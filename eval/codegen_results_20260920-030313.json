@@ -1,0 +1,92 @@
+[
+ {
+  "id": 1,
+  "gates": true,
+  "attempts": 1,
+  "seconds": 10,
+  "volume": 2827.43,
+  "bbox": [
+   3.0,
+   40.0,
+   40.0
+  ],
+  "bbox_ok": true,
+  "volume_ok": true,
+  "out": "out/codegen_eval_20260920-030137/codegen_20260920-030147",
+  "right": true
+ },
+ {
+  "id": 2,
+  "gates": true,
+  "attempts": 1,
+  "seconds": 10,
+  "volume": 57989.38,
+  "bbox": [
+   10.0,
+   60.0,
+   100.0
+  ],
+  "bbox_ok": true,
+  "volume_ok": true,
+  "out": "out/codegen_eval_20260920-030137/codegen_20260920-030157",
+  "right": true
+ },
+ {
+  "id": 3,
+  "gates": true,
+  "attempts": 1,
+  "seconds": 6,
+  "volume": 131946.89,
+  "bbox": [
+   50.0,
+   50.0,
+   80.0
+  ],
+  "bbox_ok": true,
+  "volume_ok": true,
+  "out": "out/codegen_eval_20260920-030137/codegen_20260920-030203",
+  "right": true
+ },
+ {
+  "id": 4,
+  "gates": true,
+  "attempts": 1,
+  "seconds": 11,
+  "volume": 24941.53,
+  "bbox": [
+   24.0,
+   27.71,
+   50.0
+  ],
+  "bbox_ok": true,
+  "volume_ok": true,
+  "out": "out/codegen_eval_20260920-030137/codegen_20260920-030214",
+  "right": true
+ },
+ {
+  "id": 5,
+  "gates": false,
+  "attempts": 2,
+  "seconds": 41,
+  "right": false,
+  "reasons": [
+   "you asked for 60 mm but no overall size is 60 mm (built [40.0, 40.0, 200.0])"
+  ]
+ },
+ {
+  "id": 6,
+  "gates": true,
+  "attempts": 1,
+  "seconds": 18,
+  "volume": 14250.0,
+  "bbox": [
+   30.0,
+   50.0,
+   50.0
+  ],
+  "bbox_ok": true,
+  "volume_ok": true,
+  "out": "out/codegen_eval_20260920-030137/codegen_20260920-030313",
+  "right": true
+ }
+]

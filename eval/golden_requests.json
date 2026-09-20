@@ -1,0 +1,183 @@
+{
+ "note": "English request sentences with the answer a careful engineer would extract. Loads in newtons (1 tonne = 9806.65 N). English only since 2026-09-20; results before that date used 5 Hinglish sentences and are not comparable. Add real sentences from classmates.",
+ "items": [
+  {
+   "id": 1,
+   "text": "knuckle joint for 50 kN",
+   "expect": {
+    "joint": "knuckle",
+    "load_n": 50000
+   }
+  },
+  {
+   "id": 2,
+   "text": "design a knuckle joint to carry 12.5 kN",
+   "expect": {
+    "joint": "knuckle",
+    "load_n": 12500
+   }
+  },
+  {
+   "id": 3,
+   "text": "a knuckle joint for a load of 5000 N",
+   "expect": {
+    "joint": "knuckle",
+    "load_n": 5000
+   }
+  },
+  {
+   "id": 4,
+   "text": "I need a two tonne knuckle joint",
+   "expect": {
+    "joint": "knuckle",
+    "load_n": 19613.3
+   }
+  },
+  {
+   "id": 5,
+   "text": "knukle joint 10 kN",
+   "expect": {
+    "joint": "knuckle",
+    "load_n": 10000
+   }
+  },
+  {
+   "id": 6,
+   "text": "knuckle joint with 30 mm rod",
+   "expect": {
+    "joint": "knuckle",
+    "rod_diameter_mm": 30
+   }
+  },
+  {
+   "id": 7,
+   "text": "make a knuckle joint whose rod is 25 mm",
+   "expect": {
+    "joint": "knuckle",
+    "rod_diameter_mm": 25
+   }
+  },
+  {
+   "id": 8,
+   "text": "pin joint for a tie rod carrying 40 kN (the one with a fork and an eye)",
+   "expect": {
+    "joint": "knuckle",
+    "load_n": 40000
+   }
+  },
+  {
+   "id": 9,
+   "text": "cotter joint 20 kN",
+   "expect": {
+    "joint": "cotter",
+    "load_n": 20000
+   }
+  },
+  {
+   "id": 10,
+   "text": "socket and spigot joint for an axial pull of 35 kN",
+   "expect": {
+    "joint": "cotter",
+    "load_n": 35000
+   }
+  },
+  {
+   "id": 11,
+   "text": "design a cotter joint for 30 kN",
+   "expect": {
+    "joint": "cotter",
+    "load_n": 30000
+   }
+  },
+  {
+   "id": 12,
+   "text": "cotter joint for a 3 tonne load",
+   "expect": {
+    "joint": "cotter",
+    "load_n": 29419.95
+   }
+  },
+  {
+   "id": 13,
+   "text": "M12 bolt with 40 mm grip",
+   "expect": {
+    "joint": "nut_bolt",
+    "bolt_size": 12,
+    "grip_mm": 40
+   }
+  },
+  {
+   "id": 14,
+   "text": "nut bolt for 20 kN",
+   "expect": {
+    "joint": "nut_bolt",
+    "load_n": 20000
+   }
+  },
+  {
+   "id": 15,
+   "text": "I need an M16 nut bolt, plates 30 mm thick",
+   "expect": {
+    "joint": "nut_bolt",
+    "bolt_size": 16,
+    "grip_mm": 30
+   }
+  },
+  {
+   "id": 16,
+   "text": "hexagonal bolt and nut to hold 8 kN",
+   "expect": {
+    "joint": "nut_bolt",
+    "load_n": 8000
+   }
+  },
+  {
+   "id": 17,
+   "text": "knuckle joint 50kN, tensile 80 MPa, shear 50 MPa, crushing 120 MPa",
+   "expect": {
+    "joint": "knuckle",
+    "load_n": 50000,
+    "tension_mpa": 80,
+    "shear_mpa": 50,
+    "crushing_mpa": 120
+   }
+  },
+  {
+   "id": 18,
+   "text": "fifty kilonewton knuckle joint",
+   "expect": {
+    "joint": "knuckle",
+    "load_n": 50000
+   }
+  },
+  {
+   "id": 19,
+   "text": "make me a joint",
+   "expect": {}
+  },
+  {
+   "id": 20,
+   "text": "gib and cotter joint for 15 kN",
+   "expect": {
+    "joint": "gib_and_cotter",
+    "load_n": 15000
+   }
+  },
+  {
+   "id": 21,
+   "text": "sleeve and cotter joint for 45 kN",
+   "expect": {
+    "joint": "sleeve_and_cotter",
+    "load_n": 45000
+   }
+  },
+  {
+   "id": 22,
+   "text": "cotter joint for half a tonne",
+   "expect": {
+    "joint": "cotter",
+    "load_n": 4903.325
+   }
+  }
+ ]
+}

@@ -1,0 +1,25 @@
+[project]
+name = "aicad"
+version = "0.2.0"
+description = "Sentence in, CAD parts out: knuckle, cotter and nut-bolt joints for the SGSITS major project"
+requires-python = ">=3.10,<3.13"
+dependencies = ["cadquery>=2.4"]
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+[project.scripts]
+aicad = "aicad.__main__:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["aicad*"]
+
+[tool.setuptools.package-data]
+aicad = ["data/*.json", "vendor/*.js"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

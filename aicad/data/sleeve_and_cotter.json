@@ -1,0 +1,23 @@
+{
+  "joint": "sleeve_and_cotter",
+  "title": "Sleeve and cotter joint",
+  "parts": ["rod_left", "rod_right", "sleeve", "cotter_left", "cotter_right"],
+  "verified_against_book": false,
+  "verify_note": "Proportions are from memory of Khurmi/Bhandari empirical rules and are the least certain of all four joints. Check each against the book, fill 'page', then set verified_against_book to true.",
+  "default_stresses_mpa": {"tension": 75, "shear": 60, "crushing": 150, "source": "textbook example values, UNVERIFIED", "page": null},
+  "preferred_diameters_mm": [6, 8, 10, 12, 16, 20, 25, 30, 32, 36, 40, 45, 50, 56, 60, 63, 70, 75, 80, 90, 100, 110, 125, 140, 160],
+  "proportions": {
+    "d2": {"times": 1.25, "meaning": "enlarged rod end diameter", "source": "empirical, UNVERIFIED", "page": null},
+    "d1": {"times": 2.5,  "meaning": "sleeve outer diameter", "source": "empirical, UNVERIFIED", "page": null},
+    "t":  {"times": 0.31, "meaning": "cotter thickness", "source": "empirical, UNVERIFIED", "page": null},
+    "b":  {"times": 1.25, "meaning": "cotter width (along the rod)", "source": "empirical, UNVERIFIED", "page": null},
+    "a":  {"times": 0.75, "meaning": "rod end beyond the slot", "source": "empirical, UNVERIFIED", "page": null},
+    "c":  {"times": 0.75, "meaning": "sleeve end beyond the slot", "source": "empirical, UNVERIFIED", "page": null}
+  },
+  "modelling_choices": {
+    "cotter_taper_on_width": 32,
+    "rod_gap": {"times": 0.1, "min_mm": 2, "note": "gap between the two rod ends inside the sleeve"},
+    "cotter_overhang": {"times": 0.5, "note": "cotter sticks out past the sleeve"},
+    "rod_length": {"times": 2.5, "note": "only for display, times d"}
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "note": "Allowable stresses and densities for comparing materials. Typical textbook-style values, UNVERIFIED against the design book or IS 1570. Allowables assume a factor of safety already applied. Cost is a rough relative index (plain carbon steel = 1.0), not a price.",
+  "verified_against_book": false,
+  "materials": [
+    {"name": "30C8 plain carbon steel", "tension": 75,  "shear": 60,  "crushing": 150, "density": 7850, "cost": 1.0},
+    {"name": "40C8 plain carbon steel", "tension": 95,  "shear": 70,  "crushing": 180, "density": 7850, "cost": 1.15},
+    {"name": "45C8 plain carbon steel", "tension": 110, "shear": 80,  "crushing": 200, "density": 7850, "cost": 1.3},
+    {"name": "40Cr1 alloy steel",       "tension": 160, "shear": 110, "crushing": 280, "density": 7850, "cost": 2.2},
+    {"name": "Grey cast iron FG 260",   "tension": 40,  "shear": 35,  "crushing": 250, "density": 7200, "cost": 0.8},
+    {"name": "Aluminium alloy 6061-T6", "tension": 80,  "shear": 55,  "crushing": 140, "density": 2700, "cost": 3.0}
+  ]
+}

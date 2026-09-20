@@ -1,0 +1,65 @@
+{
+ "note": "Parts outside the joint library, each with an exact expected size and volume worked out by hand. Used to measure whether AI-written CadQuery code is actually right, not just whether it passes the tool's own gates.",
+ "items": [
+  {
+   "id": 1,
+   "text": "a flat washer, 20 mm inner diameter, 40 mm outer diameter, 3 mm thick",
+   "bbox": [
+    40,
+    40,
+    3
+   ],
+   "volume": 2827.43
+  },
+  {
+   "id": 2,
+   "text": "a rectangular plate 100 x 60 x 10 mm with four 8 mm through holes, each hole centre 10 mm from both edges at each corner",
+   "bbox": [
+    100,
+    60,
+    10
+   ],
+   "volume": 57989.38
+  },
+  {
+   "id": 3,
+   "text": "a cylinder 50 mm diameter and 80 mm long with a 20 mm diameter through hole along its axis",
+   "bbox": [
+    50,
+    50,
+    80
+   ],
+   "volume": 131946.89
+  },
+  {
+   "id": 4,
+   "text": "a hexagonal bar 24 mm across flats and 50 mm long",
+   "bbox": [
+    24,
+    27.713,
+    50
+   ],
+   "volume": 24941.53
+  },
+  {
+   "id": 5,
+   "text": "a solid shaft 40 mm diameter and 200 mm long with a flat-bottomed keyway 12 mm wide, 5 mm deep and 60 mm long, square-ended, starting at one end",
+   "bbox": [
+    40,
+    40,
+    200
+   ],
+   "volume": 247946.43
+  },
+  {
+   "id": 6,
+   "text": "an L-shaped bracket bent from 5 mm thick plate, both legs 50 mm long measured on the outside, 30 mm wide",
+   "bbox": [
+    50,
+    50,
+    30
+   ],
+   "volume": 14250
+  }
+ ]
+}

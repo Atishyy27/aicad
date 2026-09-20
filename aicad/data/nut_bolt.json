@@ -1,0 +1,25 @@
+{
+  "joint": "nut_bolt",
+  "title": "Hex bolt, nut and washer",
+  "parts": ["bolt", "washer", "nut"],
+  "verified_against_book": false,
+  "verify_note": "Sizes are ISO metric coarse values typed from memory (ISO 4014 bolt head, ISO 4032 nut, ISO 7089 washer, ISO 898 stress area). Check against IS 1364 / IS 2016 or the design data book, then set verified_against_book to true.",
+  "default_stresses_mpa": {"tension": 80, "shear": 60, "crushing": 150, "source": "example allowable for a property class 4.6 bolt, UNVERIFIED", "page": null},
+  "sizes": {
+    "M6":  {"d": 6,  "pitch": 1.0,  "stress_area": 20.1, "s": 10, "k": 4.0,  "m": 5.2,  "washer_in": 6.4,  "washer_out": 12, "washer_h": 1.6},
+    "M8":  {"d": 8,  "pitch": 1.25, "stress_area": 36.6, "s": 13, "k": 5.3,  "m": 6.8,  "washer_in": 8.4,  "washer_out": 16, "washer_h": 1.6},
+    "M10": {"d": 10, "pitch": 1.5,  "stress_area": 58.0, "s": 16, "k": 6.4,  "m": 8.4,  "washer_in": 10.5, "washer_out": 20, "washer_h": 2.0},
+    "M12": {"d": 12, "pitch": 1.75, "stress_area": 84.3, "s": 18, "k": 7.5,  "m": 10.8, "washer_in": 13,   "washer_out": 24, "washer_h": 2.5},
+    "M16": {"d": 16, "pitch": 2.0,  "stress_area": 157,  "s": 24, "k": 10.0, "m": 14.8, "washer_in": 17,   "washer_out": 30, "washer_h": 3.0},
+    "M20": {"d": 20, "pitch": 2.5,  "stress_area": 245,  "s": 30, "k": 12.5, "m": 18.0, "washer_in": 21,   "washer_out": 37, "washer_h": 3.0},
+    "M24": {"d": 24, "pitch": 3.0,  "stress_area": 353,  "s": 36, "k": 15.0, "m": 21.5, "washer_in": 25,   "washer_out": 44, "washer_h": 4.0},
+    "M30": {"d": 30, "pitch": 3.5,  "stress_area": 561,  "s": 46, "k": 18.7, "m": 25.6, "washer_in": 31,   "washer_out": 56, "washer_h": 4.0},
+    "M36": {"d": 36, "pitch": 4.0,  "stress_area": 817,  "s": 55, "k": 22.5, "m": 31.0, "washer_in": 37,   "washer_out": 66, "washer_h": 5.0}
+  },
+  "modelling_choices": {
+    "default_grip": {"times": 2.0, "note": "clamped thickness when none is given, times d"},
+    "length_round_to_mm": 5,
+    "thread_ends_past_nut_pitches": 2,
+    "threads": "shown as a plain cylinder (cosmetic), like most CAD assemblies"
+  }
+}

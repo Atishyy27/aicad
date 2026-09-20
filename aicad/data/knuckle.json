@@ -1,0 +1,129 @@
+{
+  "joint": "knuckle",
+  "parts": [
+    "single_eye_rod",
+    "fork",
+    "knuckle_pin",
+    "collar",
+    "taper_pin"
+  ],
+  "verified_against_book": false,
+  "verify_note": "Every value below is from memory of Khurmi-style textbook rules. Open the department's design book, check each line, fill in 'page', then set verified_against_book to true.",
+  "default_stresses_mpa": {
+    "tension": 75,
+    "shear": 60,
+    "crushing": 150,
+    "source": "textbook example values, UNVERIFIED",
+    "page": null
+  },
+  "preferred_diameters_mm": [
+    6,
+    8,
+    10,
+    12,
+    16,
+    20,
+    25,
+    30,
+    32,
+    36,
+    40,
+    45,
+    50,
+    56,
+    60,
+    63,
+    70,
+    75,
+    80,
+    90,
+    100,
+    110,
+    125,
+    140,
+    160
+  ],
+  "proportions": {
+    "pin_diameter_d": {
+      "of": "rod_diameter_D",
+      "times": 1.0,
+      "meaning": "pin diameter equals rod diameter",
+      "source": "Khurmi-style, UNVERIFIED",
+      "page": null
+    },
+    "eye_outer_diameter_d2": {
+      "of": "d",
+      "times": 2.0,
+      "meaning": "outer diameter of eye",
+      "source": "Khurmi-style, UNVERIFIED",
+      "page": null
+    },
+    "head_collar_diameter_d3": {
+      "of": "d",
+      "times": 1.5,
+      "meaning": "pin head and collar diameter",
+      "source": "Khurmi-style, UNVERIFIED",
+      "page": null
+    },
+    "eye_thickness_t": {
+      "of": "d",
+      "times": 1.25,
+      "meaning": "thickness of single eye",
+      "source": "Khurmi-style, UNVERIFIED",
+      "page": null
+    },
+    "fork_thickness_t1": {
+      "of": "d",
+      "times": 0.75,
+      "meaning": "thickness of each fork plate",
+      "source": "Khurmi-style, UNVERIFIED",
+      "page": null
+    },
+    "head_thickness_t2": {
+      "of": "d",
+      "times": 0.5,
+      "meaning": "thickness of pin head",
+      "source": "Khurmi-style, UNVERIFIED",
+      "page": null
+    }
+  },
+  "modelling_choices": {
+    "collar_thickness": {
+      "of": "d",
+      "times": 0.5,
+      "min_mm": 5,
+      "note": "our choice, not a book value; min keeps the taper-pin hole inside the collar"
+    },
+    "taper_pin_diameter": {
+      "of": "d",
+      "times": 0.25,
+      "min_mm": 3,
+      "note": "our choice, not a book value"
+    },
+    "taper_ratio_on_diameter": 50,
+    "fork_clearance": {
+      "of": "d",
+      "times": 0.1,
+      "min_mm": 2,
+      "note": "gap between eye edge and fork base so the eye can swing"
+    },
+    "fork_base_length": {
+      "of": "d",
+      "times": 1.0,
+      "note": "our choice"
+    },
+    "rod_length": {
+      "of": "eye_outer_diameter_d2",
+      "times": 1.5,
+      "note": "only for display"
+    }
+  },
+  "pin_bending": {
+    "mode": "size",
+    "modes_note": "'size' raises the pin diameter until bending passes; 'check_only' keeps d = D and just reports bending. Books differ: set this to match yours.",
+    "formula": "M = P/2 * (t1/3 + t/4), sigma_b = 32 M / (pi d^3)",
+    "source": "Khurmi/Bhandari-style, UNVERIFIED",
+    "page": null,
+    "allowable": "tension allowable used for bending, UNVERIFIED"
+  }
+}
