@@ -120,6 +120,20 @@ Measured 20 Sep 2026 (Claude Sonnet, one attempt each unless noted):
 10 to 18 s per part. Six parts is a small set, and the checks cannot see features, so keep the
 "passed but wrong" count honest by adding harder parts.
 
+## Reference books
+
+Drop any mechanical-engineering book (PDF) into `reference/` and index it:
+
+```
+python tools/reference_library.py add ~/Downloads/some-book.pdf
+python tools/reference_library.py list
+python tools/reference_library.py find "rivet spacing"
+python tools/reference_library.py page <book> 145
+```
+
+It uses the PDF's text layer when there is one and OCRs scanned books (needs
+`brew install poppler tesseract`). `reference/` is gitignored, so books stay on your machine.
+
 ## NX
 
 `nx/import_assembly.py` is a journal to run inside NX (Tools > Journal > Play) that imports
@@ -132,10 +146,16 @@ File > Import > STEP214 > choose assembly.step > Import to: New Part.
 .venv/bin/python -m aicad.web
 ```
 
-Then open http://127.0.0.1:8765. Type a request; the page shows what it understood, highlights
-anything missing and asks for it, then builds the joint and shows the 3D model (with an
-Assembled / Exploded switch), the drawing sheet, the dimensions, the strength checks and
-download links. It only listens on this computer. Stop it with Ctrl+C.
+Then open http://127.0.0.1:8765. Four steps on one page:
+
+1. **Say what you need**, or click an example.
+2. **Check the numbers** it read. Anything missing is highlighted and asked for.
+3. **Building**, with each stage shown as it happens (sizing, solids, files, drawing sheet).
+4. **Ask or change**, as a conversation that keeps its history.
+
+Results come as tabs: the 3D model (Assembled / Exploded / Weak spots), the drawing sheet, the
+dimensions, the checks with a bar showing how much of the allowed stress each one uses, and the
+downloads. It only listens on this computer. Stop it with Ctrl+C.
 
 ## The AI part
 
@@ -198,7 +218,7 @@ in `page`, set `verified_against_book` to true. Two engineering choices to confi
 .venv/bin/python -m pytest -q
 ```
 
-227 tests: explanations, follow-up redesign, maximum-load limits, optimisation, AI-code gates, the web app (in-process, with a path-traversal check), exploded views that really separate, sizing numbers, a 10-load sweep where every check must pass for every joint, dimension
+230 tests: explanations, follow-up redesign, maximum-load limits, optimisation, AI-code gates, the web app (in-process, with a path-traversal check), exploded views that really separate, sizing numbers, a 10-load sweep where every check must pass for every joint, dimension
 lists for every drawing,
 parser cases (units, number words, bolts, missing info), the AI guard and fallback
 (with a fake Claude, so tests never spend usage), each part being one valid solid, no two

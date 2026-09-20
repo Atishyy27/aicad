@@ -1,6 +1,7 @@
 """The web app, run in-process on a free port. AI is never called (rules parser)."""
 import json
 import threading
+import time
 import urllib.error
 import urllib.request
 
@@ -29,7 +30,9 @@ def _post(base, path, body):
 def test_page_loads(server):
     with urllib.request.urlopen(server + "/") as r:
         html = r.read().decode()
-    assert "AI in CAD" in html and "/api/understand" in html
+    assert "aicad" in html and "/api/understand" in html
+    for marker in ("what do you need", "check the numbers", "Drawing", "Checks", "ask or change"):
+        assert marker in html, marker
 
 
 def test_understand_reports_what_is_missing(server):
@@ -68,3 +71,29 @@ def test_followup_limit_and_change(server):
     assert r["kind"] == "limit" and r["governing"] == "pin bending"
     r = _post(server, "/api/followup", {"fields": fields, "text": "make it 80 kN", "parser": "rules"})
     assert r["kind"] == "change" and r["fields"]["load_n"] == 80000
+
+
+def test_build_job_reports_progress_then_the_result(server):
+    r = _post(server, "/api/build_async", {"fields": {"joint": "knuckle", "load_n": 20000}, "text": "knuckle 20 kN"})
+    job = r["job"]
+    for _ in range(300):
+        st = json.load(urllib.request.urlopen(f"{server}/api/job/{job}"))
+        if st["done"]:
+            break
+        time.sleep(0.5)
+    assert st["done"] and st["result"]["ok"], st
+    assert any("Building" in p for p in st["progress"])
+    assert st["progress"][-1] == "Done"
+
+
+def test_unknown_job_is_404(server):
+    with pytest.raises(urllib.error.HTTPError) as e:
+        urllib.request.urlopen(server + "/api/job/nope")
+    assert e.value.code == 404
+
+
+def test_coupling_through_the_web_app(server):
+    r = _post(server, "/api/understand", {"text": "flange coupling to transmit 20 kW at 1440 rpm", "parser": "rules"})
+    assert r["spec"]["power_kw"] == 20 and r["spec"]["speed_rpm"] == 1440 and r["missing"] == []
+    b = _post(server, "/api/build", {"fields": {"joint": "flange_coupling", "torque_nm": 500}, "text": "coupling"})
+    assert b["ok"] and b["duty"].startswith("Torque") and len(b["checks"]) == 7
