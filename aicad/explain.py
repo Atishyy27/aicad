@@ -123,6 +123,8 @@ def utilisation(design: Design, joint) -> dict:
     for c in design.checks:
         u = c.stress_mpa / c.allowable_mpa
         for part in mapping.get(c.name, []):
+            if part not in out:   # e.g. a coupling check lists bolt_1..6 but this design has 3
+                continue
             cur = out[part][0]
             if cur is None or u > cur:
                 out[part] = (u, c.name)

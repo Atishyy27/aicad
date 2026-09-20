@@ -38,6 +38,16 @@ class Design:
     raw: dict = field(default_factory=dict)
 
     @property
+    def duty(self) -> str:
+        """One line naming what the part was sized for: a load, a torque, or nothing."""
+        if self.load_n:
+            return f"Load P = {self.load_n:,.0f} N"
+        t = self.dims.get("torque_nmm")
+        if t:
+            return f"Torque T = {t:,.0f} N mm ({t / 1000:,.0f} N m)"
+        return "No load given (proportions only)"
+
+    @property
     def all_passed(self) -> bool:
         return all(c.passed for c in self.checks)
 

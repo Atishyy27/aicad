@@ -6,9 +6,8 @@ import pytest
 from aicad.export import export_all
 from aicad.joints import REGISTRY, knuckle, parts_of
 
-CASES = {"knuckle": {"load_n": 50_000}, "cotter": {"load_n": 50_000},
-         "sleeve_and_cotter": {"load_n": 50_000}, "nut_bolt": {"load_n": 20_000},
-         "flange_coupling": {"torque_nm": 500}}
+from conftest import SIZING as CASES
+from conftest import SMALL
 
 
 @pytest.fixture(scope="module", params=list(CASES))
@@ -78,20 +77,21 @@ def test_bolt_stack_order():
 
 
 @pytest.mark.parametrize("name", list(CASES))
-def test_small_load_builds(name):
+def test_small_design_builds(name):
     joint = REGISTRY[name]
-    design = joint.design(load_n=2_000)
+    design = joint.design(**SMALL[name])
     assert all(p.val().isValid() for p in joint.build_parts(design.dims).values())
 
 
 def test_export_writes_everything_and_assembly_keeps_parts_separate(built, tmp_path):
     joint, design, parts = built
     out = export_all(parts, design, joint, tmp_path, request="test request")
-    for name in joint.PARTS:
+    names = parts_of(joint, design.dims)
+    for name in names:
         again = cq.importers.importStep(str(out / "parts" / f"{name}.step"))
         assert len(again.solids().vals()) == 1
     assy = cq.importers.importStep(str(out / "assembly.step"))
-    assert len(assy.solids().vals()) == len(joint.PARTS)
+    assert len(assy.solids().vals()) == len(names)
     html = (out / "viewer.html").read_text()
     assert "data:model/gltf-binary;base64," in html
     assert "<script type=\"module\" src=" not in html, "viewer must not load its script from the internet"

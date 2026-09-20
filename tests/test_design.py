@@ -3,6 +3,7 @@ import math
 import pytest
 
 from aicad.joints import REGISTRY, cotter, knuckle, nut_bolt
+from conftest import SIZING, SWEEP, cases
 
 LOADS_KN = [1, 2, 5, 10, 20, 50, 100, 150, 200, 300]
 
@@ -101,21 +102,19 @@ def test_bolt_too_big_load_is_rejected_with_advice():
 
 # ---------------------------------------------------------------- all joints
 
-SWEEP = [(n, kn) for n in REGISTRY for kn in (LOADS_KN if n != "nut_bolt" else [1, 2, 5, 10, 20, 40, 60])]
-
-
-@pytest.mark.parametrize("name,kn", SWEEP)
-def test_every_check_passes_for_every_tool_sized_design(name, kn):
-    r = REGISTRY[name].design(load_n=kn * 1000)
+@pytest.mark.parametrize("name,kw", cases(REGISTRY))
+def test_every_check_passes_for_every_tool_sized_design(name, kw):
+    r = REGISTRY[name].design(**kw)
     failing = [f"{c.name} {c.stress_mpa:.1f}>{c.allowable_mpa}" for c in r.checks if not c.passed]
     assert not failing, failing
 
 
 @pytest.mark.parametrize("name", list(REGISTRY))
 @pytest.mark.parametrize("bad", [0, -5])
-def test_non_positive_load_is_rejected(name, bad):
+def test_non_positive_input_is_rejected(name, bad):
+    field = "torque_nm" if name == "flange_coupling" else "load_n"
     with pytest.raises(ValueError):
-        REGISTRY[name].design(load_n=bad)
+        REGISTRY[name].design(**{field: bad})
 
 
 @pytest.mark.parametrize("name", list(REGISTRY))
@@ -126,5 +125,5 @@ def test_nothing_given_is_rejected(name):
 
 @pytest.mark.parametrize("name", list(REGISTRY))
 def test_unverified_flag_is_carried(name):
-    r = REGISTRY[name].design(load_n=10_000)
+    r = REGISTRY[name].design(**SIZING[name])
     assert r.verified_against_book is False

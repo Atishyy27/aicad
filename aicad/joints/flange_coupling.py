@@ -217,16 +217,19 @@ def build_parts(dims: dict):
         "key_left": box(-(tf + L), -tf, -w / 2, w / 2, d / 2 - t / 2, d / 2 + t / 2),
         "key_right": box(tf, tf + L, -w / 2, w / 2, d / 2 - t / 2, d / 2 + t / 2),
     }
-    for i in range(n):
+    def at(i):
         a = 2 * math.pi * i / n
-        y, z = Dp / 2 * math.cos(a), Dp / 2 * math.sin(a)
+        return 0, Dp / 2 * math.cos(a), Dp / 2 * math.sin(a)
+
+    corners = af / math.cos(math.radians(30))
+    for i in range(n):
         shank = rod_along_x(db, -tf, 2 * tf)
-        head = (cq.Workplane("YZ").workplane(offset=-tf - hh).polygon(6, af / math.cos(math.radians(30)))
-                .extrude(hh))
-        nut = (cq.Workplane("YZ").workplane(offset=tf).polygon(6, af / math.cos(math.radians(30))).extrude(nh)
+        head = cq.Workplane("YZ").workplane(offset=-tf - hh).polygon(6, corners).extrude(hh)
+        parts[f"bolt_{i + 1}"] = shank.union(head).clean().translate(at(i))
+    for i in range(n):
+        nut = (cq.Workplane("YZ").workplane(offset=tf).polygon(6, corners).extrude(nh)
                .cut(rod_along_x(db, tf - 1, nh + 2)))
-        parts[f"bolt_{i + 1}"] = shank.union(head).clean().translate((0, y, z))
-        parts[f"nut_{i + 1}"] = nut.translate((0, y, z))
+        parts[f"nut_{i + 1}"] = nut.translate(at(i))
     return parts
 
 

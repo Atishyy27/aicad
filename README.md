@@ -13,6 +13,7 @@ first-angle A3 drawing sheet.
 | Socket and spigot cotter joint | spigot, socket, cotter | load, or rod diameter |
 | Sleeve and cotter joint | two rods, sleeve, two cotters | load, or rod diameter |
 | Hex bolt, nut and washer | bolt, washer, nut | load, or a size like M12 (+ grip) |
+| Protected type rigid flange coupling | 2 shafts, 2 flanged hubs, 2 keys, n bolts and nuts | torque, or power and speed, or shaft diameter |
 
 Gib-and-cotter is recognised but not built: its proportions need the design book page first.
 
@@ -60,6 +61,7 @@ uv pip install --python .venv\Scripts\python.exe -e ".[dev]"
 .venv/bin/python -m aicad "I need a two tonne knuckle joint"
 .venv/bin/python -m aicad "socket and spigot joint for an axial pull of 35 kN"
 .venv/bin/python -m aicad "M16 nut bolt, plates 30 mm thick, load 20 kN"
+.venv/bin/python -m aicad "flange coupling to transmit 20 kW at 1440 rpm"
 .venv/bin/python -m aicad
 ```
 
@@ -180,7 +182,7 @@ before quoting any of these numbers.
 
 ## Files to check against the book
 
-`aicad/data/knuckle.json`, `cotter.json`, `nut_bolt.json` hold every proportion, table value
+`aicad/data/*.json` (one per joint, plus `materials.json`) hold every proportion, table value
 and default stress. **None are verified against the design book yet.** Check each line, fill
 in `page`, set `verified_against_book` to true. Two engineering choices to confirm:
 
@@ -196,7 +198,7 @@ in `page`, set `verified_against_book` to true. Two engineering choices to confi
 .venv/bin/python -m pytest -q
 ```
 
-188 tests: explanations, follow-up redesign, maximum-load limits, optimisation, AI-code gates, the web app (in-process, with a path-traversal check), exploded views that really separate, sizing numbers, a 10-load sweep where every check must pass for every joint, dimension
+227 tests: explanations, follow-up redesign, maximum-load limits, optimisation, AI-code gates, the web app (in-process, with a path-traversal check), exploded views that really separate, sizing numbers, a 10-load sweep where every check must pass for every joint, dimension
 lists for every drawing,
 parser cases (units, number words, bolts, missing info), the AI guard and fallback
 (with a fake Claude, so tests never spend usage), each part being one valid solid, no two

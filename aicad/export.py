@@ -115,8 +115,7 @@ def report(design: Design, request: str, joint) -> str:
     if not design.verified_against_book:
         lines += [f"> **UNVERIFIED:** the rules and default stresses in aicad/data/{joint.NAME}.json "
                   "have not yet been checked against the design book.", ""]
-    if design.load_n is not None:
-        lines.append(f"Load P = {design.load_n:,.0f} N")
+    lines.append(design.duty)
     s = design.stresses
     lines += [
         f"Allowable stresses: tension {s['tension']} MPa, shear {s['shear']} MPa, crushing {s['crushing']} MPa",

@@ -127,8 +127,16 @@ def main(argv: list[str] | None = None) -> int:
 
     from .export import export_all  # heavy imports only when building
 
-    tag = f"{spec.load_n / 1000:g}kN" if spec.load_n else (
-        f"M{spec.bolt_size}" if spec.bolt_size else f"D{spec.rod_diameter_mm:g}")
+    if spec.load_n:
+        tag = f"{spec.load_n / 1000:g}kN"
+    elif spec.torque_nm:
+        tag = f"{spec.torque_nm:g}Nm"
+    elif spec.power_kw and spec.speed_rpm:
+        tag = f"{spec.power_kw:g}kW-{spec.speed_rpm:g}rpm"
+    elif spec.bolt_size:
+        tag = f"M{spec.bolt_size}"
+    else:
+        tag = f"D{spec.rod_diameter_mm:g}"
     out = args.out or Path("out") / f"{joint.NAME}_{tag}_{datetime.now():%Y%m%d-%H%M%S}"
     print("\nBuilding solids...")
     export_all(joint.build_parts(design.dims), design, joint, out, request=text)

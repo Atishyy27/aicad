@@ -3,9 +3,7 @@ import pytest
 from aicad.explain import explain_check, explain_dim, find_symbol, substitute, utilisation, utilisation_colour
 from aicad.joints import REGISTRY, parts_of
 
-CASES = {"knuckle": {"load_n": 50_000}, "cotter": {"load_n": 35_000},
-         "sleeve_and_cotter": {"load_n": 50_000}, "nut_bolt": {"load_n": 20_000},
-         "flange_coupling": {"torque_nm": 500}}
+from conftest import SIZING as CASES
 
 
 def test_substitute_puts_numbers_into_the_formula():
@@ -53,10 +51,13 @@ def test_questions_map_to_the_right_dimension(question, key):
 def test_every_check_maps_to_real_parts(name):
     joint = REGISTRY[name]
     d = joint.design(**CASES[name])
+    here = set(parts_of(joint, d.dims))
     for c in d.checks:
         parts = joint.CHECK_PARTS.get(c.name)
         assert parts, f"{c.name} is not mapped to any part"
-        assert set(parts) <= set(parts_of(joint, d.dims))
+        # a mapping may name parts a bigger design would have (the coupling lists six bolts),
+        # but at least one named part must exist in this design
+        assert here & set(parts), f"{c.name} maps to no part of this design"
 
 
 def test_utilisation_names_the_governing_check():
@@ -70,3 +71,13 @@ def test_colour_scale_runs_green_to_red():
     g, r = utilisation_colour(0.1), utilisation_colour(1.0)
     assert g[1] > g[0] and r[0] > r[1]
     assert utilisation_colour(None) == (0.6, 0.6, 0.6)
+
+
+def test_utilisation_ignores_parts_this_design_does_not_have():
+    """The coupling's checks name up to six bolts; a three-bolt design must still work."""
+    joint = REGISTRY["flange_coupling"]
+    d = joint.design(torque_nm=500)
+    u = utilisation(d, joint)
+    assert int(d.dims["n_bolts"]) == 3
+    assert set(u) == set(parts_of(joint, d.dims))
+    assert u["bolt_1"][1] in ("bolt shear", "bolt crushing")

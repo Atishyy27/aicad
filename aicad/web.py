@@ -76,6 +76,7 @@ def build(fields: dict, text: str, freecad: bool = True, out_root: Path = OUT_RO
         "id": run_id,
         "title": joint.TITLE,
         "load_n": design.load_n,
+        "duty": design.duty,
         "dims": [{"key": k, "label": joint.LABELS.get(k, k), "value": v, "rule": design.rules.get(k, "")}
                  for k, v in design.dims.items()],
         "checks": [{"name": c.name, "stress": round(c.stress_mpa, 1), "allowed": c.allowable_mpa,
