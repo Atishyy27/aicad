@@ -1,10 +1,11 @@
 import pytest
 
 from aicad.explain import explain_check, explain_dim, find_symbol, substitute, utilisation, utilisation_colour
-from aicad.joints import REGISTRY
+from aicad.joints import REGISTRY, parts_of
 
 CASES = {"knuckle": {"load_n": 50_000}, "cotter": {"load_n": 35_000},
-         "sleeve_and_cotter": {"load_n": 50_000}, "nut_bolt": {"load_n": 20_000}}
+         "sleeve_and_cotter": {"load_n": 50_000}, "nut_bolt": {"load_n": 20_000},
+         "flange_coupling": {"torque_nm": 500}}
 
 
 def test_substitute_puts_numbers_into_the_formula():
@@ -55,7 +56,7 @@ def test_every_check_maps_to_real_parts(name):
     for c in d.checks:
         parts = joint.CHECK_PARTS.get(c.name)
         assert parts, f"{c.name} is not mapped to any part"
-        assert set(parts) <= set(joint.PARTS)
+        assert set(parts) <= set(parts_of(joint, d.dims))
 
 
 def test_utilisation_names_the_governing_check():

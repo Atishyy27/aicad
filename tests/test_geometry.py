@@ -4,10 +4,11 @@ import cadquery as cq
 import pytest
 
 from aicad.export import export_all
-from aicad.joints import REGISTRY, knuckle
+from aicad.joints import REGISTRY, knuckle, parts_of
 
 CASES = {"knuckle": {"load_n": 50_000}, "cotter": {"load_n": 50_000},
-         "sleeve_and_cotter": {"load_n": 50_000}, "nut_bolt": {"load_n": 20_000}}
+         "sleeve_and_cotter": {"load_n": 50_000}, "nut_bolt": {"load_n": 20_000},
+         "flange_coupling": {"torque_nm": 500}}
 
 
 @pytest.fixture(scope="module", params=list(CASES))
@@ -18,8 +19,8 @@ def built(request):
 
 
 def test_parts_match_the_data_file(built):
-    joint, _, parts = built
-    assert list(parts) == joint.PARTS
+    joint, design, parts = built
+    assert list(parts) == parts_of(joint, design.dims)
 
 
 def test_each_part_is_one_valid_solid(built):

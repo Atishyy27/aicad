@@ -117,7 +117,8 @@ def find_symbol(question: str, design: Design, joint) -> str | None:
 
 def utilisation(design: Design, joint) -> dict:
     """part -> (worst utilisation 0..n, governing check name) or (None, None) if no check covers it."""
-    out: dict = {p: (None, None) for p in joint.PARTS}
+    from .joints import parts_of
+    out: dict = {p: (None, None) for p in parts_of(joint, design.dims)}
     mapping = getattr(joint, "CHECK_PARTS", {})
     for c in design.checks:
         u = c.stress_mpa / c.allowable_mpa

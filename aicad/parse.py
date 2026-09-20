@@ -21,6 +21,7 @@ from dataclasses import dataclass, field
 _JOINTS = [
     ("gib_and_cotter", r"\bgib\b"),
     ("sleeve_and_cotter", r"\bsleeve\b"),
+    ("flange_coupling", r"\bcoupling\b|\bflange\b"),
     ("cotter", r"\bcott?er\b|\bsocket\b|\bspigot\b"),
     ("knuckle", r"\bk?nuc?kle\b|\bknukle\b"),
     ("nut_bolt", r"\bnut\b|\bbolts?\b|\bm\d{1,2}\b"),
@@ -32,6 +33,9 @@ _DIA = re.compile(_NUM + r"\s*mm\b", re.I)
 _GRIP = re.compile(r"\b(?:grip|clamp(?:ed|ing)?|plates?|thickness)\b\D{0,20}?" + _NUM + r"\s*mm", re.I)
 _GRIP_AFTER = re.compile(_NUM + r"\s*mm\s*(?:grip|clamp(?:ed|ing)?|thick|plates?)\b", re.I)
 _BOLT = re.compile(r"\bm\s?(\d{1,2})\b", re.I)
+_TORQUE = re.compile(r"(\d+(?:\.\d+)?)\s*(k?n[\s-]?m\b|newton[\s-]?met(?:er|re)s?)", re.I)
+_POWER = re.compile(r"(\d+(?:\.\d+)?)\s*(kw\b|kilowatts?\b|hp\b|horse\s?power)", re.I)
+_SPEED = re.compile(r"(\d+(?:\.\d+)?)\s*(rpm\b|r\.p\.m|rev(?:olution)?s?\s*(?:per|/)\s*min)", re.I)
 _STRESS = {
     "tension_mpa": re.compile(r"\b(?:tensile|tension)\b\D{0,15}?" + _NUM + r"\s*mpa", re.I),
     "shear_mpa": re.compile(r"\bshear\b\D{0,15}?" + _NUM + r"\s*mpa", re.I),
@@ -53,6 +57,9 @@ class Spec:
     rod_diameter_mm: float | None = None
     bolt_size: int | None = None
     grip_mm: float | None = None
+    torque_nm: float | None = None
+    power_kw: float | None = None
+    speed_rpm: float | None = None
     tension_mpa: float | None = None
     shear_mpa: float | None = None
     crushing_mpa: float | None = None
@@ -63,6 +70,9 @@ class Spec:
         out = []
         if self.joint is None:
             out.append("joint type")
+        elif self.joint == "flange_coupling":
+            if self.torque_nm is None and not (self.power_kw and self.speed_rpm) and self.rod_diameter_mm is None:
+                out.append("torque, or power and speed, or shaft diameter")
         elif self.joint == "nut_bolt":
             if self.load_n is None and self.bolt_size is None:
                 out.append("load or bolt size")
@@ -76,7 +86,8 @@ class Spec:
 
     def design_kwargs(self) -> dict:
         return {k: getattr(self, k) for k in (
-            "load_n", "rod_diameter_mm", "bolt_size", "grip_mm", "tension_mpa", "shear_mpa", "crushing_mpa")}
+            "load_n", "rod_diameter_mm", "bolt_size", "grip_mm", "torque_nm", "power_kw", "speed_rpm",
+            "tension_mpa", "shear_mpa", "crushing_mpa")}
 
 
 def _to_newtons(value: float, unit: str) -> float:
@@ -105,6 +116,15 @@ def parse_rules(text: str) -> Spec:
     m = _BOLT.search(text)
     if m:
         spec.bolt_size = int(m.group(1))
+    m = _TORQUE.search(text)
+    if m:
+        spec.torque_nm = float(m.group(1)) * (1000 if m.group(2).lower().startswith("kn") else 1)
+    m = _POWER.search(text)
+    if m:
+        spec.power_kw = float(m.group(1)) * (0.7457 if "h" in m.group(2).lower() else 1)
+    m = _SPEED.search(text)
+    if m:
+        spec.speed_rpm = float(m.group(1))
     m = _GRIP.search(text) or _GRIP_AFTER.search(text)
     if m:
         spec.grip_mm = float(m.group(1))
@@ -133,10 +153,12 @@ _SYSTEM = (
     f"joint must be one of {JOINT_NAMES} or null. load_n is the axial load in newtons "
     "(convert kN x1000, tonnes x9806.65, kgf x9.80665). rod_diameter_mm is the rod diameter in mm. "
     "bolt_size is the metric bolt number (M12 -> 12). grip_mm is the clamped thickness in mm. "
+    "torque_nm is torque in newton metres, power_kw in kilowatts, speed_rpm in revolutions per minute. "
     "tension_mpa, shear_mpa, crushing_mpa are allowable stresses in MPa. "
     "Use null for anything not stated. Never invent a number."
 )
-_FIELDS = ["joint", "load_n", "rod_diameter_mm", "bolt_size", "grip_mm", "tension_mpa", "shear_mpa", "crushing_mpa"]
+_FIELDS = ["joint", "load_n", "rod_diameter_mm", "bolt_size", "grip_mm", "torque_nm", "power_kw", "speed_rpm",
+           "tension_mpa", "shear_mpa", "crushing_mpa"]
 _SCHEMA = {
     "type": "object",
     "properties": {
@@ -162,6 +184,7 @@ def _traceable(value: float, text: str, factors=(1,)) -> bool:
 
 
 _LOAD_FACTORS = (1, 1000, _G, 1000 * _G)
+_PLAIN_FACTORS = (1, 1000, 0.7457)
 
 
 def spec_from_ai_json(raw: dict, text: str, source: str) -> Spec:
@@ -176,7 +199,7 @@ def spec_from_ai_json(raw: dict, text: str, source: str) -> Spec:
         if v <= 0:
             spec.notes.append(f"AI gave non-positive {key}={v:g}; dropped")
             continue
-        factors = _LOAD_FACTORS if key == "load_n" else (1,)
+        factors = _LOAD_FACTORS if key == "load_n" else (_PLAIN_FACTORS if key in ("torque_nm", "power_kw") else (1,))
         if not _traceable(v, text, factors):
             spec.notes.append(f"AI gave {key}={v:g}, which is not in the request; dropped")
             continue
@@ -276,7 +299,8 @@ def parse_ai(text: str, backend: str, timeout: float = 45, runner=subprocess.run
     return spec_from_ai_json(raw, text, source=backend)
 
 
-_MERGE_FIELDS = ["joint", "load_n", "rod_diameter_mm", "bolt_size", "grip_mm", "tension_mpa", "shear_mpa", "crushing_mpa"]
+_MERGE_FIELDS = ["joint", "load_n", "rod_diameter_mm", "bolt_size", "grip_mm", "torque_nm", "power_kw", "speed_rpm",
+           "tension_mpa", "shear_mpa", "crushing_mpa"]
 
 
 def merge(ai: Spec, rules: Spec) -> Spec:
