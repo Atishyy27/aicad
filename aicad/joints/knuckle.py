@@ -9,7 +9,8 @@ from __future__ import annotations
 
 import math
 
-from ..design import Check, Design, check_positive, load_data, next_preferred, stresses_from, times
+from ..design import (DEFAULT_DESIGN_FACTOR, Check, Design, check_positive, load_data, next_preferred,
+                      sizing_load, stresses_from, times)
 
 NAME = "knuckle"
 TITLE = "Knuckle joint"
@@ -45,6 +46,7 @@ def design(
     shear_mpa=None,
     crushing_mpa=None,
     bending_mode=None,
+    design_factor=None,
     **_ignored,
 ) -> Design:
     if load_n is None and rod_diameter_mm is None:
@@ -55,24 +57,26 @@ def design(
     props = DATA["proportions"]
     k_t, k_t1 = props["eye_thickness_t"]["times"], props["fork_thickness_t1"]["times"]
     bending_mode = bending_mode or DATA["pin_bending"]["mode"]
+    factor = float(design_factor if design_factor is not None else DEFAULT_DESIGN_FACTOR)
     P = load_n
+    Pd = sizing_load(P, factor)
     raw, notes = {}, []
 
     if rod_diameter_mm is not None:
         D = float(rod_diameter_mm)
     else:
-        raw["rod_tension"] = math.sqrt(4 * P / (math.pi * s["tension"]))
+        raw["rod_tension"] = math.sqrt(4 * Pd / (math.pi * s["tension"]))
         D = next_preferred(raw["rod_tension"], sizes)
 
     d = props["pin_diameter_d"]["times"] * D
     governing = "pin = rod diameter"
     if P is not None:
-        raw["pin_shear"] = math.sqrt(2 * P / (math.pi * s["shear"]))
+        raw["pin_shear"] = math.sqrt(2 * Pd / (math.pi * s["shear"]))
         if raw["pin_shear"] > d + 1e-9:
             d, governing = next_preferred(raw["pin_shear"], sizes), "pin double shear"
         # bending: M = P/2 (t1/3 + t/4) with t = k_t d, t1 = k_t1 d
         # sigma_b = 32M/(pi d^3) = 16 P (k_t1/3 + k_t/4) / (pi d^2)
-        raw["pin_bending"] = math.sqrt(16 * P * (k_t1 / 3 + k_t / 4) / (math.pi * s["bending"]))
+        raw["pin_bending"] = math.sqrt(16 * Pd * (k_t1 / 3 + k_t / 4) / (math.pi * s["bending"]))
         if bending_mode == "size" and raw["pin_bending"] > d + 1e-9:
             d, governing = next_preferred(raw["pin_bending"], sizes), "pin bending"
             notes.append(
@@ -114,9 +118,12 @@ def design(
 
     checks = _checks(P, dims, s) if P is not None else []
 
+    if factor > 1 and P is not None:
+        notes.insert(0, f"Sized for {factor:g} x the given load ({Pd:,.0f} N), then checked at {P:,.0f} N. "
+                        "That margin is why the checks sit below their limits.")
     return Design(
-        joint=NAME, load_n=P, stresses=s, dims=dims, rules=rules, checks=checks,
-        notes=notes, verified_against_book=DATA["verified_against_book"], raw=raw,
+        joint=NAME, load_n=P, stresses=s, dims=dims, rules=rules, checks=checks, notes=notes,
+        design_factor=factor, verified_against_book=DATA["verified_against_book"], raw=raw,
     )
 
 

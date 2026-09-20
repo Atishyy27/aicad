@@ -120,6 +120,48 @@ Measured 20 Sep 2026 (Claude Sonnet, one attempt each unless noted):
 10 to 18 s per part. Six parts is a small set, and the checks cannot see features, so keep the
 "passed but wrong" count honest by adding harder parts.
 
+## Finite element check (ANSYS-lite)
+
+```
+.venv/bin/python -m aicad.fea "knuckle joint for 50 kN"
+.venv/bin/python -m aicad "knuckle joint for 50 kN" --fea
+```
+
+FreeCAD ships the CalculiX solver and the gmsh mesher, so the tool can run one linear-static
+analysis on one part and compare it with the textbook formula it used.
+
+Validated on a case with a known answer: a 20 mm bar pulled by 10 kN gives 32.22 MPa against
+the hand answer 31.83 MPa, a 1.2 % difference from the fixed-face effect.
+
+On a real part (50 kN knuckle eye rod, held at the pin bore, pulled at the rod end): 55.1 MPa
+against the formula's 49.1 MPa, 12 % higher, because the formula ignores the stress
+concentration at the bore. Both are under the 75 MPa allowed.
+
+**This is not ANSYS.** One part, one load case, linear elastic, boundary conditions chosen by
+the tool, and stress next to a fixed face is always overstated. Treat it as a second opinion
+on the formula.
+
+## Design margin (why nothing is red any more)
+
+By default the tool sizes for **1.25 times** the load you give, then reports the stresses at
+your real load. The busiest check lands near 80 % of its allowed stress instead of 99 %.
+Change it in a follow-up ("add more margin", "design factor 2") or with `design_factor`.
+The colours mean: green below 80 % of the allowed stress, amber to 95 %, red above. The
+allowable stress already carries a safety factor of its own.
+
+## Indian context
+
+- SI units throughout, first angle projection, SP 46 title block wording.
+- Materials carry IS grade designations (IS 1570, IS 210, IS 733) with rupee rates per kg,
+  so "cheapest material" answers in rupees.
+- Each joint's data file lists the Indian standards to check it against (IS 1363/1364 bolts,
+  IS 2016 washers, IS 2048 keys, IS 2693 couplings, SP 46 drawing practice). All marked to verify.
+
+## Sharing it (Hugging Face Space)
+
+`space/` holds a Dockerfile, a Space README and `space/deploy.md` with the three commands you
+run to publish it. Untested: there is no Docker on the development machine.
+
 ## Reference books
 
 Drop any mechanical-engineering book (PDF) into `reference/` and index it:
@@ -218,7 +260,7 @@ in `page`, set `verified_against_book` to true. Two engineering choices to confi
 .venv/bin/python -m pytest -q
 ```
 
-230 tests: explanations, follow-up redesign, maximum-load limits, optimisation, AI-code gates, the web app (in-process, with a path-traversal check), exploded views that really separate, sizing numbers, a 10-load sweep where every check must pass for every joint, dimension
+244 tests: explanations, follow-up redesign, maximum-load limits, optimisation, AI-code gates, the web app (in-process, with a path-traversal check), exploded views that really separate, sizing numbers, a 10-load sweep where every check must pass for every joint, dimension
 lists for every drawing,
 parser cases (units, number words, bolts, missing info), the AI guard and fallback
 (with a fake Claude, so tests never spend usage), each part being one valid solid, no two

@@ -74,6 +74,8 @@ def main(argv: list[str] | None = None) -> int:
                     help="auto: AI if available, else rules (default). rules: offline only. ai: AI only")
     ap.add_argument("--no-freecad", action="store_true", help="skip the FreeCAD file and drawing sheet")
     ap.add_argument("--open", action="store_true", help="open the result in FreeCAD when done")
+    ap.add_argument("--fea", action="store_true",
+                    help="also run a finite-element check on one part and compare it with the hand calculation")
     ap.add_argument("--model", help="AI model: for Claude Code an alias like haiku, sonnet, opus "
                     "or a full id; for an API key the provider's model id. Default: haiku")
     args = ap.parse_args(argv)
@@ -159,6 +161,20 @@ def main(argv: list[str] | None = None) -> int:
         print(f"  drawing.svg     A3 first-angle sheet, scale {fc.get('sheet_scale')} (open in a browser, print to PDF)")
         if fc.get("dxf"):
             print("  drawing.dxf     the same views for AutoCAD / LibreCAD")
+    if args.fea:
+        from .fea import run as run_fea
+        print("\nMeshing and solving with CalculiX (a minute or two)...")
+        f = run_fea(joint, design, out)
+        if f.get("ok"):
+            print(f"  part {f['part']}: {f['note']}")
+            print(f"  mesh {f['mesh_nodes']:,} nodes, highest von Mises {f['max_von_mises']:.1f} MPa")
+            if "hand_mpa" in f:
+                print(f"  hand calculation ({f['hand_check']}) {f['hand_mpa']:.1f} MPa, "
+                      f"difference {f['difference_pct']:+.1f}%, allowed {f['allowable_mpa']:g} MPa")
+            print("  one linear-static run on one part; stress next to a fixed face is overstated")
+        else:
+            print(f"  finite-element run skipped: {f.get('reason') or f.get('error','')[:200]}")
+
     if args.open and fc and fc.get("fcstd"):
         from .freecad_pack import open_in_freecad
         open_in_freecad(Path(fc["fcstd"]))

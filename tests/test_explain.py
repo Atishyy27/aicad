@@ -33,7 +33,7 @@ def test_check_explanation_shows_the_numbers_and_the_verdict(name):
 
 def test_knuckle_pin_explanation_names_bending_as_the_reason():
     joint = REGISTRY["knuckle"]
-    d = joint.design(load_n=50_000)
+    d = joint.design(load_n=50_000, design_factor=1.0)
     text = explain_dim(d, joint, "d")
     assert "43.70" in text and "bending" in text
 
@@ -70,7 +70,7 @@ def test_utilisation_names_the_governing_check():
 def test_colour_scale_runs_green_to_red():
     g, r = utilisation_colour(0.1), utilisation_colour(1.0)
     assert g[1] > g[0] and r[0] > r[1]
-    assert utilisation_colour(None) == (0.6, 0.6, 0.6)
+    assert utilisation_colour(None) == (0.62, 0.64, 0.68)   # grey: not checked
 
 
 def test_utilisation_ignores_parts_this_design_does_not_have():

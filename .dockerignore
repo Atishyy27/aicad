@@ -1,0 +1,7 @@
+out/
+reference/
+.venv/
+.git/
+__pycache__/
+*.pyc
+eval/results_*

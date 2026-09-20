@@ -17,6 +17,8 @@ from .parse import Spec, parse
 _EXPLAIN = re.compile(r"\b(why|explain|how (?:is|was|did)|where does|what decides|reason)\b", re.I)
 _LIMIT = re.compile(r"\b(max(?:imum)?\s+load|how much (?:load|force)|load capacity|what load can|"
                     r"strongest load|carry at most|safe load)\b", re.I)
+_MARGIN = re.compile(r"margin|\bsafety\b|\bsafer\b|factor of safety|design factor|\bfos\b|\bstronger\b|"
+                     r"more capacity|less stressed|headroom", re.I)
 _OPTIMISE = re.compile(r"\b(light(?:er|est)?|cheap(?:er|est)?|optimi[sz]e|lowest mass|less material|best material)\b", re.I)
 
 
@@ -66,6 +68,25 @@ def follow_up(current: Spec, text: str, mode: str = "auto", runner=None) -> Foll
         if design.load_n:
             msg += f" The current load, {design.load_n:,.0f} N, uses {100 * design.load_n / P:.0f}% of that."
         return FollowUp("limit", msg, value=P, governing=name)
+
+    if _MARGIN.search(text):
+        m = re.search(r"(\d+(?:\.\d+)?)\s*(?:x|times)?", text)
+        want = float(m.group(1)) if m and 1.0 <= float(m.group(1)) <= 5.0 else (current.design_factor or 1.25) + 0.25
+        want = round(min(want, 4.0), 2)
+        new = replace(current, design_factor=want, notes=[])
+        j = REGISTRY.get(new.joint or "")
+        if j is None:
+            return FollowUp("unclear", "Pick a joint first.")
+        nd = j.design(**new.design_kwargs())
+        worst = max((c.stress_mpa / c.allowable_mpa for c in nd.checks), default=0)
+        msg = (f"Design factor set to {want:g}: it is now sized for {want:g} times your load, so the busiest "
+               f"check sits at {100 * worst:.0f}% of its allowed stress instead of near 100%. "
+               f"Everything gets bigger and heavier as a result.")
+        if design is not None:
+            moved = _diff(design, nd)
+            if moved:
+                msg += " Dimensions that moved: " + ", ".join(moved) + "."
+        return FollowUp("change", msg, spec=new, changes=[f"design factor: {current.design_factor or 1.25} -> {want:g}"])
 
     if design is not None and _OPTIMISE.search(text):
         from .optimise import optimise

@@ -24,13 +24,18 @@ def test_max_load_is_exactly_the_limit(name):
 
 def test_limit_question_on_a_design():
     r = follow_up(CASES["knuckle"], "how much load can this take", mode="rules")
-    assert r.kind == "limit" and r.governing == "pin bending" and 50_000 < r.value < 60_000
+    assert r.kind == "limit" and r.governing == "pin bending"
+    # the design carries more than the load it was sized for: that headroom is the design margin
+    assert r.value > 50_000 and r.value < 50_000 * 1.6
 
 
 def test_change_load_moves_dimensions_and_reports_them():
+    before = REGISTRY["knuckle"].design(**CASES["knuckle"].design_kwargs())
     r = follow_up(CASES["knuckle"], "make it 80 kN", mode="rules")
     assert r.kind == "change" and r.spec.load_n == 80_000
-    assert any(c.startswith("D: 30 -> 40") for c in r.changes)
+    after = REGISTRY["knuckle"].design(**r.spec.design_kwargs())
+    assert after.dims["D"] > before.dims["D"]
+    assert any(c.startswith(f"D: {before.dims['D']:g} -> {after.dims['D']:g}") for c in r.changes)
 
 
 def test_change_stress_only_changes_that_stress():
@@ -62,6 +67,21 @@ def test_nonsense_is_unclear_not_a_crash():
     assert follow_up(CASES["knuckle"], "blah blah", mode="rules").kind == "unclear"
 
 
+def test_margin_request_lowers_utilisation():
+    before = REGISTRY["knuckle"].design(load_n=50_000, design_factor=1.0)
+    r = follow_up(Spec(joint="knuckle", load_n=50_000, design_factor=1.0), "add more margin", mode="rules")
+    assert r.kind == "change" and r.spec.design_factor > 1
+    after = REGISTRY["knuckle"].design(**r.spec.design_kwargs())
+    worst = lambda d: max(c.stress_mpa / c.allowable_mpa for c in d.checks)
+    assert worst(after) < worst(before) - 0.1
+
+
+def test_too_small_bolt_says_what_to_use_instead():
+    d = REGISTRY["nut_bolt"].design(load_n=80_000, bolt_size=12)
+    assert not d.all_passed
+    assert any("too small" in n and ("M36" in n or "bolts" in n) for n in d.notes), d.notes
+
+
 def test_optimise_picks_a_passing_material_with_nothing_lighter():
     rows = [r for r in compare(CASES["cotter"]) if r.get("ok")]
     r = follow_up(CASES["cotter"], "make it lighter", mode="rules")
@@ -75,4 +95,4 @@ def test_optimise_picks_a_passing_material_with_nothing_lighter():
 def test_cheapest_uses_cost_not_mass():
     rows = [r for r in compare(CASES["cotter"]) if r.get("ok")]
     r = follow_up(CASES["cotter"], "cheapest material please", mode="rules")
-    assert min(rows, key=lambda x: x["cost_index"])["material"] in r.message
+    assert min(rows, key=lambda x: x["cost_inr"])["material"] in r.message

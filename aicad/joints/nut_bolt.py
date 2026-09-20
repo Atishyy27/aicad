@@ -8,7 +8,8 @@ from __future__ import annotations
 
 import math
 
-from ..design import Check, Design, check_positive, load_data, stresses_from, times
+from ..design import (DEFAULT_DESIGN_FACTOR, Check, Design, check_positive, load_data, sizing_load,
+                      stresses_from, times)
 
 NAME = "nut_bolt"
 TITLE = "Hex bolt, nut and washer"
@@ -38,13 +39,15 @@ def _size_key(n: int) -> str:
     return f"M{n}"
 
 
-def design(load_n=None, bolt_size=None, grip_mm=None, tension_mpa=None, shear_mpa=None, crushing_mpa=None, **_ignored) -> Design:
+def design(load_n=None, bolt_size=None, grip_mm=None, tension_mpa=None, shear_mpa=None, crushing_mpa=None, design_factor=None, **_ignored) -> Design:
     if load_n is None and bolt_size is None:
         raise ValueError("give a load or a bolt size like M12")
     check_positive(load_n, grip=grip_mm)
     s = stresses_from(DATA, tension_mpa, shear_mpa, crushing_mpa)
     table = DATA["sizes"]
+    factor = float(design_factor if design_factor is not None else DEFAULT_DESIGN_FACTOR)
     P = load_n
+    Pd = sizing_load(P, factor)
     raw, notes = {}, []
 
     if bolt_size is not None:
@@ -53,7 +56,7 @@ def design(load_n=None, bolt_size=None, grip_mm=None, tension_mpa=None, shear_mp
             raise ValueError(f"{key} is not in the table ({', '.join(table)})")
         how = "given by user"
     else:
-        raw["stress_area_needed"] = P / s["tension"]
+        raw["stress_area_needed"] = Pd / s["tension"]
         key = next((k for k, v in table.items() if v["stress_area"] >= raw["stress_area_needed"] - 1e-9), None)
         if key is None:
             biggest = list(table)[-1]
@@ -82,9 +85,23 @@ def design(load_n=None, bolt_size=None, grip_mm=None, tension_mpa=None, shear_mp
         checks = _checks(P, dims, s)
         notes.append("Nut thread stripping is not checked yet.")
 
+    if P is not None and bolt_size is not None and any(not c.passed for c in checks):
+        need = Pd / s["tension"]
+        fits = next((k for k, v in table.items() if v["stress_area"] >= need), None)
+        worst = max(c.stress_mpa / c.allowable_mpa for c in checks)
+        if fits:
+            notes.insert(0, f"{key} is too small for this load: the busiest check is {worst:.1f} times its "
+                            f"allowed stress. {fits} would carry it, or split the load over "
+                            f"{math.ceil(need / row['stress_area'])} x {key}.")
+        else:
+            n_needed = math.ceil(need / table[list(table)[-1]]['stress_area'])
+            notes.insert(0, f"{key} is far too small for this load ({worst:.1f} times its allowed stress) and "
+                            f"even {list(table)[-1]} cannot carry it alone: use at least {n_needed} bolts.")
+    if factor > 1 and P is not None and bolt_size is None:
+        notes.insert(0, f"Sized for {factor:g} x the given load ({Pd:,.0f} N), then checked at {P:,.0f} N.")
     return Design(
-        joint=NAME, load_n=P, stresses=s, dims=dims, rules=rules, checks=checks,
-        notes=notes, verified_against_book=DATA["verified_against_book"], raw=raw,
+        joint=NAME, load_n=P, stresses=s, dims=dims, rules=rules, checks=checks, notes=notes,
+        design_factor=factor, verified_against_book=DATA["verified_against_book"], raw=raw,
     )
 
 

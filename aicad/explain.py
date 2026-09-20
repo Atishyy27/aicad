@@ -131,13 +131,28 @@ def utilisation(design: Design, joint) -> dict:
     return out
 
 
+LOW, HIGH = 0.80, 0.95   # the allowable stress already carries a safety factor
+
+
 def utilisation_colour(u: float | None) -> tuple[float, float, float]:
-    """green (low) -> yellow (0.75) -> red (1.0 and above); grey when not checked."""
+    """green below 60 % of the allowed stress, amber to 85 %, red above. Grey when not checked."""
     if u is None:
-        return (0.6, 0.6, 0.6)
+        return (0.62, 0.64, 0.68)
     u = max(0.0, min(u, 1.0))
-    if u <= 0.75:
-        f = u / 0.75
-        return (0.15 + 0.8 * f, 0.7, 0.2)
-    f = (u - 0.75) / 0.25
-    return (0.95, 0.7 * (1 - f) + 0.1 * f, 0.2 * (1 - f))
+    if u <= LOW:
+        return (0.18, 0.66, 0.31)
+    if u <= HIGH:
+        f = (u - LOW) / (HIGH - LOW)
+        return (0.18 + 0.75 * f, 0.66 + 0.06 * f, 0.31 - 0.18 * f)
+    f = min(1.0, (u - HIGH) / (1 - HIGH))
+    return (0.93, 0.72 * (1 - f) + 0.15 * f, 0.13)
+
+
+def utilisation_words(u: float | None) -> str:
+    if u is None:
+        return "no check covers this part"
+    if u <= LOW:
+        return f"{100 * u:.0f}% of its allowed stress, comfortable"
+    if u <= HIGH:
+        return f"{100 * u:.0f}% of its allowed stress, working hard"
+    return f"{100 * u:.0f}% of its allowed stress, at the limit: this part decides the whole design"

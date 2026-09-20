@@ -8,7 +8,8 @@ from __future__ import annotations
 
 import math
 
-from ..design import Check, Design, ceil_mm, check_positive, load_data, next_preferred, stresses_from, times
+from ..design import (DEFAULT_DESIGN_FACTOR, Check, Design, ceil_mm, check_positive, load_data,
+                      next_preferred, sizing_load, stresses_from, times)
 
 NAME = "sleeve_and_cotter"
 TITLE = "Sleeve and cotter joint"
@@ -67,18 +68,20 @@ def _keep_walls(dm):
     dm["d1"] = max(dm["d1"], dm["d2"] + 6)
 
 
-def design(load_n=None, rod_diameter_mm=None, tension_mpa=None, shear_mpa=None, crushing_mpa=None, **_ignored) -> Design:
+def design(load_n=None, rod_diameter_mm=None, tension_mpa=None, shear_mpa=None, crushing_mpa=None, design_factor=None, **_ignored) -> Design:
     if load_n is None and rod_diameter_mm is None:
         raise ValueError("give a load or a rod diameter")
     check_positive(load_n, rod_diameter=rod_diameter_mm)
     s = stresses_from(DATA, tension_mpa, shear_mpa, crushing_mpa)
+    factor = float(design_factor if design_factor is not None else DEFAULT_DESIGN_FACTOR)
     P = load_n
+    Pd = sizing_load(P, factor)
     raw, notes = {}, []
 
     if rod_diameter_mm is not None:
         d = float(rod_diameter_mm)
     else:
-        raw["rod_tension"] = math.sqrt(4 * P / (math.pi * s["tension"]))
+        raw["rod_tension"] = math.sqrt(4 * Pd / (math.pi * s["tension"]))
         d = next_preferred(raw["rod_tension"], DATA["preferred_diameters_mm"])
 
     props = DATA["proportions"]
@@ -91,7 +94,7 @@ def design(load_n=None, rod_diameter_mm=None, tension_mpa=None, shear_mpa=None, 
     checks = []
     if P is not None:
         for _ in range(500):
-            checks = _checks(P, dm, s)
+            checks = _checks(Pd, dm, s)
             failing = [c for c in checks if not c.passed and c.name in _FIX]
             if not failing:
                 break
@@ -119,9 +122,14 @@ def design(load_n=None, rod_diameter_mm=None, tension_mpa=None, shear_mpa=None, 
     for key, p in props.items():
         rules[key] = f"{key} = {p['times']} x d, rounded up to whole mm ({p['meaning']}) [{p['source']}]"
 
+    if P is not None:
+        checks = _checks(P, dm, s)        # report at the real load
+        if factor > 1:
+            notes.insert(0, f"Sized for {factor:g} x the given load ({Pd:,.0f} N), then checked at {P:,.0f} N. "
+                            "That margin is why the checks sit below their limits.")
     return Design(
-        joint=NAME, load_n=P, stresses=s, dims=dm, rules=rules, checks=checks,
-        notes=notes, verified_against_book=DATA["verified_against_book"], raw=raw,
+        joint=NAME, load_n=P, stresses=s, dims=dm, rules=rules, checks=checks, notes=notes,
+        design_factor=factor, verified_against_book=DATA["verified_against_book"], raw=raw,
     )
 
 

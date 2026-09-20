@@ -62,6 +62,7 @@ def build(fields: dict, text: str, freecad: bool = True, out_root: Path = OUT_RO
 
     run_id = f"{joint.NAME}_{datetime.now():%Y%m%d-%H%M%S}_{uuid.uuid4().hex[:6]}"
     out = Path(out_root) / run_id
+    from .explain import explain_check, explain_dim, utilisation, utilisation_words
     from .export import export_all
     from .joints import parts_of
     names = parts_of(joint, design.dims)
@@ -90,10 +91,15 @@ def build(fields: dict, text: str, freecad: bool = True, out_root: Path = OUT_RO
         "title": joint.TITLE,
         "load_n": design.load_n,
         "duty": design.duty,
-        "dims": [{"key": k, "label": joint.LABELS.get(k, k), "value": v, "rule": design.rules.get(k, "")}
-                 for k, v in design.dims.items()],
+        "dims": [{"key": k, "label": joint.LABELS.get(k, k), "value": v, "rule": design.rules.get(k, ""),
+                  "why": explain_dim(design, joint, k)} for k, v in design.dims.items()],
         "checks": [{"name": c.name, "stress": round(c.stress_mpa, 1), "allowed": c.allowable_mpa,
-                    "formula": c.formula, "passed": c.passed} for c in design.checks],
+                    "formula": c.formula, "passed": c.passed, "working": explain_check(design, c)}
+                   for c in design.checks],
+        "weak_spots": [{"part": p, "used": None if u is None else round(100 * u), "check": c,
+                        "words": utilisation_words(u)}
+                       for p, (u, c) in utilisation(design, joint).items()],
+        "design_factor": design.design_factor,
         "notes": design.notes,
         "verified": design.verified_against_book,
         "sheet_scale": fc.get("sheet_scale") if fc else None,
@@ -221,10 +227,12 @@ def make_server(host="127.0.0.1", port=8765, out_root: Path = OUT_ROOT, freecad=
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(prog="aicad.web")
     ap.add_argument("--port", type=int, default=8765)
+    ap.add_argument("--host", default="127.0.0.1",
+                    help="127.0.0.1 keeps it on this computer; 0.0.0.0 is for a container")
     ap.add_argument("--no-freecad", action="store_true")
     args = ap.parse_args(argv)
-    srv = make_server(port=args.port, freecad=not args.no_freecad)
-    print(f"aicad web app on http://127.0.0.1:{args.port}  (Ctrl+C to stop)")
+    srv = make_server(host=args.host, port=args.port, freecad=not args.no_freecad)
+    print(f"aicad web app on http://{args.host}:{args.port}  (Ctrl+C to stop)")
     try:
         srv.serve_forever()
     except KeyboardInterrupt:
@@ -351,6 +359,7 @@ tr.bad td{background:color-mix(in srgb,var(--bad) 9%,transparent)}
     <button class="tab" data-tab="vsheet">Drawing</button>
     <button class="tab" data-tab="vdims">Dimensions</button>
     <button class="tab" data-tab="vchecks">Checks</button>
+    <button class="tab" data-tab="vweak">Weak spots</button>
     <button class="tab" data-tab="vfiles">Files</button>
   </div>
   <h2 id="rtitle" style="margin:0 0 2px;font-size:19px"></h2>
@@ -359,7 +368,8 @@ tr.bad td{background:color-mix(in srgb,var(--bad) 9%,transparent)}
   <div id="v3d"><iframe id="viewer"></iframe></div>
   <div id="vsheet" class="hidden"><div id="sheetBox"></div></div>
   <div id="vdims" class="hidden"><table id="dims"></table></div>
-  <div id="vchecks" class="hidden"><table id="checks"></table></div>
+  <div id="vchecks" class="hidden"><p class="muted" style="margin:0 0 8px">Every way this joint can fail, with the numbers put into each formula.</p><table id="checks"></table></div>
+  <div id="vweak" class="hidden"><p class="muted" style="margin:0 0 8px">How hard each part is working. Green below 80% of its allowed stress, amber to 95%, red above. The allowed stress already includes a safety factor. Grey means no check covers that part.</p><table id="weak"></table></div>
   <div id="vfiles" class="hidden"><div class="files" id="files"></div></div>
   <div id="rnotes"></div>
 </section>
@@ -368,7 +378,7 @@ tr.bad td{background:color-mix(in srgb,var(--bad) 9%,transparent)}
   <div class="step"><b>4</b> ask or change</div>
   <div class="thread" id="thread"></div>
   <div class="row">
-    <input id="ask" placeholder="make it 80 kN  /  why is the pin 45 mm  /  how much load can this take  /  make it lighter">
+    <input id="ask" placeholder="make it 80 kN / why is the pin 45 mm / how much load can this take / add more margin / make it lighter">
     <button id="askBtn">Send</button>
   </div>
 </section>
@@ -383,7 +393,7 @@ $("chips").innerHTML=EXAMPLES.map(e=>`<button class="chip">${esc(e)}</button>`).
 $("chips").onclick=e=>{if(e.target.classList.contains("chip")){$("text").value=e.target.textContent;$("go").click();}};
 document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{
   document.querySelectorAll(".tab").forEach(x=>x.setAttribute("aria-selected",x===t));
-  ["v3d","vsheet","vdims","vchecks","vfiles"].forEach(id=>$(id).classList.toggle("hidden",id!==t.dataset.tab));
+  ["v3d","vsheet","vdims","vchecks","vweak","vfiles"].forEach(id=>$(id).classList.toggle("hidden",id!==t.dataset.tab));
 });
 async function post(u,b){const r=await fetch(u,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(b)});return r.json();}
 function showFields(){
@@ -463,27 +473,39 @@ $("build").onclick=async()=>{
 };
 function render(r){
   $("rtitle").textContent=r.title;
-  $("rsub").textContent=(r.duty||"")+(r.verified?"":" · rules not yet checked against the design book");
+  $("rsub").textContent=(r.duty||"")
+    +((r.design_factor||1)>1?` · sized for ${r.design_factor}x that, then checked at the real load`:"")
+    +(r.verified?"":" · rules not yet checked against the design book");
   const worst=(r.checks||[]).reduce((a,c)=>Math.max(a,c.stress/c.allowed),0);
   $("kpi").innerHTML=[
     ["parts",Object.keys(r.files).filter(k=>k.startsWith("part_")).length],
     ["checks",(r.checks||[]).length+" run, "+(r.checks||[]).filter(c=>c.passed).length+" pass"],
     ["closest to its limit",worst?Math.round(worst*100)+"%":"-"],
     ["sheet",r.sheet_scale?("scale "+r.sheet_scale+", first angle"):"not made"],
+    ["design factor",(r.design_factor||1)+"x"],
   ].map(([k,v])=>`<div>${k}<b>${esc(v)}</b></div>`).join("");
   $("viewer").src=r.files.viewer;
   $("sheetBox").innerHTML=r.files.drawing
     ?`<a href="${r.files.drawing}" target="_blank"><img class="sheet" src="${r.files.drawing}" alt="drawing sheet"></a>`
     :`<p class="muted">No sheet: ${esc(r.freecad_reason)}. Install FreeCAD to get one.</p>`;
-  $("dims").innerHTML="<tr><th>symbol</th><th>meaning</th><th>mm</th></tr>"+
-    r.dims.map(d=>`<tr><td>${esc(d.key)}</td><td class="muted">${esc(d.label)}</td><td class="num">${d.value}</td></tr>`).join("");
+  $("dims").innerHTML="<tr><th>symbol</th><th>meaning</th><th>mm</th><th></th></tr>"+
+    r.dims.map((d,i)=>`<tr><td>${esc(d.key)}</td><td class="muted">${esc(d.label)}</td><td class="num">${d.value}</td>
+      <td><button class="chip" onclick="why(${i})">why?</button></td></tr>
+      <tr id="why${i}" class="hidden"><td colspan="4" class="muted" style="padding-bottom:12px">${esc(d.why)}</td></tr>`).join("");
+  window.why=i=>{const n=$("why"+i);n.classList.toggle("hidden");};
   $("checks").innerHTML=(r.checks||[]).length
     ?"<tr><th>check</th><th>stress</th><th>allowed</th><th>used</th><th></th></tr>"+r.checks.map(c=>{
-      const u=Math.min(1,c.stress/c.allowed), col=u>.9?"var(--bad)":u>.75?"var(--warn)":"var(--ok)";
+      const u=Math.min(1,c.stress/c.allowed), col=u>.95?"var(--bad)":u>.8?"var(--warn)":"var(--ok)";
       return `<tr class="${c.passed?"":"bad"}"><td>${esc(c.name)}</td><td class="num">${c.stress}</td><td class="num">${c.allowed}</td>
       <td><div class="bar"><i style="width:${Math.round(u*100)}%;background:${col}"></i></div></td>
-      <td class="${c.passed?"pass":"fail"}">${c.passed?"pass":"FAIL"}</td></tr>`;}).join("")
+      <td class="${c.passed?"pass":"fail"}">${c.passed?"pass":"FAIL"}</td></tr>
+      <tr><td colspan="5" class="muted" style="font-size:13px;padding-top:0">${esc(c.working||c.formula)}</td></tr>`;}).join("")
     :'<tr><td class="muted">No load given, so no checks.</td></tr>';
+  $("weak").innerHTML="<tr><th>part</th><th>hardest check on it</th><th>how hard it works</th><th></th></tr>"+
+    (r.weak_spots||[]).map(w=>{
+      const u=(w.used??0)/100, col=u>0.95?"var(--bad)":u>0.8?"var(--warn)":"var(--ok)";
+      return `<tr><td>${esc(w.part)}</td><td class="muted">${esc(w.check||"-")}</td><td>${esc(w.words)}</td>
+      <td><div class="bar"><i style="width:${w.used??0}%;background:${w.used==null?"var(--line)":col}"></i></div></td></tr>`;}).join("");
   const names={viewer:"3D viewer",assembly_step:"assembly.step",drawing:"drawing.svg",fcstd:"FreeCAD file",dxf:"drawing.dxf",report:"report.md"};
   $("files").innerHTML=Object.entries(r.files).map(([k,u])=>
     `<a href="${u}" ${k==="viewer"||k==="drawing"?'target="_blank"':"download"}>${esc(names[k]||k.replace("part_","")+".step")}</a>`).join("");

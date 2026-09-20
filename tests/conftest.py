@@ -23,7 +23,7 @@ SWEEP = {
     "knuckle": [{"load_n": kn * 1000} for kn in (1, 2, 5, 10, 20, 50, 100, 150, 200, 300)],
     "cotter": [{"load_n": kn * 1000} for kn in (1, 2, 5, 10, 20, 50, 100, 150, 200, 300)],
     "sleeve_and_cotter": [{"load_n": kn * 1000} for kn in (1, 2, 5, 10, 20, 50, 100, 150, 200, 300)],
-    "nut_bolt": [{"load_n": kn * 1000} for kn in (1, 2, 5, 10, 20, 40, 60)],
+    "nut_bolt": [{"load_n": kn * 1000} for kn in (1, 2, 5, 10, 20, 40, 50)],
     "flange_coupling": [{"torque_nm": nm} for nm in (50, 100, 250, 500, 1000, 2000, 3000, 5000)],
 }
 

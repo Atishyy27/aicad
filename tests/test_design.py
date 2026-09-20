@@ -11,14 +11,14 @@ LOADS_KN = [1, 2, 5, 10, 20, 50, 100, 150, 200, 300]
 # ---------------------------------------------------------------- knuckle
 
 def test_knuckle_50kn_rod_from_tension():
-    r = knuckle.design(load_n=50_000)
+    r = knuckle.design(load_n=50_000, design_factor=1.0)
     assert r.raw["rod_tension"] == pytest.approx(math.sqrt(4 * 50_000 / (math.pi * 75)))
     assert r.raw["rod_tension"] == pytest.approx(29.13, abs=0.01)
     assert r.dims["D"] == 30
 
 
 def test_knuckle_50kn_pin_is_raised_for_bending():
-    r = knuckle.design(load_n=50_000)
+    r = knuckle.design(load_n=50_000, design_factor=1.0)
     # sigma_b = 16P(0.75/3 + 1.25/4)/(pi d^2) <= 75  ->  d >= 43.70 -> preferred 45
     assert r.raw["pin_bending"] == pytest.approx(43.70, abs=0.01)
     assert r.dims["d"] == 45
@@ -28,7 +28,7 @@ def test_knuckle_50kn_pin_is_raised_for_bending():
 
 
 def test_knuckle_check_only_mode_keeps_pin_equal_to_rod_and_reports_bending_fail():
-    r = knuckle.design(load_n=50_000, bending_mode="check_only")
+    r = knuckle.design(load_n=50_000, bending_mode="check_only", design_factor=1.0)
     assert r.dims["d"] == 30
     bending = next(c for c in r.checks if c.name == "pin bending")
     assert not bending.passed
@@ -36,7 +36,7 @@ def test_knuckle_check_only_mode_keeps_pin_equal_to_rod_and_reports_bending_fail
 
 
 def test_knuckle_low_shear_stress_makes_shear_govern_over_rod():
-    r = knuckle.design(load_n=50_000, shear_mpa=20, bending_mode="check_only")
+    r = knuckle.design(load_n=50_000, shear_mpa=20, bending_mode="check_only", design_factor=1.0)
     assert r.dims["D"] == 30 and r.dims["d"] == 40
 
 
@@ -53,7 +53,7 @@ def test_knuckle_given_small_rod_fails_rod_tension():
 # ---------------------------------------------------------------- cotter
 
 def test_cotter_50kn_rod_and_proportions():
-    r = cotter.design(load_n=50_000)
+    r = cotter.design(load_n=50_000, design_factor=1.0)
     assert r.dims["d"] == 30
     # proportions are rounded up to whole mm before any adjustment
     assert r.dims["b"] >= math.ceil(1.6 * 30)
@@ -76,7 +76,7 @@ def test_cotter_adjustments_are_explained():
 # ---------------------------------------------------------------- nut bolt
 
 def test_bolt_size_from_load_is_smallest_that_passes():
-    r = nut_bolt.design(load_n=20_000)
+    r = nut_bolt.design(load_n=20_000, design_factor=1.0)
     # needs 20000/80 = 250 mm^2; M20 has 245 (too small), M24 has 353
     assert r.raw["stress_area_needed"] == pytest.approx(250)
     assert r.dims["d"] == 24
@@ -127,3 +127,31 @@ def test_nothing_given_is_rejected(name):
 def test_unverified_flag_is_carried(name):
     r = REGISTRY[name].design(**SIZING[name])
     assert r.verified_against_book is False
+
+
+# ---------------------------------------------------------------- design margin
+
+@pytest.mark.parametrize("name", list(REGISTRY))
+def test_margin_leaves_the_checks_below_their_limits(name):
+    """Without margin the tool sizes right up to the allowed stress, which is why every part
+    looked red. The default 1.25 factor sizes for a bigger load and reports at the real one."""
+    from conftest import SIZING
+    tight = REGISTRY[name].design(**SIZING[name], design_factor=1.0)
+    safe = REGISTRY[name].design(**SIZING[name])
+    worst = lambda d: max((c.stress_mpa / c.allowable_mpa for c in d.checks), default=0)
+    assert safe.design_factor == 1.25
+    assert worst(safe) <= worst(tight) + 1e-9
+    assert worst(safe) <= 0.85 or name == "nut_bolt"   # bolts jump in standard steps
+    assert all(c.passed for c in safe.checks)
+
+
+def test_margin_is_explained_in_the_notes():
+    d = REGISTRY["knuckle"].design(load_n=50_000)
+    assert any("Sized for 1.25 x the given load" in n for n in d.notes)
+
+
+@pytest.mark.parametrize("factor", [1.0, 1.5, 2.0])
+def test_bigger_factor_means_bigger_parts(factor):
+    d = REGISTRY["knuckle"].design(load_n=50_000, design_factor=factor)
+    base = REGISTRY["knuckle"].design(load_n=50_000, design_factor=1.0)
+    assert d.dims["d"] >= base.dims["d"]

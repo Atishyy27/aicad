@@ -15,7 +15,7 @@ def test_torque_from_power_and_speed():
 
 
 def test_shaft_from_torsion_then_rounded_up():
-    d = J.design(torque_nm=500)
+    d = J.design(torque_nm=500, design_factor=1.0)
     raw = (16 * 500_000 / (math.pi * 60)) ** (1 / 3)
     assert d.raw["shaft_torsion"] == pytest.approx(raw)
     assert d.dims["d"] >= raw and d.dims["d"] in J.DATA["preferred_diameters_mm"]

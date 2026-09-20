@@ -60,6 +60,7 @@ class Spec:
     torque_nm: float | None = None
     power_kw: float | None = None
     speed_rpm: float | None = None
+    design_factor: float | None = None
     tension_mpa: float | None = None
     shear_mpa: float | None = None
     crushing_mpa: float | None = None
@@ -87,7 +88,7 @@ class Spec:
     def design_kwargs(self) -> dict:
         return {k: getattr(self, k) for k in (
             "load_n", "rod_diameter_mm", "bolt_size", "grip_mm", "torque_nm", "power_kw", "speed_rpm",
-            "tension_mpa", "shear_mpa", "crushing_mpa")}
+            "design_factor", "tension_mpa", "shear_mpa", "crushing_mpa")}
 
 
 def _to_newtons(value: float, unit: str) -> float:

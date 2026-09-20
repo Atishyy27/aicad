@@ -35,9 +35,9 @@ def compare(spec) -> list[dict]:
         vol = _volume_mm3(joint, d.dims)
         mass = vol * 1e-9 * m["density"]
         rows.append({
-            "material": m["name"], "ok": d.all_passed, "mass_kg": mass,
-            "cost_index": mass * m["cost"], "size": d.dims.get("D", d.dims.get("d")),
-            "spec": s,
+            "material": m["name"], "is_grade": m.get("is_grade", ""), "ok": d.all_passed, "mass_kg": mass,
+            "cost_inr": mass * m["rate_inr_per_kg"], "rate": m["rate_inr_per_kg"],
+            "size": d.dims.get("D", d.dims.get("d")), "spec": s,
         })
     return rows
 
@@ -48,12 +48,14 @@ def optimise(spec, text: str):
     rows = [r for r in compare(spec) if r.get("ok")]
     if not rows:
         return FollowUp("unclear", "No material in the table passes every check for this load.")
-    key = "cost_index" if goal == "cost" else "mass_kg"
+    key = "cost_inr" if goal == "cost" else "mass_kg"
     rows.sort(key=lambda r: r[key])
     best = rows[0]
-    table = "; ".join(f"{r['material']}: {r['mass_kg']:.2f} kg, cost index {r['cost_index']:.2f}" for r in rows)
+    table = "; ".join(f"{r['material']}: {r['mass_kg']:.2f} kg, Rs {r['cost_inr']:,.0f}" for r in rows)
     msg = (f"{'Cheapest' if goal == 'cost' else 'Lightest'} passing choice: {best['material']} "
-           f"({best['mass_kg']:.2f} kg, cost index {best['cost_index']:.2f}). All passing options: {table}. "
-           f"Material values are UNVERIFIED.")
+           f"({best['is_grade']}) at {best['mass_kg']:.2f} kg, material cost about Rs {best['cost_inr']:,.0f} "
+           f"at Rs {best['rate']:g}/kg. All passing options: {table}. "
+           f"Stresses and rates are UNVERIFIED.")
     return FollowUp("change", msg, spec=best["spec"],
-                    changes=[f"material: {best['material']}", f"goal: lowest {'cost' if goal == 'cost' else 'mass'}"])
+                    changes=[f"material: {best['material']} ({best['is_grade']})",
+                             f"goal: lowest {'cost' if goal == 'cost' else 'mass'}"])

@@ -8,7 +8,8 @@ from __future__ import annotations
 
 import math
 
-from ..design import Check, Design, ceil_mm, check_positive, load_data, next_preferred, stresses_from, times
+from ..design import (DEFAULT_DESIGN_FACTOR, Check, Design, ceil_mm, check_positive, load_data,
+                      next_preferred, sizing_load, stresses_from, times)
 
 NAME = "flange_coupling"
 TITLE = "Protected type rigid flange coupling"
@@ -75,12 +76,13 @@ def _checks(T, dm, s):
 
 
 def design(torque_nm=None, power_kw=None, speed_rpm=None, rod_diameter_mm=None, shaft_diameter_mm=None,
-           tension_mpa=None, shear_mpa=None, crushing_mpa=None, **_ignored) -> Design:
+           tension_mpa=None, shear_mpa=None, crushing_mpa=None, design_factor=None, **_ignored) -> Design:
     shaft_given = shaft_diameter_mm or rod_diameter_mm
     if torque_nm is None and not (power_kw and speed_rpm) and shaft_given is None:
         raise ValueError("give a torque, or power and speed, or a shaft diameter")
     check_positive(None, torque=torque_nm, power=power_kw, speed=speed_rpm, shaft=shaft_given)
     s = stresses_from(DATA, tension_mpa, shear_mpa, crushing_mpa)
+    factor = float(design_factor if design_factor is not None else DEFAULT_DESIGN_FACTOR)
     raw, notes = {}, []
 
     T = None
@@ -91,10 +93,11 @@ def design(torque_nm=None, power_kw=None, speed_rpm=None, rod_diameter_mm=None, 
         raw["torque_from_power"] = T
         notes.append(f"Torque from power and speed: T = 9.5493e6 x {power_kw:g} / {speed_rpm:g} = {T:,.0f} N mm.")
 
+    Td = sizing_load(T, factor)
     if shaft_given is not None:
         d = float(shaft_given)
     else:
-        raw["shaft_torsion"] = (16 * T / (math.pi * s["shear"])) ** (1 / 3)
+        raw["shaft_torsion"] = (16 * Td / (math.pi * s["shear"])) ** (1 / 3)
         d = next_preferred(raw["shaft_torsion"], DATA["preferred_diameters_mm"])
 
     p = DATA["proportions"]
@@ -117,11 +120,11 @@ def design(torque_nm=None, power_kw=None, speed_rpm=None, rod_diameter_mm=None, 
 
     checks = []
     if T is not None:
-        raw["bolt_from_shear"] = math.sqrt(8 * T / (math.pi * dm["n_bolts"] * DATA["bolt_stresses_mpa"]["shear"] * dm["Dp"]))
+        raw["bolt_from_shear"] = math.sqrt(8 * Td / (math.pi * dm["n_bolts"] * DATA["bolt_stresses_mpa"]["shear"] * dm["Dp"]))
         dm["d_bolt"] = float(next((b for b in BOLT_SIZES if b >= raw["bolt_from_shear"]), BOLT_SIZES[-1]))
         start = dict(dm)
         for _ in range(500):
-            checks = _checks(T, dm, s)
+            checks = _checks(Td, dm, s)
             failing = [c for c in checks if not c.passed]
             if not failing:
                 break
@@ -164,8 +167,13 @@ def design(torque_nm=None, power_kw=None, speed_rpm=None, rod_diameter_mm=None, 
         pr = p[prop]
         rules[key] = f"{key} = {pr['times']} x d, rounded up to whole mm ({pr['meaning']}) [{pr['source']}]"
 
-    return Design(joint=NAME, load_n=None, stresses=s, dims=dm, rules=rules, checks=checks,
-                  notes=notes, verified_against_book=DATA["verified_against_book"], raw=raw)
+    if T is not None:
+        checks = _checks(T, dm, s)        # report at the real torque
+        if factor > 1:
+            notes.insert(0, f"Sized for {factor:g} x the given torque ({Td:,.0f} N mm), then checked at "
+                            f"{T:,.0f} N mm. That margin is why the checks sit below their limits.")
+    return Design(joint=NAME, load_n=None, stresses=s, dims=dm, rules=rules, checks=checks, notes=notes,
+                  design_factor=factor, verified_against_book=DATA["verified_against_book"], raw=raw)
 
 
 def build_parts(dims: dict):

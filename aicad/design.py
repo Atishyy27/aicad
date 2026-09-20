@@ -34,6 +34,7 @@ class Design:
     rules: dict = field(default_factory=dict)
     checks: list[Check] = field(default_factory=list)
     notes: list[str] = field(default_factory=list)
+    design_factor: float = 1.0
     verified_against_book: bool = False
     raw: dict = field(default_factory=dict)
 
@@ -75,6 +76,17 @@ def stresses_from(data: dict, tension=None, shear=None, crushing=None) -> dict:
         "crushing": crushing or s["crushing"],
         "bending": tension or s.get("bending", s["tension"]),
     }
+
+
+DEFAULT_DESIGN_FACTOR = 1.25
+
+
+def sizing_load(value, design_factor):
+    """Size for a bigger load than asked for, then report the stresses at the real load.
+    A factor of 1.25 leaves the governing check at about 80 % of the allowed stress."""
+    if value is None:
+        return None
+    return value * max(1.0, float(design_factor or 1.0))
 
 
 def check_positive(load_n, **dims):

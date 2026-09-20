@@ -1,37 +1,145 @@
 {
-  "joint": "flange_coupling",
-  "title": "Protected type rigid flange coupling",
-  "parts_note": "two flanged hubs, one sunk key per shaft, and n bolts; the bolt count comes from the shaft size",
-  "verified_against_book": false,
-  "verify_note": "Proportions, the bolt-count rule and the key rule are from memory of Khurmi/Bhandari-style tables. Check each against the design book, fill in 'page', then set verified_against_book to true.",
-  "default_stresses_mpa": {
-    "tension": 75, "shear": 60, "crushing": 150,
-    "source": "textbook example values, UNVERIFIED", "page": null
+ "joint": "flange_coupling",
+ "title": "Protected type rigid flange coupling",
+ "parts_note": "two flanged hubs, one sunk key per shaft, and n bolts; the bolt count comes from the shaft size",
+ "verified_against_book": false,
+ "verify_note": "Proportions, the bolt-count rule and the key rule are from memory of Khurmi/Bhandari-style tables. Check each against the design book, fill in 'page', then set verified_against_book to true.",
+ "default_stresses_mpa": {
+  "tension": 75,
+  "shear": 60,
+  "crushing": 150,
+  "source": "textbook example values, UNVERIFIED",
+  "page": null
+ },
+ "bolt_stresses_mpa": {
+  "shear": 40,
+  "crushing": 100,
+  "source": "bolt material, usually weaker than the shaft, UNVERIFIED"
+ },
+ "key_stresses_mpa": {
+  "shear": 50,
+  "crushing": 120,
+  "source": "key material, UNVERIFIED"
+ },
+ "preferred_diameters_mm": [
+  16,
+  20,
+  25,
+  30,
+  32,
+  35,
+  40,
+  45,
+  50,
+  56,
+  60,
+  63,
+  70,
+  75,
+  80,
+  90,
+  100,
+  110,
+  125,
+  140,
+  160
+ ],
+ "proportions": {
+  "hub_diameter": {
+   "times": 2.0,
+   "meaning": "hub outside diameter",
+   "source": "empirical, UNVERIFIED",
+   "page": null
   },
-  "bolt_stresses_mpa": {"shear": 40, "crushing": 100, "source": "bolt material, usually weaker than the shaft, UNVERIFIED"},
-  "key_stresses_mpa": {"shear": 50, "crushing": 120, "source": "key material, UNVERIFIED"},
-  "preferred_diameters_mm": [16, 20, 25, 30, 32, 35, 40, 45, 50, 56, 60, 63, 70, 75, 80, 90, 100, 110, 125, 140, 160],
-  "proportions": {
-    "hub_diameter": {"times": 2.0, "meaning": "hub outside diameter", "source": "empirical, UNVERIFIED", "page": null},
-    "hub_length": {"times": 1.5, "meaning": "hub length", "source": "empirical, UNVERIFIED", "page": null},
-    "flange_thickness": {"times": 0.5, "meaning": "flange thickness", "source": "empirical, UNVERIFIED", "page": null},
-    "bolt_circle": {"times": 3.0, "meaning": "bolt circle diameter", "source": "empirical, UNVERIFIED", "page": null},
-    "flange_diameter": {"times": 4.0, "meaning": "flange outside diameter", "source": "empirical, UNVERIFIED", "page": null},
-    "rim_thickness": {"times": 0.25, "meaning": "protecting rim thickness", "source": "empirical, UNVERIFIED", "page": null},
-    "key_width": {"times": 0.25, "meaning": "sunk key width", "source": "w = d/4, UNVERIFIED", "page": null},
-    "key_thickness": {"times": 0.1667, "meaning": "sunk key thickness", "source": "t = d/6, UNVERIFIED", "page": null}
+  "hub_length": {
+   "times": 1.5,
+   "meaning": "hub length",
+   "source": "empirical, UNVERIFIED",
+   "page": null
   },
-  "bolt_count_rule": [
-    {"up_to_shaft_mm": 40, "bolts": 3},
-    {"up_to_shaft_mm": 100, "bolts": 4},
-    {"up_to_shaft_mm": 180, "bolts": 6}
-  ],
-  "modelling_choices": {
-    "rim_height": {"times": 0.5, "note": "how far the protecting rim stands proud, times d"},
-    "shaft_length": {"times": 1.5, "note": "shaft stub shown each side, times d"},
-    "bolt_head_across_flats": {"times": 1.6, "note": "times bolt diameter"},
-    "bolt_head_height": {"times": 0.7, "note": "times bolt diameter"},
-    "nut_height": {"times": 0.8, "note": "times bolt diameter"},
-    "clearance": {"times": 0.02, "min_mm": 0.5, "note": "fit clearance used when modelling"}
+  "flange_thickness": {
+   "times": 0.5,
+   "meaning": "flange thickness",
+   "source": "empirical, UNVERIFIED",
+   "page": null
+  },
+  "bolt_circle": {
+   "times": 3.0,
+   "meaning": "bolt circle diameter",
+   "source": "empirical, UNVERIFIED",
+   "page": null
+  },
+  "flange_diameter": {
+   "times": 4.0,
+   "meaning": "flange outside diameter",
+   "source": "empirical, UNVERIFIED",
+   "page": null
+  },
+  "rim_thickness": {
+   "times": 0.25,
+   "meaning": "protecting rim thickness",
+   "source": "empirical, UNVERIFIED",
+   "page": null
+  },
+  "key_width": {
+   "times": 0.25,
+   "meaning": "sunk key width",
+   "source": "w = d/4, UNVERIFIED",
+   "page": null
+  },
+  "key_thickness": {
+   "times": 0.1667,
+   "meaning": "sunk key thickness",
+   "source": "t = d/6, UNVERIFIED",
+   "page": null
   }
+ },
+ "bolt_count_rule": [
+  {
+   "up_to_shaft_mm": 40,
+   "bolts": 3
+  },
+  {
+   "up_to_shaft_mm": 100,
+   "bolts": 4
+  },
+  {
+   "up_to_shaft_mm": 180,
+   "bolts": 6
+  }
+ ],
+ "modelling_choices": {
+  "rim_height": {
+   "times": 0.5,
+   "note": "how far the protecting rim stands proud, times d"
+  },
+  "shaft_length": {
+   "times": 1.5,
+   "note": "shaft stub shown each side, times d"
+  },
+  "bolt_head_across_flats": {
+   "times": 1.6,
+   "note": "times bolt diameter"
+  },
+  "bolt_head_height": {
+   "times": 0.7,
+   "note": "times bolt diameter"
+  },
+  "nut_height": {
+   "times": 0.8,
+   "note": "times bolt diameter"
+  },
+  "clearance": {
+   "times": 0.02,
+   "min_mm": 0.5,
+   "note": "fit clearance used when modelling"
+  }
+ },
+ "indian_standards_to_check": [
+  "IS 2693: cast iron flange couplings (verify)",
+  "IS 2048: parallel keys and keyways",
+  "IS 1363 / IS 1364: bolts and nuts",
+  "SP 46: drawing practice"
+ ],
+ "units": "SI: mm, N, MPa. First angle projection (Indian practice, SP 46)."
 }
