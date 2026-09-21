@@ -84,6 +84,17 @@ def design(load_n=None, bolt_size=None, grip_mm=None, tension_mpa=None, shear_mp
     if P is not None:
         checks = _checks(P, dims, s)
         notes.append("Nut thread stripping is not checked yet.")
+        # NPTEL IIT Kharagpur, Design of Machine Elements I, module 4 lesson 4, section 4.4.1.1.
+        # The page prints the relation as "284 d kN", but its own worked example reads 56.8 kN
+        # for M20, so the constant is 2840 d newtons. Reported, not checked: tightening load
+        # depends on how the joint is actually made up.
+        p1 = 2840 * dims["d"]
+        notes.append(
+            f"Tightening: screwing the nut up leak-tight on a gasket puts about "
+            f"{p1:,.0f} N in this bolt before your load arrives, roughly "
+            f"{p1 / dims['stress_area']:.0f} MPa on its own (half that if it need not be "
+            f"leak-tight). The checks below ignore it, so use a torque wrench and a bolt "
+            f"grade that can take both.")
 
     if P is not None and bolt_size is not None and any(not c.passed for c in checks):
         need = Pd / s["tension"]

@@ -68,34 +68,52 @@ def design(
         raw["rod_tension"] = math.sqrt(4 * Pd / (math.pi * s["tension"]))
         D = next_preferred(raw["rod_tension"], sizes)
 
+    # every thickness comes from the ROD diameter (NPTEL IIT KGP M4L2 fig 4.2.3.1);
+    # the pin is sized separately and raised when shear or bending needs it
+    t_eye, t_fork = k_t * D, k_t1 * D
     d = props["pin_diameter_d"]["times"] * D
     governing = "pin = rod diameter"
     if P is not None:
         raw["pin_shear"] = math.sqrt(2 * Pd / (math.pi * s["shear"]))
         if raw["pin_shear"] > d + 1e-9:
             d, governing = next_preferred(raw["pin_shear"], sizes), "pin double shear"
-        # bending: M = P/2 (t1/3 + t/4) with t = k_t d, t1 = k_t1 d
-        # sigma_b = 32M/(pi d^3) = 16 P (k_t1/3 + k_t/4) / (pi d^2)
-        raw["pin_bending"] = math.sqrt(16 * Pd * (k_t1 / 3 + k_t / 4) / (math.pi * s["bending"]))
+        # sigma_b = 16 P (t1/3 + t/4) / (pi d^3), with t and t1 fixed by the rod diameter
+        raw["pin_bending"] = (16 * Pd * (t_fork / 3 + t_eye / 4) / (math.pi * s["bending"])) ** (1 / 3)
         if bending_mode == "size" and raw["pin_bending"] > d + 1e-9:
             d, governing = next_preferred(raw["pin_bending"], sizes), "pin bending"
             notes.append(
-                f"Pin raised to {d:g} mm for bending (needs {raw['pin_bending']:.1f} mm). "
-                "Set pin_bending.mode to 'check_only' in knuckle.json if your book only checks bending."
+                f"Pin raised to {d:g} mm for bending (needs {raw['pin_bending']:.1f} mm), the same step the "
+                "NPTEL worked problem takes. Set pin_bending.mode to 'check_only' to keep the pin equal to the rod."
             )
+
+    # the hole has to fit the final pin, so the eye and fork must grow with it. The NPTEL
+    # worked problem raises the pin for bending but then checks the eye against the original
+    # pin size; done that way its own eye-shear check fails, so we grow the eye instead.
+    d2 = props["eye_outer_diameter_d2"]["times"] * D
+    if P is not None and d > props["pin_diameter_d"]["times"] * D:
+        grown = False
+        for _ in range(400):
+            trial = dict(D=D, d=d, d2=d2, t=t_eye, t1=t_fork)
+            if all(c.passed for c in _checks(Pd, trial, s) if c.name.startswith(("eye", "fork"))):
+                break
+            d2 += 1
+            grown = True
+        if grown:
+            notes.append(f"Eye and fork outer diameter grown to {d2:g} mm because the bigger pin "
+                         "leaves less metal around the hole.")
 
     dims = {
         "D": D,
         "d": d,
-        "d2": props["eye_outer_diameter_d2"]["times"] * d,
-        "d3": props["head_collar_diameter_d3"]["times"] * d,
-        "t": k_t * d,
-        "t1": k_t1 * d,
-        "t2": props["head_thickness_t2"]["times"] * d,
+        "d2": d2,
+        "d3": props["head_collar_diameter_d3"]["times"] * D,
+        "t": t_eye,
+        "t1": t_fork,
+        "t2": props["head_thickness_t2"]["times"] * D,
     }
     m = DATA["modelling_choices"]
     dims["collar_t"] = times(m["collar_thickness"], d)
-    dims["taper_d"] = times(m["taper_pin_diameter"], d)
+    dims["taper_d"] = times(m["taper_pin_diameter"], D)
     dims["clearance"] = times(m["fork_clearance"], d)
     dims["fork_base"] = times(m["fork_base_length"], d)
     dims["rod_len"] = m["rod_length"]["times"] * dims["d2"]
@@ -103,7 +121,7 @@ def design(
 
     def rule(key, prop_key):
         p = props[prop_key]
-        return f"{key} = {p['times']} x d ({p['meaning']}) [{p['source']}]"
+        return f"{key} = {p['times']} x D, the rod diameter ({p['meaning']}) [{p['source']}]"
 
     rules = {
         "D": "given by user" if rod_diameter_mm is not None

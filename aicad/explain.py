@@ -71,7 +71,7 @@ def explain_dim(design: Design, joint, key: str) -> str:
         lines.append(f"Starts equal to the rod diameter, {design.dims['D']:g} mm.")
         lines.append(f"Double shear needs √(2P / (π τ)) = √(2 × {_fmt(P)} / (π × {s['shear']:g})) = "
                      f"{raw['pin_shear']:.2f} mm.")
-        lines.append(f"Bending needs √(16P (t1/3 + t/4 per mm of d) / (π σb)) = {raw['pin_bending']:.2f} mm.")
+        lines.append(f"Bending needs cube root(16P (t1/3 + t/4) / (π sigma_b)) = {raw['pin_bending']:.2f} mm.")
         lines.append(f"The largest requirement governs: {design.rules.get('d', '')}.")
     elif joint.NAME == "nut_bolt" and key == "d":
         lines.append(design.rules.get("d", ""))

@@ -164,6 +164,31 @@ run to publish it. Untested: there is no Docker on the development machine.
 
 ## Reference books
 
+### What has been checked against a book, and what has not
+
+| Joint | Source | State |
+|---|---|---|
+| Knuckle | NPTEL IIT Kharagpur, DME I, module 4 lesson 2 | proportions and all nine checks verified |
+| Socket and spigot cotter | NPTEL IIT Kharagpur, DME I, module 4 lesson 2 | proportions and all ten checks verified |
+| Hex bolt and nut | NPTEL IIT Kharagpur, DME I, module 4 lesson 4 | tightening load verified; size table still unverified |
+| Flange coupling | NPTEL IIT Kharagpur, DME I, module 4 lesson 1 | key checks verified; proportions unverified |
+| Sleeve and cotter | none held | unverified |
+
+The tool deliberately disagrees with the lesson in two places, both because the lesson's own
+answer fails its own check. `tests/test_book_problems.py` asserts each one.
+
+1. **Knuckle eye.** The lesson raises the pin from 40 to 55 mm for bending, then checks the eye
+   against the original 40 mm pin. With the real pin in the hole its eye-shear check reads
+   80 MPa against 65 allowed. This tool grows the eye outer diameter instead.
+2. **Cotter thickness.** The lesson checks crushing of the socket but not crushing between the
+   cotter and the spigot, which Khurmi does check. At the lesson's own answer that reads
+   167 MPa against 110 allowed, so this tool sizes the cotter thicker.
+
+One typo was also caught: the lesson prints the initial tightening load as `284 d kN`, but its
+own M20 example gives 56.8 kN, so the constant is `2840 d` newtons.
+
+### Adding your own
+
 Drop any mechanical-engineering book (PDF) into `reference/` and index it:
 
 ```

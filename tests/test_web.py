@@ -68,7 +68,7 @@ def test_files_outside_the_output_folder_are_not_served(server):
 def test_followup_limit_and_change(server):
     fields = {"joint": "knuckle", "load_n": 50000}
     r = _post(server, "/api/followup", {"fields": fields, "text": "how much load can this take", "parser": "rules"})
-    assert r["kind"] == "limit" and r["governing"] == "pin bending"
+    assert r["kind"] == "limit" and r["governing"] == "eye shear"
     r = _post(server, "/api/followup", {"fields": fields, "text": "make it 80 kN", "parser": "rules"})
     assert r["kind"] == "change" and r["fields"]["load_n"] == 80000
 

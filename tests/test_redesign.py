@@ -24,7 +24,9 @@ def test_max_load_is_exactly_the_limit(name):
 
 def test_limit_question_on_a_design():
     r = follow_up(CASES["knuckle"], "how much load can this take", mode="rules")
-    assert r.kind == "limit" and r.governing == "pin bending"
+    # eye shear binds first now: the eye is grown to the smallest size that passes, so it sits
+    # closest to its allowable of any check
+    assert r.kind == "limit" and r.governing == "eye shear"
     # the design carries more than the load it was sized for: that headroom is the design margin
     assert r.value > 50_000 and r.value < 50_000 * 1.6
 
@@ -44,7 +46,9 @@ def test_change_stress_only_changes_that_stress():
 
 
 def test_change_that_needs_no_new_sizes_says_so():
-    r = follow_up(CASES["knuckle"], "use shear 50 MPa", mode="rules")
+    # crushing is nowhere near governing on this joint, so lowering it changes nothing.
+    # shear would: it drives the eye, which is sized right down to its limit.
+    r = follow_up(CASES["knuckle"], "use crushing 120 MPa", mode="rules")
     assert "No dimension had to change" in r.message
 
 

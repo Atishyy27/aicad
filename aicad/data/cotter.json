@@ -6,8 +6,8 @@
   "socket",
   "cotter"
  ],
- "verified_against_book": false,
- "verify_note": "Proportions are from memory of Bhandari/Khurmi empirical rules. Check each against the book, fill 'page', then set verified_against_book to true.",
+ "verified_against_book": true,
+ "verify_note": "All ten failure checks and every empirical proportion confirmed against the NPTEL lesson. Naming differs from the lesson: their d3 is the socket collar (our d4) and their d4 is the rod collar (our d3); their l and l1 are our c and a.",
  "default_stresses_mpa": {
   "tension": 75,
   "shear": 60,
@@ -20,20 +20,20 @@
   8,
   10,
   12,
+  14,
   16,
+  18,
   20,
+  22,
   25,
   30,
-  32,
-  36,
+  35,
   40,
   45,
   50,
-  56,
+  55,
   60,
-  63,
   70,
-  75,
   80,
   90,
   100,
@@ -46,56 +46,56 @@
   "d1": {
    "times": 1.21,
    "meaning": "spigot diameter",
-   "source": "empirical, UNVERIFIED",
-   "page": null
+   "source": "NPTEL IIT KGP M4L2 empirical proportions",
+   "page": "lesson 2"
   },
   "d2": {
    "times": 1.75,
    "meaning": "socket outer diameter",
-   "source": "empirical, UNVERIFIED",
-   "page": null
+   "source": "NPTEL IIT KGP M4L2 empirical proportions",
+   "page": "lesson 2"
   },
   "d3": {
    "times": 1.5,
-   "meaning": "spigot collar diameter",
-   "source": "empirical, UNVERIFIED",
-   "page": null
+   "meaning": "spigot (rod) collar diameter",
+   "source": "NPTEL IIT KGP M4L2 empirical proportions",
+   "page": "lesson 2"
   },
   "d4": {
    "times": 2.4,
    "meaning": "socket collar diameter",
-   "source": "empirical, UNVERIFIED",
-   "page": null
+   "source": "NPTEL IIT KGP M4L2 empirical proportions",
+   "page": "lesson 2"
   },
   "a": {
    "times": 0.75,
-   "meaning": "spigot end beyond the slot",
-   "source": "empirical, UNVERIFIED",
-   "page": null
+   "meaning": "spigot end beyond the slot (their l1)",
+   "source": "NPTEL IIT KGP M4L2 empirical proportions",
+   "page": "lesson 2"
   },
   "c": {
    "times": 0.75,
-   "meaning": "socket end beyond the slot",
-   "source": "empirical, UNVERIFIED",
-   "page": null
+   "meaning": "socket end beyond the slot (their l)",
+   "source": "NPTEL IIT KGP M4L2 empirical proportions",
+   "page": "lesson 2"
   },
   "b": {
    "times": 1.6,
-   "meaning": "cotter width (along the rod)",
-   "source": "empirical, UNVERIFIED",
-   "page": null
+   "meaning": "cotter width",
+   "source": "NPTEL IIT KGP M4L2 empirical proportions",
+   "page": "lesson 2"
   },
   "t": {
    "times": 0.31,
    "meaning": "cotter thickness",
-   "source": "empirical, UNVERIFIED",
-   "page": null
+   "source": "NPTEL IIT KGP M4L2 empirical proportions",
+   "page": "lesson 2"
   },
   "t1": {
    "times": 0.45,
    "meaning": "spigot collar thickness",
-   "source": "empirical, UNVERIFIED",
-   "page": null
+   "source": "NPTEL IIT KGP M4L2 empirical proportions",
+   "page": "lesson 2"
   }
  },
  "modelling_choices": {
@@ -123,5 +123,8 @@
   "SP 46: engineering drawing practice",
   "IS 1570: steel designations"
  ],
- "units": "SI: mm, N, MPa. First angle projection (Indian practice, SP 46)."
+ "units": "SI: mm, N, MPa. First angle projection (Indian practice, SP 46).",
+ "verified_against": "NPTEL, IIT Kharagpur, Design of Machine Elements I, Module 4 Lesson 2 'Cotter and knuckle joint', sections 4.2.1 to 4.2.2 and worked problem Q.1. Downloaded 21 Sep 2026, kept in reference/.",
+ "cotter_taper_note": "The lesson gives the cotter taper as 1 in 24 on width; our model uses 1 in 32, a modelling choice.",
+ "departs_from_book": "The lesson checks crushing of the socket, (d3 - d1) t, but not crushing between the cotter and the spigot, d1 t, which Khurmi does check. At the lesson's own answer that reads 167 MPa against 110 allowed, so this tool sizes the cotter thicker. See tests/test_book_problems.py."
 }

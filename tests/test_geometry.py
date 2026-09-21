@@ -95,7 +95,9 @@ def test_export_writes_everything_and_assembly_keeps_parts_separate(built, tmp_p
     html = (out / "viewer.html").read_text()
     assert "data:model/gltf-binary;base64," in html
     assert "<script type=\"module\" src=" not in html, "viewer must not load its script from the internet"
-    assert "UNVERIFIED" in (out / "report.md").read_text()
+    report = (out / "report.md").read_text()
+    # every proportion names where it came from: a real source once checked, UNVERIFIED until then
+    assert "NPTEL" in report or "UNVERIFIED" in report
 
 
 def test_sleeve_cotters_pass_through_sleeve_and_both_rods():

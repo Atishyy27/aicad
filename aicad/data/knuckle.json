@@ -7,8 +7,8 @@
   "collar",
   "taper_pin"
  ],
- "verified_against_book": false,
- "verify_note": "Every value below is from memory of Khurmi-style textbook rules. Open the department's design book, check each line, fill in 'page', then set verified_against_book to true.",
+ "verified_against_book": true,
+ "verify_note": "Proportions and all nine failure checks confirmed against the NPTEL lesson above. Every thickness is a multiple of the ROD diameter; the pin is sized separately and raised when shear or bending needs it, exactly as the lesson's worked problem does.",
  "default_stresses_mpa": {
   "tension": 75,
   "shear": 60,
@@ -21,20 +21,20 @@
   8,
   10,
   12,
+  14,
   16,
+  18,
   20,
+  22,
   25,
   30,
-  32,
-  36,
+  35,
   40,
   45,
   50,
-  56,
+  55,
   60,
-  63,
   70,
-  75,
   80,
   90,
   100,
@@ -45,46 +45,46 @@
  ],
  "proportions": {
   "pin_diameter_d": {
-   "of": "rod_diameter_D",
+   "of": "D",
    "times": 1.0,
-   "meaning": "pin diameter equals rod diameter",
-   "source": "Khurmi-style, UNVERIFIED",
-   "page": null
+   "meaning": "pin diameter, before shear and bending raise it",
+   "source": "NPTEL IIT KGP M4L2 fig 4.2.3.1",
+   "page": "lesson 2"
   },
   "eye_outer_diameter_d2": {
-   "of": "d",
+   "of": "D",
    "times": 2.0,
    "meaning": "outer diameter of eye",
-   "source": "Khurmi-style, UNVERIFIED",
-   "page": null
+   "source": "NPTEL IIT KGP M4L2 fig 4.2.3.1",
+   "page": "lesson 2"
   },
   "head_collar_diameter_d3": {
-   "of": "d",
+   "of": "D",
    "times": 1.5,
    "meaning": "pin head and collar diameter",
-   "source": "Khurmi-style, UNVERIFIED",
-   "page": null
+   "source": "NPTEL IIT KGP M4L2 fig 4.2.3.1",
+   "page": "lesson 2"
   },
   "eye_thickness_t": {
-   "of": "d",
+   "of": "D",
    "times": 1.25,
    "meaning": "thickness of single eye",
-   "source": "Khurmi-style, UNVERIFIED",
-   "page": null
+   "source": "NPTEL IIT KGP M4L2 fig 4.2.3.1",
+   "page": "lesson 2"
   },
   "fork_thickness_t1": {
-   "of": "d",
+   "of": "D",
    "times": 0.75,
    "meaning": "thickness of each fork plate",
-   "source": "Khurmi-style, UNVERIFIED",
-   "page": null
+   "source": "NPTEL IIT KGP M4L2 fig 4.2.3.1",
+   "page": "lesson 2"
   },
   "head_thickness_t2": {
-   "of": "d",
+   "of": "D",
    "times": 0.5,
    "meaning": "thickness of pin head",
-   "source": "Khurmi-style, UNVERIFIED",
-   "page": null
+   "source": "NPTEL IIT KGP M4L2 fig 4.2.3.1",
+   "page": "lesson 2"
   }
  },
  "modelling_choices": {
@@ -95,10 +95,10 @@
    "note": "our choice, not a book value; min keeps the taper-pin hole inside the collar"
   },
   "taper_pin_diameter": {
-   "of": "d",
+   "of": "D",
    "times": 0.25,
    "min_mm": 3,
-   "note": "our choice, not a book value"
+   "note": "split pin mean diameter = 0.25 x rod diameter (NPTEL IIT KGP M4L2)"
   },
   "taper_ratio_on_diameter": 50,
   "fork_clearance": {
@@ -121,8 +121,8 @@
  "pin_bending": {
   "mode": "size",
   "modes_note": "'size' raises the pin diameter until bending passes; 'check_only' keeps d = D and just reports bending. Books differ: set this to match yours.",
-  "formula": "M = P/2 * (t1/3 + t/4), sigma_b = 32 M / (pi d^3)",
-  "source": "Khurmi/Bhandari-style, UNVERIFIED",
+  "formula": "sigma_b = 16P (t1/3 + t/4) / (pi d1^3), with t and t1 from the rod diameter",
+  "source": "NPTEL IIT KGP M4L2 section 4.2.3 check 3",
   "page": null,
   "allowable": "tension allowable used for bending, UNVERIFIED"
  },
@@ -131,5 +131,8 @@
   "SP 46: engineering drawing practice, first angle projection",
   "IS 1570: steel designations"
  ],
- "units": "SI: mm, N, MPa. First angle projection (Indian practice, SP 46)."
+ "units": "SI: mm, N, MPa. First angle projection (Indian practice, SP 46).",
+ "verified_against": "NPTEL, IIT Kharagpur, Design of Machine Elements I, Module 4 Lesson 2 'Cotter and knuckle joint', section 4.2.3 and worked problem Q.2. Downloaded 21 Sep 2026, kept in reference/.",
+ "preferred_sizes_source": "NPTEL IIT KGP M4L2 worked problem: 6-22 mm in 2 mm steps, 25-60 in 5, 60-110 in 10, 110-140 in 15, 140-160 in 20",
+ "departs_from_book": "The lesson raises the pin to 55 mm for bending but then checks the eye against the original 40 mm pin. With the raised pin in the hole its own eye-shear check reads 80 MPa against 65 allowed, so this tool grows the eye outer diameter instead of copying d2 = 2D. See tests/test_book_problems.py."
 }

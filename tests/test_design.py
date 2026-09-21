@@ -19,10 +19,13 @@ def test_knuckle_50kn_rod_from_tension():
 
 def test_knuckle_50kn_pin_is_raised_for_bending():
     r = knuckle.design(load_n=50_000, design_factor=1.0)
-    # sigma_b = 16P(0.75/3 + 1.25/4)/(pi d^2) <= 75  ->  d >= 43.70 -> preferred 45
-    assert r.raw["pin_bending"] == pytest.approx(43.70, abs=0.01)
-    assert r.dims["d"] == 45
-    assert r.dims["d2"] == 90 and r.dims["t"] == 56.25 and r.dims["t1"] == 33.75
+    # thicknesses come off the rod, not the pin (NPTEL M4L2): D = 30, t = 1.25 D, t1 = 0.75 D.
+    # sigma_b = 16 P (t1/3 + t/4) / (pi d^3) <= 75  ->  d >= 38.55 -> next preferred 40
+    assert r.raw["pin_bending"] == pytest.approx(38.55, abs=0.01)
+    assert r.dims["d"] == 40
+    assert r.dims["t"] == 37.5 and r.dims["t1"] == 22.5
+    # 2 D would be 60; the eye grows past it because the raised pin eats into the metal
+    assert r.dims["d2"] == 63
     assert "governed by pin bending" == r.rules["d"]
     assert any("bending" in n for n in r.notes)
 
@@ -124,9 +127,11 @@ def test_nothing_given_is_rejected(name):
 
 
 @pytest.mark.parametrize("name", list(REGISTRY))
-def test_unverified_flag_is_carried(name):
+def test_the_book_flag_matches_the_data_file(name):
+    """Knuckle and cotter were checked against NPTEL IIT Kharagpur, module 4 lesson 2.
+    The rest have no primary source held here and must still say so."""
     r = REGISTRY[name].design(**SIZING[name])
-    assert r.verified_against_book is False
+    assert r.verified_against_book is (name in {"knuckle", "cotter"})
 
 
 # ---------------------------------------------------------------- design margin
