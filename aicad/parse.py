@@ -56,6 +56,7 @@ class Spec:
     load_n: float | None = None
     rod_diameter_mm: float | None = None
     bolt_size: int | None = None
+    gibs: int | None = None
     grip_mm: float | None = None
     torque_nm: float | None = None
     power_kw: float | None = None
@@ -87,8 +88,8 @@ class Spec:
 
     def design_kwargs(self) -> dict:
         return {k: getattr(self, k) for k in (
-            "load_n", "rod_diameter_mm", "bolt_size", "grip_mm", "torque_nm", "power_kw", "speed_rpm",
-            "design_factor", "tension_mpa", "shear_mpa", "crushing_mpa")}
+            "load_n", "rod_diameter_mm", "bolt_size", "gibs", "grip_mm", "torque_nm", "power_kw",
+            "speed_rpm", "design_factor", "tension_mpa", "shear_mpa", "crushing_mpa")}
 
 
 def _to_newtons(value: float, unit: str) -> float:
@@ -117,6 +118,12 @@ def parse_rules(text: str) -> Spec:
     m = _BOLT.search(text)
     if m:
         spec.bolt_size = int(m.group(1))
+    if spec.joint == "gib_and_cotter":
+        # one gib is the default (Unwin fig 130); "double", "two gibs" or "2 gibs" gives fig 131
+        if re.search(r"\bdouble\b|\b(?:two|2)\s+gibs?\b", text, re.I):
+            spec.gibs = 2
+        elif re.search(r"\b(?:single|one|1)\s+gib\b", text, re.I):
+            spec.gibs = 1
     m = _TORQUE.search(text)
     if m:
         spec.torque_nm = float(m.group(1)) * (1000 if m.group(2).lower().startswith("kn") else 1)
@@ -153,12 +160,13 @@ _SYSTEM = (
     + _JOINT_MEANINGS +
     f"joint must be one of {JOINT_NAMES} or null. load_n is the axial load in newtons "
     "(convert kN x1000, tonnes x9806.65, kgf x9.80665). rod_diameter_mm is the rod diameter in mm. "
-    "bolt_size is the metric bolt number (M12 -> 12). grip_mm is the clamped thickness in mm. "
+    "bolt_size is the metric bolt number (M12 -> 12). gibs is 1 or 2, only for a gib and cotter "
+    "joint, 2 when the request says double or two gibs. grip_mm is the clamped thickness in mm. "
     "torque_nm is torque in newton metres, power_kw in kilowatts, speed_rpm in revolutions per minute. "
     "tension_mpa, shear_mpa, crushing_mpa are allowable stresses in MPa. "
     "Use null for anything not stated. Never invent a number."
 )
-_FIELDS = ["joint", "load_n", "rod_diameter_mm", "bolt_size", "grip_mm", "torque_nm", "power_kw", "speed_rpm",
+_FIELDS = ["joint", "load_n", "rod_diameter_mm", "bolt_size", "gibs", "grip_mm", "torque_nm", "power_kw", "speed_rpm",
            "tension_mpa", "shear_mpa", "crushing_mpa"]
 _SCHEMA = {
     "type": "object",
@@ -200,11 +208,20 @@ def spec_from_ai_json(raw: dict, text: str, source: str) -> Spec:
         if v <= 0:
             spec.notes.append(f"AI gave non-positive {key}={v:g}; dropped")
             continue
+        if key == "gibs":
+            # not a dimension: a two-valued choice, usually written in words ("double", "two
+            # gibs"), so the digit-matching guard below would throw away a correct answer.
+            # Nothing can be fabricated here beyond 1 or 2, and anything else is dropped.
+            if v not in (1, 2):
+                spec.notes.append(f"AI gave gibs={v:g}; a gib and cotter joint has one or two, dropped")
+                continue
+            spec.gibs = int(v)
+            continue
         factors = _LOAD_FACTORS if key == "load_n" else (_PLAIN_FACTORS if key in ("torque_nm", "power_kw") else (1,))
         if not _traceable(v, text, factors):
             spec.notes.append(f"AI gave {key}={v:g}, which is not in the request; dropped")
             continue
-        setattr(spec, key, int(v) if key == "bolt_size" else v)
+        setattr(spec, key, int(v) if key in ("bolt_size", "gibs") else v)
     return spec
 
 
@@ -300,7 +317,7 @@ def parse_ai(text: str, backend: str, timeout: float = 45, runner=subprocess.run
     return spec_from_ai_json(raw, text, source=backend)
 
 
-_MERGE_FIELDS = ["joint", "load_n", "rod_diameter_mm", "bolt_size", "grip_mm", "torque_nm", "power_kw", "speed_rpm",
+_MERGE_FIELDS = ["joint", "load_n", "rod_diameter_mm", "bolt_size", "gibs", "grip_mm", "torque_nm", "power_kw", "speed_rpm",
            "tension_mpa", "shear_mpa", "crushing_mpa"]
 
 

@@ -167,3 +167,17 @@ def test_half_a_tonne_is_traceable():
 def test_hindi_number_words_are_no_longer_accepted():
     s = spec_from_ai_json({"joint": "knuckle", "load_n": 19613.3}, "do tonne ka knuckle joint", "x")
     assert s.load_n is None
+
+
+def test_gib_count_is_read_from_words_not_digits():
+    """The count is written in words, so the digit-matching guard must not eat it."""
+    from aicad.parse import parse_rules, spec_from_ai_json
+    assert parse_rules("double gib and cotter joint for 50 kN").gibs == 2
+    assert parse_rules("gib and cotter joint with two gibs for 50 kN").gibs == 2
+    assert parse_rules("gib and cotter joint for 50 kN").gibs is None      # default, decided later
+    ai = spec_from_ai_json({"joint": "gib_and_cotter", "gibs": 2, "load_n": 50000},
+                           "double gib and cotter joint for 50 kN", source="test")
+    assert ai.gibs == 2
+    bad = spec_from_ai_json({"joint": "gib_and_cotter", "gibs": 7, "load_n": 50000},
+                            "gib and cotter joint for 50 kN", source="test")
+    assert bad.gibs is None and any("one or two" in n for n in bad.notes)
