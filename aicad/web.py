@@ -388,7 +388,8 @@ const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 let joints={}, lastText="", lastFields=null;
 const EXAMPLES=["knuckle joint for 50 kN","socket and spigot joint for 35 kN","sleeve and cotter joint for 50 kN",
-  "M16 nut bolt, plates 30 mm thick, load 20 kN","flange coupling to transmit 20 kW at 1440 rpm"];
+  "gib and cotter joint for 50 kN","M16 nut bolt, plates 30 mm thick, load 20 kN",
+  "flange coupling to transmit 20 kW at 1440 rpm"];
 $("chips").innerHTML=EXAMPLES.map(e=>`<button class="chip">${esc(e)}</button>`).join("");
 $("chips").onclick=e=>{if(e.target.classList.contains("chip")){$("text").value=e.target.textContent;$("go").click();}};
 document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{

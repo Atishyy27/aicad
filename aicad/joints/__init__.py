@@ -1,9 +1,10 @@
 """Registry of joints the tool can build. Add a module here to add a joint."""
 from __future__ import annotations
 
-from . import cotter, flange_coupling, knuckle, nut_bolt, sleeve_and_cotter
+from . import cotter, flange_coupling, gib_and_cotter, knuckle, nut_bolt, sleeve_and_cotter
 
-REGISTRY = {m.NAME: m for m in (knuckle, cotter, sleeve_and_cotter, nut_bolt, flange_coupling)}
+REGISTRY = {m.NAME: m for m in (knuckle, cotter, sleeve_and_cotter, gib_and_cotter, nut_bolt,
+                                flange_coupling)}
 
 
 def parts_of(joint, dims) -> list[str]:

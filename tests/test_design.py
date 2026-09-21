@@ -128,10 +128,11 @@ def test_nothing_given_is_rejected(name):
 
 @pytest.mark.parametrize("name", list(REGISTRY))
 def test_the_book_flag_matches_the_data_file(name):
-    """Knuckle and cotter were checked against NPTEL IIT Kharagpur, module 4 lesson 2.
-    The rest have no primary source held here and must still say so."""
+    """Knuckle and cotter were checked against NPTEL IIT Kharagpur module 4 lesson 2,
+    gib and cotter against Unwin 1899 page 179. The rest have no primary source held
+    here and must still say so."""
     r = REGISTRY[name].design(**SIZING[name])
-    assert r.verified_against_book is (name in {"knuckle", "cotter"})
+    assert r.verified_against_book is (name in {"knuckle", "cotter", "gib_and_cotter"})
 
 
 # ---------------------------------------------------------------- design margin

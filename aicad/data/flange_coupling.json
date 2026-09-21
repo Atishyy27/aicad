@@ -141,5 +141,7 @@
   "IS 1363 / IS 1364: bolts and nuts",
   "SP 46: drawing practice"
  ],
- "units": "SI: mm, N, MPa. First angle projection (Indian practice, SP 46)."
+ "units": "SI: mm, N, MPa. First angle projection (Indian practice, SP 46).",
+ "books_searched": "Unwin 1899 page 234 does give a flange coupling table (n = 3 + 0.5 d, bolt diameter = 0.62 d / sqrt(n), a = 1.5 x bolt, c = 1.25 x bolt, b = 0.25 d + 0.125, t = b/2) but it is an 1899 design in inches, with an absolute term in b, and it is not the protected type this tool builds. It was read and rejected, not skipped. NPTEL Design of Machine Elements I (course 112105125) has no couplings module: its modules are 4 joints, 7 springs, 8 shafts, 10 permanent joints, 11 joints for special loading, 12 brakes. Do not search that course again.",
+ "verified_parts": "The two key checks ARE verified: NPTEL module 4 lesson 1 gives shear over the whole key and bearing over HALF the key thickness, which is what key_shear and key_crushing do. The empirical proportions below are what remain unverified."
 }

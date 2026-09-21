@@ -103,5 +103,6 @@
   "SP 46: engineering drawing practice",
   "IS 1570: steel designations"
  ],
- "units": "SI: mm, N, MPa. First angle projection (Indian practice, SP 46)."
+ "units": "SI: mm, N, MPa. First angle projection (Indian practice, SP 46).",
+ "books_searched": "Searched in full and found nothing for this joint: NPTEL IIT Kharagpur Design of Machine Elements I module 4, all four lessons (lesson 2 covers the socket-and-spigot cotter and the knuckle only, zero occurrences of 'sleeve'), and Unwin 1899, whose sleeve and muff couplings on pages 231 to 236 are held by keys, not cotters. Scope of that negative: those two sources only. The proportions here stay unverified until a book that covers this joint is in reference/."
 }

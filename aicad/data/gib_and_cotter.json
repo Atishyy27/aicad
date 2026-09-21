@@ -1,0 +1,107 @@
+{
+ "joint": "gib_and_cotter",
+ "title": "Gib and cotter joint",
+ "parts_note": "a round rod with a square end, a strap that wraps it, and the cotter split into a tapered cotter plus one or two hooked gibs",
+ "verified_against_book": true,
+ "verified_against": "Unwin, Elements of Machine Design, 1899, page 179 figures 130 and 131 (gib and cotter proportions, unit = the breadth b) and page 178 figure 127 (simple cottered joint). Out of copyright, from archive.org, kept in reference/. The strength checks are the socket-and-spigot check set from NPTEL IIT Kharagpur module 4 lesson 2, carried across to a square section: see check_source below.",
+ "check_source": "Every check is the matching socket-and-spigot cotter check with the circular area replaced by the square one: pi/4 d^2 becomes B^2, (d2 - d1) becomes (Bo - B). The cotter joint those formulas came from is verified against NPTEL module 4 lesson 2 and tested in tests/test_book_problems.py. Nothing here is an invented ratio: anything Unwin does not give is sized by a check, not by a proportion.",
+ "why_a_gib": "A plain cotter pushes the two sides of the strap apart as it is driven. The gib is the other half of the same slot, with hooked ends that wrap the strap and hold it together, so the taper can be steeper. Unwin page 179.",
+ "default_stresses_mpa": {
+  "tension": 75,
+  "shear": 60,
+  "crushing": 150,
+  "source": "same working values as the other cotter joints in this tool",
+  "page": null
+ },
+ "preferred_diameters_mm": [
+  6,
+  8,
+  10,
+  12,
+  14,
+  16,
+  18,
+  20,
+  22,
+  25,
+  30,
+  35,
+  40,
+  45,
+  50,
+  55,
+  60,
+  70,
+  80,
+  90,
+  100,
+  110,
+  125,
+  140,
+  160
+ ],
+ "gibs": 1,
+ "breadth_split": {
+  "1": {
+   "cotter": 0.625,
+   "gib": 0.375
+  },
+  "2": {
+   "cotter": 0.375,
+   "gib": 0.3125
+  },
+  "source": "Unwin 1899 page 179, figures 130 and 131. One gib: 5/8 cotter + 3/8 gib. Two gibs: 5/16 + 3/8 + 5/16. The unit is the total breadth b."
+ },
+ "proportions": {
+  "t": {
+   "times_b": 0.25,
+   "meaning": "thickness of the gib and cotter",
+   "source": "Unwin 1899 page 179, figures 130 and 131: thickness 0.25 x the breadth b"
+  }
+ },
+ "taper": {
+  "one_in": 24,
+  "range": "1 in 24 to 1 in 48 for a plain cotter; 1 in 8 to 1 in 16 when a screw stops it slacking back",
+  "source": "Unwin 1899 page 179"
+ },
+ "sized_by_check": {
+  "B": "rod end square side: raised until the rod end passes tension across the slot and crushing",
+  "Bo": "strap outer square side: raised until the strap passes tension across the slot and crushing",
+  "b": "total breadth of gib and cotter: from double shear, P = 2 b t tau",
+  "a": "rod end beyond the slot: from shear of the rod end, P = 2 a B tau",
+  "c": "strap beyond the slot: from shear of the strap end, P = 2 c (Bo - B) tau"
+ },
+ "modelling_choices": {
+  "gib_hook": {
+   "times_t": 1.0,
+   "note": "how far the hooked end of the gib laps over the strap, times the cotter thickness"
+  },
+  "hook_height": {
+   "times_t": 0.8,
+   "note": "height of the hooked lip, times the cotter thickness"
+  },
+  "cotter_overhang": {
+   "times": 0.25,
+   "min_mm": 6,
+   "note": "how far the cotter stands proud, times the rod diameter"
+  },
+  "rod_length": {
+   "times": 2.5,
+   "note": "length of round rod shown each side, times the rod diameter"
+  },
+  "corner_radius": {
+   "times_B": 0.12,
+   "note": "radius on the outside corners of the strap"
+  },
+  "end_wall": {
+   "times_B": 0.75,
+   "note": "strap metal closing over the rod tip, times the rod end side; a modelling choice, not a check"
+  },
+  "clearance_mm": 2.0
+ },
+ "indian_standards_to_check": [
+  "IS 2016 / IS 1367 for any fastener used with it (verify)",
+  "SP 46: drawing practice"
+ ],
+ "units": "SI: mm, N, MPa. First angle projection (Indian practice, SP 46)."
+}

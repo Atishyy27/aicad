@@ -39,11 +39,13 @@ def test_cotter_and_socket_spigot_words():
     assert parse_rules("socket and spigot joint for 20 kN").joint == "cotter"
 
 
-def test_sleeve_is_built_and_gib_is_recognised_but_not_built():
+def test_both_cotter_variants_are_recognised_and_built():
     s = parse_rules("sleeve and cotter joint 10 kN")
     assert s.joint == "sleeve_and_cotter" and s.supported()
     g = parse_rules("gib and cotter joint 10 kN")
-    assert g.joint == "gib_and_cotter" and not g.supported()
+    assert g.joint == "gib_and_cotter" and g.supported()
+    # "gib" must win over the bare word cotter, or every gib request builds a plain cotter
+    assert parse_rules("gib and cotter joint 10 kN").joint != "cotter"
 
 
 def test_bolt_size_and_grip():

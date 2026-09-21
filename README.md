@@ -12,10 +12,13 @@ first-angle A3 drawing sheet.
 | Knuckle joint | single-eye rod, fork, knuckle pin, collar, taper pin | load, or rod diameter |
 | Socket and spigot cotter joint | spigot, socket, cotter | load, or rod diameter |
 | Sleeve and cotter joint | two rods, sleeve, two cotters | load, or rod diameter |
+| Gib and cotter joint | rod with a square end, strap, cotter, one or two hooked gibs | load, or rod diameter |
 | Hex bolt, nut and washer | bolt, washer, nut | load, or a size like M12 (+ grip) |
 | Protected type rigid flange coupling | 2 shafts, 2 flanged hubs, 2 keys, n bolts and nuts | torque, or power and speed, or shaft diameter |
 
-Gib-and-cotter is recognised but not built: its proportions need the design book page first.
+Gib-and-cotter is built from Unwin 1899 page 179: the breadth splits 5/8 cotter and 3/8 gib
+(or 5/16, 3/8, 5/16 with two gibs), thickness is a quarter of the breadth, and the hooked gib is
+what lets the taper be steep without spreading the strap.
 
 ```
 out/<name>/
@@ -172,7 +175,8 @@ run to publish it. Untested: there is no Docker on the development machine.
 | Socket and spigot cotter | NPTEL IIT Kharagpur, DME I, module 4 lesson 2 | proportions and all ten checks verified |
 | Hex bolt and nut | NPTEL IIT Kharagpur, DME I, module 4 lesson 4 | tightening load verified; size table still unverified |
 | Flange coupling | NPTEL IIT Kharagpur, DME I, module 4 lesson 1 | key checks verified; proportions unverified |
-| Sleeve and cotter | none held | unverified |
+| Gib and cotter | Unwin, Elements of Machine Design, 1899, page 179 | breadth split, thickness and taper verified; everything else sized by a check |
+| Sleeve and cotter | none found | unverified, and both books searched |
 
 The tool deliberately disagrees with the lesson in two places, both because the lesson's own
 answer fails its own check. `tests/test_book_problems.py` asserts each one.

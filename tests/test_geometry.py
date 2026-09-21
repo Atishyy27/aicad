@@ -97,7 +97,7 @@ def test_export_writes_everything_and_assembly_keeps_parts_separate(built, tmp_p
     assert "<script type=\"module\" src=" not in html, "viewer must not load its script from the internet"
     report = (out / "report.md").read_text()
     # every proportion names where it came from: a real source once checked, UNVERIFIED until then
-    assert "NPTEL" in report or "UNVERIFIED" in report
+    assert any(src in report for src in ("NPTEL", "Unwin", "UNVERIFIED"))
 
 
 def test_sleeve_cotters_pass_through_sleeve_and_both_rods():

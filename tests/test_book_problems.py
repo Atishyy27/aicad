@@ -97,3 +97,49 @@ def test_data_files_now_name_their_source(joint):
     data = REGISTRY[joint].DATA
     assert data["verified_against_book"] is True
     assert "NPTEL" in data["verified_against"] and "IIT Kharagpur" in data["verified_against"]
+
+
+# ------------------------------------------------- Unwin 1899, page 179, gib and cotter
+
+def test_gib_and_cotter_breadth_split_matches_unwin_figure_130():
+    """One gib: the breadth divides 5/8 cotter and 3/8 gib, and the thickness is 0.25 b."""
+    d = REGISTRY["gib_and_cotter"].design(load_n=50_000, gibs=1)
+    b = d.dims["b"]
+    assert d.dims["cotter_b"] == pytest.approx(0.625 * b)
+    assert d.dims["gib_b"] == pytest.approx(0.375 * b)
+    assert d.dims["cotter_b"] + d.dims["gib_b"] == pytest.approx(b)
+    assert d.dims["t"] == pytest.approx(0.25 * b, abs=1)      # rounded up to whole mm
+
+
+def test_gib_and_cotter_breadth_split_matches_unwin_figure_131():
+    """Two gibs: 5/16 + 3/8 + 5/16, which is the whole breadth again."""
+    d = REGISTRY["gib_and_cotter"].design(load_n=50_000, gibs=2)
+    b = d.dims["b"]
+    assert d.dims["cotter_b"] == pytest.approx(0.375 * b)
+    assert d.dims["gib_b"] == pytest.approx(0.3125 * b)
+    assert d.dims["cotter_b"] + 2 * d.dims["gib_b"] == pytest.approx(b)
+
+
+def test_gib_and_cotter_taper_is_in_unwins_range():
+    """Unwin gives 1 in 24 to 1 in 48 for a plain cotter, 1 in 8 to 1 in 16 with a screw."""
+    d = REGISTRY["gib_and_cotter"].design(load_n=50_000)
+    assert 8 <= d.dims["taper_one_in"] <= 48
+
+
+def test_gib_and_cotter_shear_lengths_are_really_in_the_metal():
+    """The two shear checks assume metal beyond the slot. This asserts the geometry
+    actually has it: the rod end reaches a past the slot, and the strap has c before it."""
+    j = REGISTRY["gib_and_cotter"]
+    d = j.design(load_n=50_000)
+    slot_start = d.dims["xs"] - d.dims["b"] / 2
+    slot_end = d.dims["xs"] + d.dims["b"] / 2
+    assert slot_start == pytest.approx(d.dims["c"])                       # strap metal first
+    assert d.dims["rod_end_len"] - slot_end == pytest.approx(d.dims["a"])  # rod metal after
+    assert d.dims["L"] > d.dims["rod_end_len"]                            # strap closes over the tip
+
+
+def test_gib_and_cotter_checks_mirror_the_socket_and_spigot_set():
+    """Every check is the cotter joint's check on a square section, so the names line up."""
+    g = {c.name for c in REGISTRY["gib_and_cotter"].design(load_n=50_000).checks}
+    assert g == {"rod tension", "rod end tension", "strap tension", "gib and cotter shear",
+                 "rod end crushing", "strap crushing", "rod end shear", "strap end shear"}
