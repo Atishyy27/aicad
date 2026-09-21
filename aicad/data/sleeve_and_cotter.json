@@ -104,5 +104,6 @@
   "IS 1570: steel designations"
  ],
  "units": "SI: mm, N, MPa. First angle projection (Indian practice, SP 46).",
- "books_searched": "Searched in full and found nothing for this joint: NPTEL IIT Kharagpur Design of Machine Elements I module 4, all four lessons (lesson 2 covers the socket-and-spigot cotter and the knuckle only, zero occurrences of 'sleeve'), and Unwin 1899, whose sleeve and muff couplings on pages 231 to 236 are held by keys, not cotters. Scope of that negative: those two sources only. The proportions here stay unverified until a book that covers this joint is in reference/."
+ "books_searched": "No book held here covers this joint by name. Searched in full: NPTEL IIT Kharagpur DME I module 4, all four lessons (zero occurrences of 'sleeve'); Unwin 1899, whose sleeve and muff couplings on pages 231-236 are held by keys, not cotters; Leutwiler 1917; and Kimball and Barr 1909, whose only muff is a split-muff coupling. Scope of that negative: those four sources. The empirical proportions below stay unverified.",
+ "checks_verified_against": "The CHECKS are verified even though the proportions are not. Leutwiler 1917 article 98 lists ten ways a cotter joint fails; this joint uses eight of them, with the socket reading as the sleeve: (a) rod tension, (b) rod across the slot, (c) sleeve across the slot, (d) cotter in double shear, (e) rod end shear, (f) sleeve end shear, (g) sleeve crushing, (h) rod crushing. His (i) and (j) are the collar, which this joint does not have, so their absence is correct rather than a gap."
 }

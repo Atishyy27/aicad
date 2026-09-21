@@ -126,5 +126,6 @@
  "units": "SI: mm, N, MPa. First angle projection (Indian practice, SP 46).",
  "verified_against": "NPTEL, IIT Kharagpur, Design of Machine Elements I, Module 4 Lesson 2 'Cotter and knuckle joint', sections 4.2.1 to 4.2.2 and worked problem Q.1. Downloaded 21 Sep 2026, kept in reference/.",
  "cotter_taper_note": "The lesson gives the cotter taper as 1 in 24 on width; our model uses 1 in 32, a modelling choice.",
- "departs_from_book": "The lesson checks crushing of the socket, (d3 - d1) t, but not crushing between the cotter and the spigot, d1 t, which Khurmi does check. At the lesson's own answer that reads 167 MPa against 110 allowed, so this tool sizes the cotter thicker. See tests/test_book_problems.py."
+ "departs_from_book": "The lesson checks crushing of the socket, (d3 - d1) t, but not crushing between the cotter and the spigot, d1 t, which Khurmi does check. At the lesson's own answer that reads 167 MPa against 110 allowed, so this tool sizes the cotter thicker. See tests/test_book_problems.py.",
+ "second_source": "Leutwiler, Elements of Machine Design, 1917, article 98 (PDF page 143), lists ten ways a cotter joint fails, and they match this tool's ten checks one for one. It INCLUDES equation (117), P = t d1 Sb, rod or cotter may crush, which is the check the NPTEL lesson leaves out and whose absence made its own answer read 167 MPa against 110 allowed. Two independent books, seventy years apart, against one lesson: the departure recorded in departs_from_book is confirmed, not a preference."
 }

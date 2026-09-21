@@ -172,11 +172,11 @@ run to publish it. Untested: there is no Docker on the development machine.
 | Joint | Source | State |
 |---|---|---|
 | Knuckle | NPTEL IIT Kharagpur, DME I, module 4 lesson 2 | proportions and all nine checks verified |
-| Socket and spigot cotter | NPTEL IIT Kharagpur, DME I, module 4 lesson 2 | proportions and all ten checks verified |
+| Socket and spigot cotter | NPTEL IIT KGP M4 L2, **and** Leutwiler 1917 art. 98 | proportions and all ten checks verified against two independent books |
 | Hex bolt and nut | NPTEL IIT Kharagpur, DME I, module 4 lesson 4 | tightening load verified; size table still unverified |
-| Flange coupling | NPTEL IIT Kharagpur, DME I, module 4 lesson 1 | key checks verified; proportions unverified |
-| Gib and cotter | Unwin, Elements of Machine Design, 1899, page 179 | breadth split, thickness and taper verified; everything else sized by a check |
-| Sleeve and cotter | none found | unverified, and both books searched |
+| Flange coupling | NPTEL IIT KGP M4 L1 (keys); Leutwiler 1917 art. 275 (bolts) | every check verified twice; proportions cannot be verified, see below |
+| Gib and cotter | Unwin 1899 p179; taper confirmed by Leutwiler 1917 art. 98 | breadth split, thickness and taper verified; everything else sized by a check |
+| Sleeve and cotter | no book covers it; checks map onto Leutwiler art. 98 | checks verified; proportions unverified, four books searched |
 
 The tool deliberately disagrees with the lesson in two places, both because the lesson's own
 answer fails its own check. `tests/test_book_problems.py` asserts each one.
@@ -190,6 +190,24 @@ answer fails its own check. `tests/test_book_problems.py` asserts each one.
 
 One typo was also caught: the lesson prints the initial tightening load as `284 d kN`, but its
 own M20 example gives 56.8 kN, so the constant is `2840 d` newtons.
+
+**A second book settled the argument.** Leutwiler, *Elements of Machine Design*, 1917, article 98,
+lists ten ways a cotter joint fails, and they match this tool's ten checks one for one. His
+equation (117), `P = t d1 Sb`, rod or cotter may crush, is exactly the check NPTEL omits. Two
+independent books, eighteen years apart, against one lesson.
+
+**Why the coupling's proportions will never carry a source.** Leutwiler, article 275: no uniform
+proportions of flange couplings had been proposed for adoption as a standard, and the published
+tables are individual manufacturers' practice. The ratios here are a convention, not a standard,
+and the tool says so rather than implying otherwise. Its seven checks, though, are now verified
+twice: his equations (413) and (414) are algebraically identical to the bolt shear and bolt
+crushing used here.
+
+**The finite-element runs now say when not to believe them.** If the computed peak sits more than
+1.5 times above the hand calculation, the tool solves again on a mesh half the size. If the peak
+moves more than 5 percent it reports NOT CONVERGED and tells you to design to the hand
+calculation. On the gib and cotter rod the peak moved 15 percent between 9,863 and 52,643 nodes,
+so that number is a concentration at the clamped face, not a design stress.
 
 ### Adding your own
 

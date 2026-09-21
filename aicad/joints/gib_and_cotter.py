@@ -230,6 +230,14 @@ def build_parts(dims: dict):
     def square_along_x(side, x0, length):
         return box(x0, x0 + length, -side / 2, side / 2, -side / 2, side / 2)
 
+    # Square-cornered slot, deliberately. Leutwiler 1917 article 98 notes that cotter slots are
+    # often made with semi-circular edges, to avoid sharp corners that start cracks and to add
+    # shearing area at the sides. Rounding was tried here and dropped: filleting the cutting
+    # solid SHRINKS it, so metal is left exactly where the cotter sits, and the overlap test
+    # caught that. Doing it properly means an obround slot with the ends pushed out past b,
+    # which moves the a and c dimensions the two shear checks are measured from. The
+    # finite-element run could not settle the question either way, because its peak sits at the
+    # face the solver clamps. Left square until there is a reason better than a guess.
     slot = box(xs - dims["b"] / 2, xs + dims["b"] / 2, -t / 2, t / 2, -span, span)
 
     # the rod: round stock from -X, a square end that reaches into the strap, slotted

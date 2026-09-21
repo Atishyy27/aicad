@@ -53,6 +53,16 @@ def pick_faces(shape, rule, dims):
             return []
         best = (min if pick == "min" else max)(cands, key=lambda t: _axis_value(t[1], axis))
         return [best[0]]
+    if kind == "plane_near":
+        # the face at a position worked out from the dimensions, e.g. the far wall of the slot
+        # at xs + b/2. Used where "the two planar faces nearest the middle" would pick up a
+        # step in the part instead of the slot.
+        axis = rule["axis"]
+        target = sum(dims[k] * w for k, w in rule["at"].items())
+        tol = rule.get("tol", 1.0)
+        near = [i for i, f in _planar(faces)
+                if _normal_along(f, axis) and abs(_axis_value(f, axis) - target) <= tol]
+        return near
     if kind == "plane_normal":
         axis = rule["axis"]
         cands = [(i, f) for i, f in _planar(faces) if _normal_along(f, axis)]

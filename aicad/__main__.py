@@ -171,6 +171,11 @@ def main(argv: list[str] | None = None) -> int:
             if "hand_mpa" in f:
                 print(f"  hand calculation ({f['hand_check']}) {f['hand_mpa']:.1f} MPa, "
                       f"difference {f['difference_pct']:+.1f}%, allowed {f['allowable_mpa']:g} MPa")
+            if f.get("warning"):
+                print(f"  NOT CONVERGED: {f['warning']}")
+            elif f.get("converged"):
+                print(f"  settled: halving the mesh to {f['fine_mesh_nodes']:,} nodes moved the "
+                      f"peak {f['peak_moved_pct']:+.0f}% ({f['fine_mesh_mpa']:.0f} MPa), within 5%")
             print("  one linear-static run on one part; stress next to a fixed face is overstated")
         else:
             print(f"  finite-element run skipped: {f.get('reason') or f.get('error','')[:200]}")

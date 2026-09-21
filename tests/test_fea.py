@@ -62,3 +62,28 @@ def test_unknown_joint_says_so():
     class J:
         NAME = "nothing_like_this"
     assert fea.run(J, None, ".")["ok"] is False
+
+
+def test_every_fea_case_names_dimensions_that_really_exist():
+    """A face rule that refers to a dimension by the wrong name fails deep inside FreeCAD,
+    minutes into a run. This catches it in milliseconds."""
+    from aicad.fea import CASES
+    from aicad.joints import REGISTRY
+    from conftest import SIZING
+    for joint, case in CASES.items():
+        dims = REGISTRY[joint].design(**SIZING[joint]).dims
+        for rule in (case["fix"], case["load"]):
+            for key in list(rule.get("at", {})) + ([rule["dia"]] if rule.get("dia") else []):
+                assert key in dims, f"{joint}: face rule names {key}, which is not a dimension"
+
+
+def test_the_gib_joint_is_held_at_the_wall_the_shear_check_is_about():
+    """The rod is clamped at the far wall of the slot, which is the metal the rod-end shear
+    check says could tear out. If that moved, the run would be measuring something else."""
+    from aicad.fea import CASES
+    from aicad.joints import REGISTRY
+    case = CASES["gib_and_cotter"]
+    dims = REGISTRY["gib_and_cotter"].design(load_n=50_000).dims
+    target = sum(dims[k] * w for k, w in case["fix"]["at"].items())
+    assert target == dims["xs"] + dims["b"] / 2
+    assert dims["rod_end_len"] - target == dims["a"]

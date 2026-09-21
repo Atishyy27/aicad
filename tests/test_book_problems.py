@@ -143,3 +143,55 @@ def test_gib_and_cotter_checks_mirror_the_socket_and_spigot_set():
     g = {c.name for c in REGISTRY["gib_and_cotter"].design(load_n=50_000).checks}
     assert g == {"rod tension", "rod end tension", "strap tension", "gib and cotter shear",
                  "rod end crushing", "strap crushing", "rod end shear", "strap end shear"}
+
+
+# ------------------- Leutwiler 1917: a second, independent book on the same joints
+
+def test_cotter_checks_match_leutwilers_ten_failure_modes():
+    """Leutwiler article 98 lists ten ways a cotter joint fails. Ours are the same ten.
+
+    (a) rod tension            (b) rod across the slot     (c) socket across the slot
+    (d) cotter double shear    (e) rod end shear           (f) socket end shear
+    (g) socket crushing        (h) ROD OR COTTER CRUSHING  (i) collar shear
+    (j) collar crushing
+    """
+    d = REGISTRY["cotter"].design(load_n=50_000)
+    assert len(d.checks) == 10
+    # (h) is the one the NPTEL lesson omits; two books have it, so we keep it
+    crush = next(c for c in d.checks if c.name == "spigot crushing")
+    assert crush.formula == "P / (d1 t)"          # Leutwiler eq. (117): P = t d1 Sb
+
+
+def test_coupling_bolt_formulas_match_leutwilers_equations():
+    """Leutwiler (413): a = sqrt(8T / (pi n e Ss)).  (414): a f = 2T / (n e Sb).
+    Rearranged for stress, those are exactly what this tool computes."""
+    import math
+    d = REGISTRY["flange_coupling"].design(torque_nm=500)
+    T, dims = d.dims["torque_nmm"], d.dims
+    a, n, e, f = dims["d_bolt"], dims["n_bolts"], dims["Dp"], dims["tf"]
+    shear = next(c for c in d.checks if c.name == "bolt shear")
+    crush = next(c for c in d.checks if c.name == "bolt crushing")
+    assert shear.stress_mpa == pytest.approx(8 * T / (math.pi * a**2 * n * e))
+    assert crush.stress_mpa == pytest.approx(2 * T / (n * a * f * e))
+
+
+def test_coupling_proportions_are_still_not_claimed_as_verified():
+    """Leutwiler says plainly that no standard flange coupling proportions existed and that
+    published tables are manufacturers' practice. So the flag must stay false even though
+    every check is now verified twice."""
+    d = REGISTRY["flange_coupling"].design(torque_nm=500)
+    assert d.verified_against_book is False
+
+
+def test_sleeve_joint_uses_eight_of_leutwilers_ten_and_correctly_drops_the_collar():
+    """The proportions have no book behind them, but the checks do: eight of Leutwiler's ten,
+    with the socket reading as the sleeve. His (i) and (j) are collar failures and this joint
+    has no collar, so they must be absent rather than merely forgotten."""
+    d = REGISTRY["sleeve_and_cotter"].design(load_n=50_000)
+    names = {c.name for c in d.checks}
+    assert names == {"rod tension", "rod end tension", "sleeve tension", "cotter shear",
+                     "rod end crushing", "sleeve crushing", "rod end shear", "sleeve end shear"}
+    assert not any("collar" in n for n in names)
+    # the crushing check NPTEL omits is present here too, as (h) P = t d1 Sb
+    assert next(c for c in d.checks if c.name == "rod end crushing").formula == "P / (d2 t)"
+    assert d.verified_against_book is False      # proportions still unverified, and they say so

@@ -62,7 +62,8 @@
  "taper": {
   "one_in": 24,
   "range": "1 in 24 to 1 in 48 for a plain cotter; 1 in 8 to 1 in 16 when a screw stops it slacking back",
-  "source": "Unwin 1899 page 179"
+  "source": "Unwin 1899 page 179",
+  "second_source": "Leutwiler 1917 article 98 agrees: a practical taper is 1/4 inch per foot, which is 1 in 48, and it may go to about 1.5 inches per foot, near 1 in 8, when a locking device is fitted. Two independent books give the same range."
  },
  "sized_by_check": {
   "B": "rod end square side: raised until the rod end passes tension across the slot and crushing",

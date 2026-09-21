@@ -48,6 +48,16 @@ CASES = {
         "compare": "rod tension",
         "note": "Rod held at its cotter slot faces, pulled at the rod end.",
     },
+    "gib_and_cotter": {
+        "part": "rod",
+        # the cotter bears on the far wall of the slot, which is the wall the "rod end shear"
+        # check says could tear out
+        "fix": {"kind": "plane_near", "axis": "x", "at": {"xs": 1, "b": 0.5}},
+        "load": {"kind": "plane_end", "axis": "x", "pick": "min"},
+        "direction": [-1, 0, 0],
+        "compare": "rod tension",
+        "note": "Rod held at the far wall of the cotter slot, pulled at the round rod end.",
+    },
     "nut_bolt": {
         "part": "bolt",
         "fix": {"kind": "plane_normal", "axis": "z", "pick": "min"},  # under the head
@@ -65,7 +75,7 @@ def available() -> bool:
     return find_freecadcmd() is not None
 
 
-def run(joint, design, out_dir: Path, timeout: float = 900) -> dict:
+def run(joint, design, out_dir: Path, timeout: float = 900, converge_check: bool = True) -> dict:
     """Run one linear-static analysis and compare it with the matching hand calculation."""
     name = joint.NAME
     if name not in CASES:
@@ -102,6 +112,38 @@ def run(joint, design, out_dir: Path, timeout: float = 900) -> dict:
         return {"ok": False, "reason": f"freecadcmd exited {done.returncode}",
                 "log": (done.stdout + done.stderr)[-600:]}
     r = json.loads(result_file.read_text())
+
+    # When the finite-element peak sits well above the hand calculation, the question is whether
+    # it is a real concentration or an artefact of the mesh and of clamping a face rigidly. The
+    # test is to solve again on a finer mesh and see whether the peak stays put.
+    #
+    # Measured on the gib and cotter rod at four mesh sizes (6.0, 4.0, 2.5, 1.6 mm), the peak
+    # read 157, 180, 175 and 191 MPa across a 16x increase in nodes: wandering by about 10%,
+    # not settling. A single refinement step is therefore a weak test and can report "stable"
+    # by luck, which is why the step here is a halving and the band is tight.
+    if r.get("ok") and check is not None and converge_check:
+        ratio = r["max_von_mises"] / max(check.stress_mpa, 1e-9)
+        if ratio > 1.5:
+            job["mesh_mm"] = round(job["mesh_mm"] * 0.5, 2)
+            job_file.write_text(json.dumps(job, indent=1))
+            subprocess.run([exe, str(_SCRIPT)], capture_output=True, text=True,
+                           timeout=timeout, env=env)
+            fine = json.loads(result_file.read_text())
+            if fine.get("ok"):
+                moved = 100 * (fine["max_von_mises"] - r["max_von_mises"]) / r["max_von_mises"]
+                r["fine_mesh_mpa"] = round(fine["max_von_mises"], 1)
+                r["fine_mesh_nodes"] = fine["mesh_nodes"]
+                r["peak_moved_pct"] = round(moved, 1)
+                r["converged"] = abs(moved) <= 5
+                if not r["converged"]:
+                    r["warning"] = (
+                        f"The peak moved {moved:+.0f}% when the mesh was halved "
+                        f"({r['mesh_nodes']:,} to {fine['mesh_nodes']:,} nodes, "
+                        f"{r['max_von_mises']:.0f} to {fine['max_von_mises']:.0f} MPa), so it "
+                        f"has not settled. Read it as a concentration at a sharp corner or at "
+                        f"the face the tool clamped, not as a design stress. Design to the hand "
+                        f"calculation.")
+
     if r.get("ok") and check is not None:
         r["hand_mpa"] = round(check.stress_mpa, 2)
         r["hand_check"] = check.name
@@ -147,6 +189,11 @@ def main(argv=None) -> int:
         print(f"Difference: {r['difference_pct']:+.1f} %")
         print(f"Allowed: {r['allowable_mpa']:g} MPa, so the finite element result "
               f"{'passes' if r['passes_allowable'] else 'FAILS'}")
+    if r.get("warning"):
+        print(f"\nNOT CONVERGED: {r['warning']}")
+    elif r.get("converged"):
+        print(f"Settled: halving the mesh to {r['fine_mesh_nodes']:,} nodes moved the peak "
+              f"{r['peak_moved_pct']:+.0f}% ({r['fine_mesh_mpa']:.0f} MPa), within 5%.")
     print("\nThis is one linear-static run on one part with boundary conditions the tool chose. "
           "Stress next to a fixed face is always overstated.")
     print(f"Files: {out.resolve()}")
