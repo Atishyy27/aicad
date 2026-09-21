@@ -2,6 +2,7 @@
 """Make the reference books searchable.
 
     python tools/reference_library.py add <file.pdf> [more.pdf ...]   OCR if needed, index it
+    python tools/reference_library.py remove <name>                   drop a book from the library
     python tools/reference_library.py list                            what is in the library
     python tools/reference_library.py find "cotter joint"             search every book
     python tools/reference_library.py page <book> <page>              print one page of text
@@ -38,6 +39,52 @@ def _load() -> dict:
 def _save(ix: dict):
     TEXT.mkdir(parents=True, exist_ok=True)
     INDEX.write_text(json.dumps(ix, indent=1))
+
+
+ENGINEERING_WORDS = ("design", "machine", "element", "mechanic", "engineer", "strength", "material",
+                    "drawing", "cad", "khurmi", "bhandari", "shigley", "spotts", "handbook", "data book",
+                    "thermodynam", "manufactur", "kinematic", "vibration", "fluid", "theory", "text")
+
+
+def looks_like_a_book(pdf: Path, pages: int) -> bool:
+    """A textbook is long and usually says so in its name. Short files are reports, resumes, tickets."""
+    name = pdf.stem.lower()
+    return pages >= 80 or any(w in name for w in ENGINEERING_WORDS)
+
+
+def confirm(items: list[tuple[Path, int, bool]]) -> list[Path]:
+    """Show what is about to be copied into the project and ask. Books stay on this machine,
+    but they still land inside the project folder, so a stray shell glob should not do it silently."""
+    print("\nAbout to copy into reference/ and index:")
+    for pdf, pages, booky in items:
+        mark = "book " if booky else "NOT A BOOK?"
+        print(f"  {mark:12s} {pages:>5} pages  {pdf.name}")
+    odd = [i for i in items if not i[2]]
+    if odd:
+        print(f"\n{len(odd)} of {len(items)} do not look like engineering books "
+              "(short, and nothing bookish in the name).")
+    try:
+        answer = input("Add [a]ll, only the [b]ooks, or [n]othing? [b] ").strip().lower() or "b"
+    except EOFError:
+        answer = "b"
+    if answer.startswith("n"):
+        return []
+    if answer.startswith("a"):
+        return [i[0] for i in items]
+    return [i[0] for i in items if i[2]]
+
+
+def remove(name: str) -> None:
+    ix = _load()
+    if name not in ix:
+        sys.exit(f"not in the library: {name}")
+    shutil.rmtree(TEXT / name, ignore_errors=True)
+    pdf = REF / ix[name]["file"]
+    if pdf.exists():
+        pdf.unlink()
+    ix.pop(name)
+    _save(ix)
+    print(f"removed {name}")
 
 
 def add(pdf: Path) -> None:
@@ -115,8 +162,19 @@ def main(argv=None) -> int:
         return 1
     cmd, rest = args[0], args[1:]
     if cmd == "add":
-        for f in rest:
-            add(Path(f).expanduser())
+        paths = [Path(f).expanduser() for f in rest]
+        missing = [p for p in paths if not p.exists()]
+        if missing:
+            sys.exit("no such file: " + ", ".join(str(m) for m in missing))
+        items = []
+        for f in paths:
+            try:
+                pages = int(re.search(r"Pages:\s+(\d+)", _run(["pdfinfo", str(f)]).stdout).group(1))
+            except Exception:
+                pages = 0
+            items.append((f, pages, looks_like_a_book(f, pages)))
+        for f in confirm(items):
+            add(f)
     elif cmd == "list":
         ix = _load()
         for name, meta in ix.items():
@@ -124,6 +182,8 @@ def main(argv=None) -> int:
             print(f"{name}: {meta['pages']} pages, {got} indexed  ({meta['file']})")
         if not ix:
             print("empty")
+    elif cmd == "remove":
+        remove(rest[0])
     elif cmd == "find":
         find(" ".join(rest))
     elif cmd == "page":

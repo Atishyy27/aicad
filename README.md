@@ -171,7 +171,13 @@ python tools/reference_library.py add ~/Downloads/some-book.pdf
 python tools/reference_library.py list
 python tools/reference_library.py find "rivet spacing"
 python tools/reference_library.py page <book> 145
+python tools/reference_library.py remove <book>
 ```
+
+`add` copies the PDF into `reference/`, so it shows you the list first and asks. Files that do
+not look like engineering books (short, nothing bookish in the name) are flagged and skipped
+unless you say "all". Point it at the books themselves, not at a whole folder: a glob like
+`~/Downloads/*.pdf` will sweep up everything you have.
 
 It uses the PDF's text layer when there is one and OCRs scanned books (needs
 `brew install poppler tesseract`). `reference/` is gitignored, so books stay on your machine.
