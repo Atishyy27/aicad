@@ -2,8 +2,9 @@
 
 You run these. The token is yours and I must never see it.
 
-Corrected 22 Sep 2026. The earlier version of this file used `hf repo create --repo-type space
---space_sdk docker`, which is not the current syntax: the command is `hf repos create --type
+Corrected 22 Sep 2026, twice. This venv is a uv venv and has no `pip` in it, so the install
+line uses `uv pip install --python .venv/bin/python`. The earlier version of this file also used
+`hf repo create --repo-type space --space_sdk docker`, which is not the current syntax: the command is `hf repos create --type
 space --sdk docker`. It also told you to copy the Space README over the project README at the
 repo root, which would have destroyed it, and to push the whole git history to a public Space.
 The staging folder below avoids all three.
@@ -16,7 +17,7 @@ https://huggingface.co/settings/tokens with **write** access.
 ## 2. Install the client and log in
 
     cd /Users/atishay/Desktop/codes_masti/masti/projects/ai-cad
-    .venv/bin/pip install --upgrade huggingface_hub
+    uv pip install --python .venv/bin/python huggingface_hub
     .venv/bin/hf auth login
 
 Paste the token when it asks. A pass looks like `Login successful`. If it says
@@ -36,7 +37,11 @@ README. Not the reference books, not `out/`, not the tests, not the git history.
     du -sh /tmp/aicad-space
 
 A pass is roughly 1 MB or less. If it is tens of megabytes, something large was copied in and
-you should look at what before uploading.
+you should look at what before uploading. Measured on 22 Sep 2026: 1.3 MB, 34 files.
+
+Already done and checked on this machine: the client is installed, the folder is staged, and a
+knuckle, a gib and cotter and a flange coupling were built using only the staged copy, to prove
+nothing it needs was left behind. All three sized, passed every check and wrote a full file set.
 
 ## 4. Create the Space and upload
 
