@@ -16,6 +16,9 @@ COPY --chown=user pyproject.toml README.md ./
 COPY --chown=user aicad ./aicad
 RUN pip install --user --no-cache-dir "cadquery>=2.4"
 
-ENV AICAD_OUT=/home/user/app/out
+# freecad-python3 installs the command as /usr/lib/freecad/bin/freecadcmd-python3 and puts
+# nothing in /usr/bin, so point the tool straight at it. Verified against the Debian bookworm
+# file list for that package.
+ENV FREECAD_CMD=/usr/lib/freecad/bin/freecadcmd-python3
 EXPOSE 7860
 CMD ["python", "-m", "aicad.web", "--host", "0.0.0.0", "--port", "7860"]

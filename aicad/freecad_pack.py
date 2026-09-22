@@ -24,13 +24,20 @@ def find_freecadcmd() -> str | None:
         return env
     candidates = [
         "/Applications/FreeCAD.app/Contents/Resources/bin/freecadcmd",
+        # Debian and Ubuntu put it here under its own name, off the PATH: the package
+        # freecad-python3 ships /usr/lib/freecad/bin/freecadcmd-python3 and nothing in
+        # /usr/bin. Without this the Hugging Face Space would silently lose drawings and FEA.
+        "/usr/lib/freecad/bin/freecadcmd-python3",
+        "/usr/lib/freecad/bin/freecadcmd",
+        "/usr/bin/freecadcmd",
         *sorted(glob.glob(r"C:\Program Files\FreeCAD*\bin\freecadcmd.exe"), reverse=True),
         *sorted(glob.glob(r"C:\Program Files\FreeCAD*\bin\FreeCADCmd.exe"), reverse=True),
     ]
     for c in candidates:
         if Path(c).exists():
             return c
-    return shutil.which("freecadcmd") or shutil.which("FreeCADCmd")
+    return (shutil.which("freecadcmd") or shutil.which("FreeCADCmd")
+            or shutil.which("freecadcmd-python3"))
 
 
 def run_pack(out: Path, joint, design, request: str, timeout: float = 600) -> dict:
