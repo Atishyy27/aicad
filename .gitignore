@@ -6,3 +6,6 @@ out/
 *.egg-info/
 .DS_Store
 reference/
+
+report/shots/
+report/*.html

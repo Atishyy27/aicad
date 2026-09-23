@@ -126,9 +126,23 @@ def build(fields: dict, text: str, freecad: bool = True, out_root: Path = OUT_RO
         files.update({"drawing": "drawing.svg", "fcstd": f"{joint.NAME}.FCStd"})
         if fc.get("dxf"):
             files["dxf"] = "drawing.dxf"
+    # Carry the viewer and the sheet inside the response, not just as file paths. Hosted, a
+    # second request for /out/... can land on a different container with its own empty /tmp,
+    # and the 3D model renders as "not found" even though the build succeeded. Anything the
+    # page must show immediately travels with the result.
+    inline = {}
+    for key, rel in (("viewer", "viewer.html"), ("drawing", "drawing.svg")):
+        f = out / rel
+        if f.exists() and f.stat().st_size <= 8_000_000:
+            try:
+                inline[key] = f.read_text()
+            except Exception:
+                pass
+
     return {
         "ok": True,
         "steps": steps,          # the full working, so the page can show it however it got here
+        "inline": inline,
         "id": run_id,
         "title": joint.TITLE,
         "load_n": design.load_n,
@@ -347,6 +361,8 @@ progress::-webkit-progress-bar{background:var(--line)}progress::-webkit-progress
 .tab[aria-selected=true]{color:var(--ink);border-bottom-color:var(--accent)}
 iframe{width:100%;height:520px;border:0;border-radius:10px;background:var(--bg)}
 img.sheet{width:100%;border:1px solid var(--line);border-radius:10px;background:#fff}
+.sheet-wrap{border:1px solid var(--line);border-radius:10px;background:#fff;padding:6px;overflow:auto}
+.sheet-wrap svg{width:100%;height:auto;display:block}
 table{border-collapse:collapse;width:100%;font-size:14px}
 th{text-align:left;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
 td,th{padding:7px 8px;border-bottom:1px solid var(--line)}
@@ -575,8 +591,14 @@ function render(r){
     ["sheet",r.sheet_scale?("scale "+r.sheet_scale+", first angle"):"not made"],
     ["design factor",(r.design_factor||1)+"x"],
   ].map(([k,v])=>`<div>${k}<b>${esc(v)}</b></div>`).join("");
-  $("viewer").src=r.files.viewer;
-  $("sheetBox").innerHTML=r.files.drawing
+  const inl=r.inline||{};
+  // srcdoc renders what we already have; src would need a second request that may reach a
+  // different server instance and 404 even though the build worked.
+  if(inl.viewer){ $("viewer").removeAttribute("src"); $("viewer").srcdoc=inl.viewer; }
+  else { $("viewer").src=r.files.viewer; }
+  $("sheetBox").innerHTML=inl.drawing
+    ?`<div class="sheet-wrap">${inl.drawing}</div>`
+    :r.files.drawing
     ?`<a href="${r.files.drawing}" target="_blank"><img class="sheet" src="${r.files.drawing}" alt="drawing sheet"></a>`
     :`<p class="muted">No sheet: ${esc(r.freecad_reason)}. Install FreeCAD to get one.</p>`;
   $("dims").innerHTML="<tr><th>symbol</th><th>meaning</th><th>mm</th><th></th></tr>"+

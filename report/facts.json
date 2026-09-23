@@ -1,0 +1,223 @@
+{
+ "design_factor": 1.25,
+ "joints": [
+  {
+   "name": "knuckle",
+   "title": "Knuckle joint",
+   "parts": 5,
+   "checks": 9,
+   "dims": 12,
+   "verified": true,
+   "source": "NPTEL, IIT Kharagpur, Design of Machine Elements I, Module 4 Lesson 2 'Cotter and knuckle joint', section 4.2.3 and work",
+   "duty": "Load P = 50,000 N",
+   "worst": 0.761904761904762
+  },
+  {
+   "name": "cotter",
+   "title": "Socket and spigot cotter joint",
+   "parts": 3,
+   "checks": 10,
+   "dims": 14,
+   "verified": true,
+   "source": "NPTEL, IIT Kharagpur, Design of Machine Elements I, Module 4 Lesson 2 'Cotter and knuckle joint', sections 4.2.1 to 4.2.",
+   "duty": "Load P = 35,000 N",
+   "worst": 0.6666666666666666
+  },
+  {
+   "name": "sleeve_and_cotter",
+   "title": "Sleeve and cotter joint",
+   "parts": 5,
+   "checks": 8,
+   "dims": 12,
+   "verified": false,
+   "source": "Proportions are from memory of Khurmi/Bhandari empirical rules and are the least certain of all four joints. Check each ",
+   "duty": "Load P = 50,000 N",
+   "worst": 0.7716049382716049
+  },
+  {
+   "name": "gib_and_cotter",
+   "title": "Gib and cotter joint",
+   "parts": 4,
+   "checks": 8,
+   "dims": 20,
+   "verified": true,
+   "source": "Unwin, Elements of Machine Design, 1899, page 179 figures 130 and 131 (gib and cotter proportions, unit = the breadth b)",
+   "duty": "Load P = 50,000 N",
+   "worst": 0.7936507936507937
+  },
+  {
+   "name": "nut_bolt",
+   "title": "Hex bolt, nut and washer",
+   "parts": 3,
+   "checks": 2,
+   "dims": 11,
+   "verified": false,
+   "source": "Sizes are ISO metric coarse values typed from memory (ISO 4014 bolt head, ISO 4032 nut, ISO 7089 washer, ISO 898 stress ",
+   "duty": "Load P = 20,000 N",
+   "worst": 0.708215297450425
+  },
+  {
+   "name": "flange_coupling",
+   "title": "Protected type rigid flange coupling",
+   "parts": 12,
+   "checks": 7,
+   "dims": 15,
+   "verified": false,
+   "source": "The CHECKS are verified against two independent sources; the PROPORTIONS are not, and cannot be. Leutwiler 1917 article ",
+   "duty": "Torque T = 500,000 N mm (500 N m)",
+   "worst": 0.7936507936507937
+  }
+ ],
+ "knuckle": {
+  "raw": {
+   "rod_tension": 32.57,
+   "pin_shear": 25.75,
+   "pin_bending": 43.72
+  },
+  "dims": [
+   [
+    "D",
+    "rod diameter",
+    35.0,
+    "rod in tension: D = sqrt(4P / (pi sigma_t)), rounded up to a preferred size"
+   ],
+   [
+    "d",
+    "pin diameter",
+    45.0,
+    "governed by pin bending"
+   ],
+   [
+    "d2",
+    "eye outer diameter",
+    70.0,
+    "d2 = 2.0 x D, the rod diameter (outer diameter of eye) [NPTEL IIT KGP M4L2 fig 4.2.3.1]"
+   ],
+   [
+    "d3",
+    "pin head and collar diameter",
+    52.5,
+    "d3 = 1.5 x D, the rod diameter (pin head and collar diameter) [NPTEL IIT KGP M4L2 fig 4.2.3.1]"
+   ],
+   [
+    "t",
+    "eye thickness",
+    43.75,
+    "t = 1.25 x D, the rod diameter (thickness of single eye) [NPTEL IIT KGP M4L2 fig 4.2.3.1]"
+   ],
+   [
+    "t1",
+    "fork plate thickness",
+    26.25,
+    "t1 = 0.75 x D, the rod diameter (thickness of each fork plate) [NPTEL IIT KGP M4L2 fig 4.2.3.1]"
+   ],
+   [
+    "t2",
+    "pin head thickness",
+    17.5,
+    "t2 = 0.5 x D, the rod diameter (thickness of pin head) [NPTEL IIT KGP M4L2 fig 4.2.3.1]"
+   ],
+   [
+    "collar_t",
+    "collar thickness",
+    22.5,
+    ""
+   ],
+   [
+    "taper_d",
+    "taper pin diameter (big end)",
+    8.75,
+    ""
+   ],
+   [
+    "clearance",
+    "gap between eye and fork base",
+    4.5,
+    ""
+   ],
+   [
+    "fork_base",
+    "fork base length",
+    45.0,
+    ""
+   ],
+   [
+    "rod_len",
+    "rod length shown",
+    105.0,
+    ""
+   ]
+  ],
+  "checks": [
+   [
+    "rod tension",
+    "4P / (pi D^2)",
+    52.0,
+    75,
+    true
+   ],
+   [
+    "pin double shear",
+    "P / (2 pi/4 d^2)",
+    15.7,
+    60,
+    true
+   ],
+   [
+    "pin bending",
+    "32M / (pi d^3), M = P/2 (t1/3 + t/4)",
+    55.0,
+    75,
+    true
+   ],
+   [
+    "eye tension",
+    "P / ((d2 - d) t)",
+    45.7,
+    75,
+    true
+   ],
+   [
+    "eye shear",
+    "P / ((d2 - d) t)",
+    45.7,
+    60,
+    true
+   ],
+   [
+    "eye crushing",
+    "P / (d t)",
+    25.4,
+    150,
+    true
+   ],
+   [
+    "fork tension",
+    "P / ((d2 - d) 2 t1)",
+    38.1,
+    75,
+    true
+   ],
+   [
+    "fork shear",
+    "P / ((d2 - d) 2 t1)",
+    38.1,
+    60,
+    true
+   ],
+   [
+    "fork crushing",
+    "P / (d 2 t1)",
+    21.2,
+    150,
+    true
+   ]
+  ],
+  "notes": [
+   "Sized for 1.25 x the given load (62,500 N), then checked at 50,000 N. That margin is why the checks sit below their limits.",
+   "Pin raised to 45 mm for bending (needs 43.7 mm), the same step the NPTEL worked problem takes. Set pin_bending.mode to 'check_only' to keep the pin equal to the rod."
+  ]
+ },
+ "tests": "290 tests collected in 18.70s",
+ "commit": "1ff02f4"
+}
