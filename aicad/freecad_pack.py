@@ -45,12 +45,15 @@ def run_pack(out: Path, joint, design, request: str, timeout: float = 600) -> di
     if exe is None:
         return {"ok": False, "reason": "FreeCAD not found (install it or set FREECAD_CMD)"}
     out = Path(out).resolve()
+    from .joints import parts_of
+    parts_named = parts_of(joint, design.dims)
     job = {
         "out": str(out),
         "joint": joint.NAME,
         "title": joint.TITLE,
         "request": request,
         "colors": joint.COLORS,
+        "part_names": list(parts_named),
         "dims": [[k, joint.LABELS.get(k, k), v] for k, v in design.dims.items()],
         "load_n": design.load_n,
         "duty": design.duty,
@@ -82,8 +85,18 @@ def open_in_freecad(path: Path) -> None:
 
 # ------------------------------------------------------------ inside FreeCAD
 
+def _mark(stage):  # pragma: no cover - runs under freecadcmd
+    """Print a marker before each stage. A segfault kills the process without a traceback,
+    so the last marker printed is the call that crashed. This is how the container's
+    "freecadcmd exited -11" was turned into a named step."""
+    import sys
+    print(f"AICAD-STAGE {stage}", flush=True)
+    sys.stdout.flush()
+
+
 def _inside_freecad():  # pragma: no cover - runs under freecadcmd
     import FreeCAD
+    _mark(f"start FreeCAD {FreeCAD.Version()[0]}.{FreeCAD.Version()[1]}.{FreeCAD.Version()[2]}")
     import Import
     import TechDraw
 
@@ -92,17 +105,58 @@ def _inside_freecad():  # pragma: no cover - runs under freecadcmd
     result: dict = {"ok": False}
     try:
         doc = FreeCAD.newDocument(job["joint"])
-        Import.insert(str(out / "assembly.step"), doc.Name)
+        # Two ways to read the STEP file, and the choice is not cosmetic.
+        #
+        # Import.insert goes through ImportOCAF2, which also reads colours and writes them onto
+        # each object's view properties. With no GUI those properties are not there to write to,
+        # and FreeCAD 0.20 does not raise, it segfaults partway through the shape loop. That is
+        # exactly what the server showed: "import step", then ImportOCAF2 counting 6 shapes to
+        # 100%, then signal 11. A segfault cannot be caught, so the choice is made up front.
+        #
+        # Part.insert reads the same geometry with no colour handling at all. The sheet only
+        # needs shapes, so nothing that matters is lost; the saved file just has plain colours.
+        gui = bool(getattr(FreeCAD, "GuiUp", False))
+        _mark(f"import step via {'Import (colours)' if gui else 'Part (no colours, headless)'}")
+        if gui:
+            Import.insert(str(out / "assembly.step"), doc.Name)
+        else:
+            # Read each part from its own STEP file and label it. Reading the assembly in one
+            # go with Part.insert works, but names every object assembly, assembly001 and so on,
+            # which throws away the part names the saved file is meant to carry.
+            import Part as _Part
+            for name in job.get("part_names") or []:
+                f = out / "parts" / f"{name}.step"
+                if not f.exists():
+                    continue
+                shp = _Part.Shape()          # read first: once attached, Shape is immutable
+                shp.read(str(f))
+                obj = doc.addObject("Part::Feature", name)
+                obj.Shape = shp
+                obj.Label = name
+        _mark("recompute")
         doc.recompute()
+        _mark("collect parts")
         parts = [o for o in doc.Objects if o.TypeId == "Part::Feature" and o.Shape.Solids]
-        for o in parts:
-            rgb = job["colors"].get(o.Label)
-            if rgb and hasattr(o, "ViewObject") and o.ViewObject:
-                o.ViewObject.ShapeColor = tuple(rgb)
+
+        # Colour is a view property and only exists when the GUI is up. Under freecadcmd there
+        # is no GUI, and on FreeCAD 0.20 reaching for ViewObject there crashes the process
+        # outright rather than returning nothing, which is what killed this on the server
+        # (freecadcmd exited -11, right after the STEP import). GuiUp is the reliable guard;
+        # hasattr is not, because the attribute exists and dies on access.
+        if getattr(FreeCAD, "GuiUp", False):
+            _mark("colour parts")
+            for o in parts:
+                rgb = job["colors"].get(o.Label)
+                if rgb and getattr(o, "ViewObject", None):
+                    o.ViewObject.ShapeColor = tuple(rgb)
+        else:
+            _mark("no GUI, skipping colours")
         result["parts"] = sorted(o.Label for o in parts)
 
         import Part
+        _mark("make compound")
         comp = Part.makeCompound([o.Shape for o in parts])
+        _mark("build sheet")
         sheet_svg, sheet_scale = build_sheet(comp, job)
         (out / "drawing.svg").write_text(sheet_svg)
         result["svg"] = str(out / "drawing.svg")
@@ -216,9 +270,12 @@ def _project(comp, n, up, hidden=True):
     m = FreeCAD.Matrix(H.x, H.y, H.z, 0, V.x, V.y, V.z, 0, N.x, N.y, N.z, 0, 0, 0, 0, 1)
     shape = comp.copy()
     shape.transformShape(m)
+    _mark("projectToSVG")
     svg = (TechDraw.projectToSVG(shape, FreeCAD.Vector(0, 0, 1), "ShowHiddenLines") if hidden
            else TechDraw.projectToSVG(shape, FreeCAD.Vector(0, 0, 1)))
+    _mark("projectEx")
     edges = TechDraw.projectEx(shape, FreeCAD.Vector(0, 0, 1))
+    _mark("projected ok")
     bbs = [e.BoundBox for e in edges if not e.isNull()]
     x0 = min(b.XMin for b in bbs); x1 = max(b.XMax for b in bbs)
     y0 = min(b.YMin for b in bbs); y1 = max(b.YMax for b in bbs)

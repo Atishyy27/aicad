@@ -1,0 +1,52 @@
+# Vercel Functions container image. Vercel builds this remotely, so no local Docker needed.
+# Hobby gives 2 GB / 1 vCPU; measured peak for this app is 600-800 MB with drawings and FEA.
+# Image caps are 2 GB per compressed layer and 15 GB total (Vercel Container Registry docs,
+# read 23 Sep 2026), so this image fits with room.
+FROM python:3.12-slim-bookworm
+
+ENV DEBIAN_FRONTEND=noninteractive PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1
+# freecad-python3 gives /usr/lib/freecad/bin/freecadcmd-python3, calculix-ccx gives /usr/bin/ccx
+# and gmsh gives /usr/bin/gmsh, which are the three binaries FreeCAD's solver tooling looks for.
+# All three checked against the Debian bookworm file lists rather than assumed.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        freecad-python3 libgl1 libglu1-mesa libxrender1 libxcursor1 libxft2 libxinerama1 \
+        libxkbcommon0 libfontconfig1 libsm6 libice6 libdbus-1-3 libegl1 xvfb \
+        calculix-ccx gmsh ca-certificates \
+    && rm -rf /var/lib/apt/lists/* \
+    && rm -rf /usr/share/doc /usr/share/man /usr/share/locale /usr/share/info \
+    && find /usr/lib/freecad -name "*.a" -delete 2>/dev/null || true
+
+WORKDIR /app
+COPY pyproject.toml README.md ./
+COPY aicad ./aicad
+
+# Installed system-wide on purpose, NOT with --user. The first deploy ran the container under
+# a different user than the one that did the install, so ~/.local was not on sys.path and every
+# build failed with ModuleNotFoundError: No module named 'cadquery' while the site still loaded,
+# because the kernel is imported lazily. System site-packages is readable whatever UID runs it.
+RUN pip install --no-cache-dir "cadquery>=2.4" \
+    && find /usr/local/lib -name "__pycache__" -type d -prune -exec rm -rf {} + \
+    && find /usr/local/lib -name "*.pyc" -delete
+
+# freecad-python3 installs the command as /usr/lib/freecad/bin/freecadcmd-python3 and puts
+# nothing in /usr/bin, so point the tool straight at it. Verified against the Debian bookworm
+# file list for that package.
+ENV FREECAD_CMD=/usr/lib/freecad/bin/freecadcmd-python3
+
+# FreeCAD links Qt even in its command-line build. With no display it segfaulted here
+# (freecadcmd exited -11, signal 11), which is why these are set rather than guessed at:
+# offscreen gives Qt a platform plugin that needs no X server, and the writable runtime
+# directory stops it failing on a read-only home.
+ENV QT_QPA_PLATFORM=offscreen
+ENV XDG_RUNTIME_DIR=/tmp/runtime
+ENV HOME=/tmp
+
+# Vercel sends traffic to port 80 unless PORT is set, so read it rather than hardcoding.
+# Shell form on purpose: exec form would pass the literal string $PORT.
+# The application directory is read-only at runtime, so built files go to /tmp.
+ENV AICAD_OUT=/tmp/aicad-out
+ENV PORT=80
+EXPOSE 80
+# /tmp is a fresh filesystem at runtime, so the runtime dir is made here, not at build time
+CMD mkdir -p /tmp/runtime /tmp/aicad-out && chmod 700 /tmp/runtime && \
+    python -m aicad.web --host 0.0.0.0 --port ${PORT}

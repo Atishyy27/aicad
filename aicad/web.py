@@ -15,12 +15,16 @@ import traceback
 import uuid
 from datetime import datetime
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+import os
 from pathlib import Path
 
 from .joints import REGISTRY
 from .parse import Spec, parse
 
-OUT_ROOT = Path("out") / "web"
+# Where built files land. Overridable because a hosted container usually has a read-only
+# application directory and only /tmp writable: on Vercel this app got a 500 until
+# AICAD_OUT pointed somewhere it could actually write.
+OUT_ROOT = Path(os.environ.get("AICAD_OUT") or (Path("out") / "web"))
 _BUILD_LOCK = threading.Lock()  # FreeCAD and the geometry kernel are not run in parallel
 
 
@@ -45,7 +49,12 @@ def _num(v):
 
 
 def build(fields: dict, text: str, freecad: bool = True, out_root: Path = OUT_ROOT, progress=None) -> dict:
+    # Every step is kept as well as streamed. Hosted, the polling path can lose the job to
+    # another container, and then the only way the working reaches the page is in the result.
+    steps: list[str] = []
+
     def say(msg):
+        steps.append(msg)
         if progress:
             progress(msg)
 
@@ -66,11 +75,34 @@ def build(fields: dict, text: str, freecad: bool = True, out_root: Path = OUT_RO
     from .export import export_all
     from .joints import parts_of
     names = parts_of(joint, design.dims)
-    say(f"Sized: {len(design.dims)} dimensions, {len(design.checks)} strength checks")
+
+    say(f"Read as: {joint.TITLE}, {design.duty}")
+    for key, value in design.raw.items():
+        # the raw solutions of the sizing formulas, before rounding to a standard size
+        say(f"  formula {key}: {value:.2f} mm")
+    for key, why in (design.rules or {}).items():
+        if key in design.dims:
+            say(f"  {key} = {design.dims[key]:g} mm  <-  {str(why)[:150]}")
+    say(f"Sized: {len(design.dims)} dimensions from {len(design.rules or {})} rules")
+    for c in design.checks:
+        pct = 100 * c.stress_mpa / c.allowable_mpa if c.allowable_mpa else 0
+        say(f"  check {c.name}: {c.formula} = {c.stress_mpa:.1f} MPa vs {c.allowable_mpa:g} allowed"
+            f"  ->  {'pass' if c.passed else 'FAIL'} ({pct:.0f}% used)")
+    say(f"Checked: {sum(1 for c in design.checks if c.passed)} of {len(design.checks)} pass")
+    for n in design.notes:
+        say(f"  note: {str(n)[:200]}")
     with _BUILD_LOCK:
-        say(f"Building {len(names)} solid parts")
+        say(f"Building {len(names)} solid parts with the CAD kernel: {', '.join(names)}")
         parts = joint.build_parts(design.dims)
-        say("Writing STEP files, assembly, exploded and weak-spot views")
+        for name, part in parts.items():
+            try:
+                solids = part.solids().vals()
+                vol = sum(x.Volume() for x in solids) / 1000.0
+                say(f"  {name}: {len(solids)} solid, {vol:,.1f} cm3, "
+                    f"{vol * 7.85 / 1000:,.2f} kg in steel")
+            except Exception:
+                say(f"  {name}: built")
+        say("Writing STEP files, the assembly, the exploded and weak-spot views")
         export_all(parts, design, joint, out, request=text)
         fc = None
         if freecad:
@@ -78,6 +110,15 @@ def build(fields: dict, text: str, freecad: bool = True, out_root: Path = OUT_RO
             say("Drawing the A3 first-angle sheet in FreeCAD")
             fc = run_pack(out, joint, design, text)
     say("Done")
+
+    # Say so when the drawing did not happen. A missing sheet used to look identical to a
+    # joint that simply has no sheet, which is how a hosted deploy can quietly lose a feature.
+    if freecad and not (fc and fc.get("ok")):
+        why = (fc or {}).get("reason") or (fc or {}).get("error") or "FreeCAD did not run"
+        log = (fc or {}).get("log") or ""
+        # carry the tail of FreeCAD's own output: "exited 1" alone says nothing about why
+        design.notes.append(f"No drawing sheet: {str(why)[:200]}"
+                            + (f" | FreeCAD said: {str(log)[-400:]}" if log else ""))
 
     files = {"viewer": "viewer.html", "assembly_step": "assembly.step", "report": "report.md"}
     files.update({f"part_{p}": f"parts/{p}.step" for p in joint.PARTS})
@@ -87,6 +128,7 @@ def build(fields: dict, text: str, freecad: bool = True, out_root: Path = OUT_RO
             files["dxf"] = "drawing.dxf"
     return {
         "ok": True,
+        "steps": steps,          # the full working, so the page can show it however it got here
         "id": run_id,
         "title": joint.TITLE,
         "load_n": design.load_n,
@@ -168,6 +210,10 @@ class Handler(BaseHTTPRequestHandler):
         self.send_response(code)
         self.send_header("Content-Type", ctype)
         self.send_header("Content-Length", str(len(body)))
+        # Never cache the page or the API. Hosted, a browser holding an old copy looks exactly
+        # like a deploy that did not work, and that cost real time to tell apart.
+        self.send_header("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
+        self.send_header("Pragma", "no-cache")
         self.end_headers()
         self.wfile.write(body)
 
@@ -179,7 +225,8 @@ class Handler(BaseHTTPRequestHandler):
             job = JOBS.get(self.path.rsplit("/", 1)[-1])
             return self._json(200 if job else 404, job or {"error": "unknown job"})
         if self.path in ("/", "/index.html"):
-            return self._send(200, PAGE.encode(), "text/html; charset=utf-8")
+            page = PAGE.replace("__BUILD_ID__", _BUILD_ID)
+            return self._send(200, page.encode(), "text/html; charset=utf-8")
         if self.path.startswith("/out/"):
             root = Path(self.out_root).resolve()
             target = (root / self.path[len("/out/"):].split("?")[0]).resolve()
@@ -240,6 +287,9 @@ def main(argv=None) -> int:
     return 0
 
 
+# Stamped into the page so you can tell at a glance whether the browser is showing a stale copy
+_BUILD_ID = datetime.fromtimestamp(Path(__file__).stat().st_mtime).strftime("%Y-%m-%d %H:%M")
+
 PAGE = r"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -283,7 +333,12 @@ label{display:flex;flex-direction:column;gap:5px;font-size:12.5px;color:var(--mu
 .hidden{display:none}
 progress{width:100%;height:6px;appearance:none;border:0;border-radius:99px;overflow:hidden;background:var(--line)}
 progress::-webkit-progress-bar{background:var(--line)}progress::-webkit-progress-value{background:var(--accent)}
-#log{margin:10px 0 0;padding:0;list-style:none;font-size:13.5px;color:var(--muted)}
+#log{margin:10px 0 0;padding:0;list-style:none;font-size:13.5px;color:var(--muted);
+     max-height:340px;overflow-y:auto}
+#log li.substep{padding-left:34px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+     font-size:12.5px;opacity:.9;white-space:pre-wrap;word-break:break-word}
+#log li.substep::before{content:"";}
+#log li.bad{color:var(--bad,#c0392b)}
 #log li{padding:3px 0 3px 22px;position:relative}
 #log li::before{content:"●";position:absolute;left:4px;color:var(--accent)}
 #log li.done::before{content:"✓";color:var(--ok)}
@@ -320,6 +375,7 @@ tr.bad td{background:color-mix(in srgb,var(--bad) 9%,transparent)}
     <button id="go">Understand</button>
   </div>
   <div class="chips" id="chips"></div>
+  <div class="muted" style="font-size:11px;margin-top:6px">build __BUILD_ID__</div>
   <div id="status" class="muted" style="margin-top:10px"></div>
 </section>
 
@@ -388,7 +444,7 @@ const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 let joints={}, lastText="", lastFields=null;
 const EXAMPLES=["knuckle joint for 50 kN","socket and spigot joint for 35 kN","sleeve and cotter joint for 50 kN",
-  "gib and cotter joint for 50 kN","M16 nut bolt, plates 30 mm thick, load 20 kN",
+  "gib and cotter joint for 50 kN","M24 nut bolt, plates 30 mm thick, load 20 kN",
   "flange coupling to transmit 20 kW at 1440 rpm"];
 $("chips").innerHTML=EXAMPLES.map(e=>`<button class="chip">${esc(e)}</button>`).join("");
 $("chips").onclick=e=>{if(e.target.classList.contains("chip")){$("text").value=e.target.textContent;$("go").click();}};
@@ -415,6 +471,13 @@ $("go").onclick=async()=>{
   ["result","askCard","progCard"].forEach(i=>$(i).classList.add("hidden"));
   try{
     const r=await post("/api/understand",{text:lastText,parser:$("parser").value});
+    if(!r||!r.spec||!r.joints){
+      // a server-side error came back instead of a reading: say so rather than throwing
+      $("status").innerHTML=`<span class="err">${esc((r&&(r.error||r.message))||"the reader failed")}</span>`;
+      return;
+    }
+    // wipe the previous reading first, so nothing from the last request can linger in a box
+    ["load","dia","bolt","grip","torque","power","speed"].forEach(i=>$(i).value="");
     joints=r.joints; const s=r.spec;
     $("joint").innerHTML='<option value="">choose...</option>'+Object.entries(joints)
       .map(([k,v])=>`<option value="${k}">${esc(v.title)} (${v.parts} parts)</option>`).join("");
@@ -448,13 +511,40 @@ function fields(){
   return {joint:j, load_n:$("load").value?+$("load").value*1000:null, rod_diameter_mm:num("dia"),
           bolt_size:num("bolt"), grip_mm:num("grip"), torque_nm:num("torque"), power_kw:num("power"), speed_rpm:num("speed")};
 }
+function showSteps(list){
+  // Print the actual working: every formula, every rounding, every check with its numbers.
+  // Nothing here is stored text, it is what the server computed for this request.
+  const log=$("log");
+  for(const m of list){
+    const li=document.createElement("li");
+    li.textContent=m;
+    if(/^\s/.test(m)) li.className="substep";
+    if(/FAIL/.test(m)) li.classList.add("bad");
+    log.appendChild(li);
+  }
+  log.querySelectorAll("li").forEach(n=>n.classList.add("done"));
+  log.scrollTop=log.scrollHeight;
+}
 async function runBuild(f){
   $("progCard").classList.remove("hidden"); $("log").innerHTML=""; $("prog").value=0;
   const {job}=await post("/api/build_async",{fields:f,text:lastText});
-  let seen=0;
+  let seen=0, misses=0;
   for(;;){
     await new Promise(r=>setTimeout(r,600));
-    const st=await (await fetch("/api/job/"+job)).json();
+    const res=await fetch("/api/job/"+job);
+    const st=await res.json();
+    // The job lives in one server's memory. Hosted, a later poll can land on a different
+    // instance that never heard of it, so the job reads as unknown. Build it in one request
+    // instead: slower to show progress, but it actually finishes.
+    if(!res.ok||!Array.isArray(st.progress)){
+      if(++misses<3) continue;
+      const li=document.createElement("li");
+      li.textContent="Building in one step, the working appears below when it finishes";
+      $("log").appendChild(li); $("prog").value=2;
+      const r=await post("/api/build",{fields:f,text:lastText});
+      showSteps(r.steps||[]);
+      return r;
+    }
     while(seen<st.progress.length){
       const li=document.createElement("li"); li.textContent=st.progress[seen++]; $("log").appendChild(li);
       $("log").querySelectorAll("li").forEach((n,i,a)=>n.classList.toggle("done",i<a.length-1));
