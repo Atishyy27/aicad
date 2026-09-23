@@ -24,7 +24,8 @@ F = json.loads((HERE / "facts.json").read_text())
 # ---- fill these in when he supplies them --------------------------------------------------
 STUDENT = "Atishay Jain"
 ENROLMENT = "0801ME231024"
-TEAM = []                       # [("Name", "Enrolment"), ...] once he gives them
+TEAM = [("Ansh Yadav", "10"), ("Ankur Dodhke", "14"), ("Atishay Jain", "24"),
+        ("Bhavya Shrivastava", "30"), ("Dharmendra Gupta", "D03")]
 GUIDE = "____________________"  # guide's name
 GUIDE_TITLE = "____________________"   # designation
 HOD = "Dr. B. R. Rawal"
@@ -89,19 +90,19 @@ li{margin-bottom:1.5mm}
 .title-page{height:247mm;min-height:247mm;padding:0;display:flex;flex-direction:column;
   text-align:center;border:0;page-break-after:always}
 .tp-border{border:2.5pt solid #000;padding:3mm;flex:1 1 auto;display:flex;
-  flex-direction:column;min-height:0}
+  flex-direction:column}
 .tp-inner{border:0.8pt solid #000;padding:16mm 12mm 14mm;flex:1 1 auto;display:flex;
-  flex-direction:column;align-items:center;min-height:0}
-.tp-title{font-size:23pt;font-weight:700;line-height:1.25;margin:30mm 0 7mm;text-transform:uppercase}
+  flex-direction:column;align-items:center}
+.tp-title{font-size:23pt;font-weight:700;line-height:1.25;margin:22mm 0 6mm;text-transform:uppercase}
 .tp-sub{font-size:12pt;font-style:italic;color:#333;max-width:85%;line-height:1.45}
-.tp-label{font-size:11.5pt;margin-top:32mm;letter-spacing:.02em}
+.tp-label{font-size:11.5pt;margin-top:26mm;letter-spacing:.02em}
 .tp-deg{font-size:14pt;font-weight:700;margin-top:2mm;line-height:1.4}
-.tp-by{margin-top:32mm;font-size:12pt}
+.tp-by{margin-top:22mm;font-size:12pt}
 .tp-name{font-size:15pt;font-weight:700;margin-top:2mm}
-.tp-guide{margin-top:30mm;font-size:12pt}
-.tp-inst{margin-top:28mm;font-size:13pt;font-weight:700;line-height:1.45}
+.tp-guide{margin-top:20mm;font-size:12pt}
+.tp-inst{margin-top:19mm;font-size:13pt;font-weight:700;line-height:1.45}
 .seal{width:26mm;height:26mm;border:1.5pt solid #000;border-radius:50%;
-  display:flex;align-items:center;justify-content:center;font-size:8pt;margin:26mm auto 0;
+  display:flex;align-items:center;justify-content:center;font-size:8pt;margin:16mm auto 0;
   line-height:1.15}
 
 /* front matter */
@@ -236,7 +237,7 @@ def build_html() -> str:
     n_checks = sum(j["checks"] for j in F["joints"])
     team_block = ""
     if TEAM:
-        team_block = "<br>".join(f"{n} &nbsp;({e})" for n, e in TEAM)
+        team_block = "<br>".join(f"{n} &nbsp;&nbsp;&mdash;&nbsp;&nbsp;Roll No. {e}" for n, e in TEAM).replace("&mdash;", "&#8226;")
     else:
         team_block = (f"{STUDENT} &nbsp;({ENROLMENT})<br>"
                       f"<span class='blank'></span> &nbsp;(<span class='blank' "
@@ -296,7 +297,7 @@ departure and its reason are stated explicitly in Chapter 5 rather than left imp
 <p>We further declare that the content of this report has not been submitted, in whole or in
 part, to any other institute or university for the award of any degree or diploma.</p>
 <div class="sign-row" style="margin-top:30mm">
-  <div><div class="sign-line"></div>{STUDENT}<br>{ENROLMENT}</div>
+  <div><div class="sign-line"></div>Signatures of the candidates</div>
   <div><div class="sign-line"></div>Date and Place</div>
 </div>
 </section>"""
@@ -316,7 +317,7 @@ machine elements formed the primary reference for this work, and the Internet Ar
 which the out of copyright texts by Unwin and Leutwiler were obtained.</p>
 <p>Finally, we thank our families and classmates for their support during the course of this
 project.</p>
-<div style="margin-top:22mm;text-align:right">{STUDENT}<br>{ENROLMENT}</div>
+<div style="margin-top:22mm;text-align:right">Ansh Yadav<br>Ankur Dodhke<br>Atishay Jain<br>Bhavya Shrivastava<br>Dharmendra Gupta</div>
 </section>"""
 
     abstract = f"""
