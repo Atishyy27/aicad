@@ -86,9 +86,9 @@ b{font-weight:700}
   line-height:1.45;max-width:100%}
 
 /* front matter */
-.fm-h{font-size:20pt;font-weight:700;text-align:center;margin:0 0 8mm;letter-spacing:.02em}
+.fm-h{font-size:20pt;font-weight:700;text-align:center;margin:0 0 8mm;letter-spacing:.02em;text-decoration:underline}
 .inst-head{text-align:center;margin-bottom:6mm}
-.inst-head .i1{font-size:16pt;font-weight:700;line-height:1.35}
+.inst-head .i1{font-size:14pt;font-weight:700;line-height:1.35}
 .inst-head .i2{font-size:12pt;line-height:1.4}
 .inst-head .i3{font-size:16pt;font-weight:700;margin-top:2mm}
 .sess{font-size:18pt;font-weight:700;text-align:center;margin:4mm 0 8mm}
@@ -141,6 +141,16 @@ figcaption{font-size:12pt;font-weight:700;margin-top:2.5mm;text-align:center;lin
 .refs{text-align:left}
 .refs li{margin-bottom:3.5mm;line-height:1.15}
 """
+
+
+def logo(width_mm: float = 26) -> str:
+    """The institute crest, taken from the Major Project Format template itself."""
+    f = HERE / "assets" / "sgsits-logo.png"
+    if not f.exists():
+        return ""
+    b64 = base64.b64encode(f.read_bytes()).decode()
+    return (f'<div style="text-align:center;margin:4mm 0">'
+            f'<img src="data:image/png;base64,{b64}" style="width:{width_mm}mm" alt="SGSITS"></div>')
 
 
 def img_src(name: str) -> str:
@@ -241,6 +251,7 @@ def cover_html() -> str:
     return f"""
 <div class="cover">
   <div class="cv-title">{TITLE}</div>
+  {logo(30)}
   <div class="cv-sub">A Project Report Submitted to<br>
     Rajiv Gandhi Proudyogiki Vishwavidyalaya, Bhopal<br>
     towards the partial fulfillment of the degree of Bachelor of Technology<br>
@@ -250,13 +261,14 @@ def cover_html() -> str:
     <div>Supervised by:<br><span class="nm">{GUIDE}<br>{GUIDE_DESIG}<br>{DEPT}</span></div>
     <div class="r">Submitted by:<br><span class="nm">{names}</span></div>
   </div>
-  <div class="cv-inst">{INST}<br>{DEPT}<br>{SESSION}</div>
+  <div class="cv-inst">{INST}</div>
 </div>"""
 
 
 def inst_head() -> str:
     return f"""<div class="inst-head"><div class="i1">{INST}</div>
       <div class="i2">{INST_SUB}</div><div class="i3">{DEPT_CAPS}</div></div>
+      {logo(26)}
       <div class="sess">{SESSION}</div>"""
 
 
@@ -269,8 +281,8 @@ def recommendation_html() -> str:
 Bachelor of Technology in Mechanical Engineering of Rajiv Gandhi Proudyogiki Vishwavidyalaya,
 Bhopal (M.P.) during the session {SESSION}.</div>
 <div class="sig-row sig14">
-  <div><div class="sig-line"></div>{GUIDE}<br>{GUIDE_DESIG}<br>{DEPT}</div>
-  <div><div class="sig-line"></div>Head of Department<br>{HOD}<br>{DEPT}</div>
+  <div style="text-align:left">{GUIDE}<br>{GUIDE_DESIG}<br>{DEPT}</div>
+  <div style="text-align:left">Head of Department<br>{GUIDE_DESIG}<br>{DEPT}</div>
 </div>"""
 
 
