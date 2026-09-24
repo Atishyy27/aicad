@@ -40,12 +40,14 @@ F = json.loads((HERE / "facts.json").read_text())
 
 # ---------------------------------------------------------------- the team and the front page
 # Enrolment numbers taken from the team's own presentation, which uses the full form.
+# Full enrolment form: 0801ME23 followed by the roll digits, and 0801ME23D0x for the
+# diploma entry. Roll digits taken from the team's own presentation.
 TEAM = [
-    ("ME231013", "Ankur Dodke"),
-    ("ME231014", "Ansh Yadav"),
-    ("ME231024", "Atishay Jain"),
-    ("ME231030", "Bhavya Shrivastava"),
-    ("ME22D04", "Dharmendra Gupta"),
+    ("0801ME231013", "Ankur Dodke"),
+    ("0801ME231014", "Ansh Yadav"),
+    ("0801ME231024", "Atishay Jain"),
+    ("0801ME231030", "Bhavya Shrivastava"),
+    ("0801ME23D04", "Dharmendra Gupta"),
 ]
 GUIDE = "Dr. B. R. Rawal"
 GUIDE_DESIG = "Professor and Head"
@@ -112,7 +114,8 @@ b{font-weight:700}
 .cv-two{display:flex;justify-content:space-between;width:100%;font-size:14pt;font-weight:700;
   text-align:left;margin-bottom:10mm}
 .cv-two .r{text-align:right}
-.cv-two .nm{font-weight:400;font-size:12pt;line-height:1.55}
+.cv-two .nm{font-weight:400;font-size:12pt;line-height:1.5}
+.cv-two table td{border:none;font-size:12pt;vertical-align:top}
 .cv-inst{font-size:14pt;font-weight:700;margin-top:auto;line-height:1.45}
 
 /* contents, lists */
@@ -247,7 +250,12 @@ def header_for(title: str) -> str:
 # ------------------------------------------------------------------------------ front matter
 
 def cover_html() -> str:
-    names = "".join(f'<div>{e} &nbsp; {n}</div>' for e, n in TEAM)
+    names = "".join(
+        f'<tr><td style="padding:0.6mm 0;white-space:nowrap">{e}</td>'
+        f'<td style="padding:0.6mm 0 0.6mm 4mm;white-space:nowrap">{n}</td></tr>'
+        for e, n in TEAM)
+    names = (f'<table style="border-collapse:collapse;margin-left:auto">'
+             f'<tbody>{names}</tbody></table>')
     return f"""
 <div class="cover">
   <div class="cv-title">{TITLE}</div>
