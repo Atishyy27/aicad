@@ -616,9 +616,9 @@ def build() -> str:
 
 if __name__ == "__main__":
     html = build()
-    src = HERE / "AI-in-CAD-Slides.html"
+    src = HERE / "AI-in-CAD-Major-Project-Presentation.html"
     src.write_text(html)
-    pdf = HERE / "AI-in-CAD-Slides.pdf"
+    pdf = HERE / "AI-in-CAD-Major-Project-Presentation.pdf"
     if pdf.exists():
         pdf.unlink()
     subprocess.run([BRAVE, "--headless", "--disable-gpu", "--no-sandbox",
