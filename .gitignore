@@ -9,3 +9,4 @@ reference/
 
 report/shots/
 report/*.html
+report/.build/
