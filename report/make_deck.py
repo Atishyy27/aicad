@@ -655,12 +655,21 @@ def make_pptx(pdf: Path) -> None:
     for old in png_dir.glob("*.png"):
         old.unlink()
     subprocess.run(["pdftoppm", "-r", "150", "-png", str(pdf), str(png_dir / "s")], check=True)
+    try:
+        from notes import NOTES                      # when run from inside report/
+    except ImportError:
+        import sys
+        sys.path.insert(0, str(HERE))
+        from notes import NOTES
     prs = Presentation()
     prs.slide_width, prs.slide_height = Inches(W_IN), Inches(H_IN)
     blank = prs.slide_layouts[6]
-    for p in sorted(png_dir.glob("s-*.png")):
-        s = prs.slides.add_slide(blank)
-        s.shapes.add_picture(str(p), 0, 0, width=prs.slide_width, height=prs.slide_height)
+    for i, p in enumerate(sorted(png_dir.glob("s-*.png")), 1):
+        sl = prs.slides.add_slide(blank)
+        sl.shapes.add_picture(str(p), 0, 0, width=prs.slide_width, height=prs.slide_height)
+        note = NOTES.get(i)
+        if note:
+            sl.notes_slide.notes_text_frame.text = note.strip()
     out = HERE / "AI-in-CAD-Major-Project-Presentation.pptx"
     prs.save(str(out))
     print(f"{out.name}  {out.stat().st_size // 1024} KB")
