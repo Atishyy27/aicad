@@ -207,7 +207,72 @@ def build() -> None:
         </div>
       </div>""")
 
-    divider("Part 2", "What was built",
+    divider("Part 2", "Literature review",
+            "Three published sources define the design procedure used here. Two of them are out "
+            "of copyright, so every formula can be shown to a reviewer.")
+
+    slide("""
+      <div class="kick">Literature reviewed</div>
+      <h2>What each source contributes, and why three were needed</h2>
+      <table class="sm">
+        <tr><th>Source</th><th>Year</th><th>What it provides</th><th>Used for</th></tr>
+        <tr><td><b>NPTEL, IIT Kharagpur</b><br>Design of Machine Elements I, Module 4</td>
+            <td>Course</td>
+            <td>Complete design procedure for the socket and spigot cotter joint and the knuckle
+            joint: empirical proportions as multiples of the rod diameter, and the full list of
+            failure modes. Lesson 1 gives the key equations, Lesson 4 the bolt tightening
+            relation.</td>
+            <td>Primary procedure for four of the six joints</td></tr>
+        <tr><td><b>Unwin</b><br><i>The Elements of Machine Design</i></td><td>1899</td>
+            <td>Page 179: division of the slot breadth between cotter and gib, thickness as a
+            fraction of that breadth, and the permissible taper range.</td>
+            <td>The gib and cotter joint, which the course does not cover</td></tr>
+        <tr><td><b>Leutwiler</b><br><i>Elements of Machine Design</i></td><td>1917</td>
+            <td>Article 98 lists ten distinct ways a cotter joint fails, with the expression for
+            each. Article 275 analyses the flange coupling as key, bolts and flange at the hub.</td>
+            <td>Independent second opinion, and the coupling</td></tr>
+      </table>
+      <div class="row r2" style="flex:none;margin-top:8mm">
+        <div class="card l"><b>Why a second source on the same joint matters.</b> Where two
+        independent texts published eighteen years apart agree, the expression can be treated as
+        settled. Where they disagree, the disagreement is itself a finding, and three such
+        findings are reported later in this deck.</div>
+        <div class="card"><b>Standards consulted.</b> SP 46 for first angle projection and the
+        title block, IS 2048 for parallel keys and keyways, IS 1363 and IS 1364 for hexagon head
+        bolts and nuts, IS 2693 for cast iron flange couplings.</div>
+      </div>""")
+
+    slide("""
+      <div class="kick">Existing approaches, and the gap</div>
+      <h2>Modelling is solved. Language is solved. The connection between them is not.</h2>
+      <div class="row r3">
+        <div class="col">
+          <h3>Parametric CAD</h3>
+          <p>A model driven by a parameter table regenerates when the parameters change, which
+          removes the drafting labour.</p>
+          <div class="card r"><b>It does not determine the parameters.</b> The designer still
+          computes them, and the software regenerates an unsafe model as readily as a safe one.</div>
+        </div>
+        <div class="col">
+          <h3>Language models writing CAD code</h3>
+          <p>Recent work generates modelling code directly from a description. Geometry appears
+          quickly.</p>
+          <div class="card r"><b>No dimension can be traced to a calculation</b> and no failure
+          mode is verified. Geometry that cannot be justified is of no use in a design review.</div>
+        </div>
+        <div class="col">
+          <h3>Expert systems and handbooks in software</h3>
+          <p>Reliable within the range they were written for, and long established in industry.</p>
+          <div class="card r"><b>The calculation is hidden.</b> A result cannot be checked against
+          a published source without access to the implementation.</div>
+        </div>
+      </div>
+      <div class="card g" style="margin-top:8mm"><b>The gap addressed here.</b> A system in which
+      a written requirement is interpreted by a language model, the resulting parameters drive a
+      deterministic calculation taken from published literature, and that calculation stays open
+      to inspection by the reader.</div>""")
+
+    divider("Part 3", "What was built",
             "A written requirement goes in. A sized, checked, modelled and drawn joint comes out, "
             "with the whole working printed.")
 
@@ -290,7 +355,7 @@ def build() -> None:
         ratio, every dimension the source omits is sized against a failure check.</div>
       </div>""")
 
-    divider("Part 3", "Worked example",
+    divider("Part 4", "Worked example",
             "A knuckle joint for 50 kN, shown exactly as the software computes it.")
 
     dims = "".join(f"<tr><td class='mono'>{a}</td><td>{b}</td><td class='n'>{c:g}</td>"
@@ -359,7 +424,7 @@ def build() -> None:
           <div class="cap">Working printed for the example above.</div></div>
       </div>""")
 
-    divider("Part 4", "Output",
+    divider("Part 5", "Output",
             "Exact solids in a neutral format, and a first angle sheet produced without opening "
             "a CAD application.")
 
@@ -394,7 +459,7 @@ def build() -> None:
           is visible without reading the table.</div></div>
       </div>""")
 
-    divider("Part 5", "Verification",
+    divider("Part 6", "Verification",
             "Every proportion and every check compared against published design literature. "
             "The comparison found three errors in the sources.")
 
@@ -467,7 +532,7 @@ def build() -> None:
         </div>
       </div>""")
 
-    divider("Part 6", "Validation and limits",
+    divider("Part 7", "Validation and limits",
             "An independent finite element cross check, the tests that hold the work together, "
             "and what the system does not do.")
 
