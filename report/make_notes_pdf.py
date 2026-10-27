@@ -44,7 +44,7 @@ def build() -> None:
             ("Bhavya", "7 to 10", "What was built, the AI decision, scope"),
             ("Atishay", "11 to 17", "Worked example and output"),
             ("Dharmendra", "18 to 21", "Verification and the three findings"),
-            ("Ankur", "22 to 26", "Validation, tests, limits, conclusion")]
+            ("Ankur", "22 to 27", "Validation, tests, limits, timeline, conclusion")]
     table = "".join(f"<tr><td><b>{a}</b></td><td>{b}</td><td>{c}</td></tr>" for a, b, c in rows)
 
     blocks = []
@@ -65,7 +65,7 @@ def build() -> None:
             f"<title>Speaker notes</title><style>{CSS}</style></head><body>"
             f"<h1>Speaker notes</h1>"
             f"<div class='sub'>Strategic Application of Artificial Intelligence in CAD &middot; "
-            f"26 slides &middot; glance at these, do not read them out</div>"
+            f"{len(NOTES)} slides &middot; glance at these, do not read them out</div>"
             f"<table class='map'><tr><th>Presenter</th><th>Slides</th><th>Section</th></tr>"
             f"{table}</table>{''.join(blocks)}</body></html>")
 

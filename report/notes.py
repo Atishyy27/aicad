@@ -114,17 +114,30 @@ A first angle A3 sheet with front view, side view, plan, an isometric, dimension
 title block. Produced by driving FreeCAD without opening its interface.
 Alongside it: a STEP file for every part and one for the assembly, which opens in NX,
 SolidWorks, Fusion and Onshape, a DXF for AutoCAD, and an editable FreeCAD file.
-STEP is a neutral format, so the output is not locked to our software.""",
+STEP is a neutral format, so the output is not locked to our software.
+Next slide shows exactly what that NX claim rests on.""",
 
 17: """ATISHAY.
+One of our stated objectives is that the output opens in commercial CAD, specifically NX10,
+since that is what we are taught on in the lab. Here is what we actually checked, not what we
+assumed.
+We opened the exported file as text and read it directly. The schema line reads AUTOMOTIVE
+DESIGN, AP214, which is the exact STEP format NX10 reads natively. Inside it, four separate
+named parts, rod, strap, cotter, gib, each its own solid, not fused into one body. That is the
+structure an assembly import needs.
+We are saying this plainly: opening it inside NX10 itself still needs a lab machine, which
+none of us has done yet. If asked, say exactly that, do not claim it was opened when it was not.
+We verified the file is built correctly; we have not yet watched NX10 read it.""",
+
+18: """ATISHAY.
 The assembled model, which rotates in the browser, and the same joint coloured by how close each
 part is to its limit.
 The colouring is useful because it puts the weakest member in front of you without reading a
 table.""",
 
-18: """DHARMENDRA. Section opener. Say: now, how do we know any of this is correct.""",
+19: """DHARMENDRA. Section opener. Say: now, how do we know any of this is correct.""",
 
-19: """DHARMENDRA.
+20: """DHARMENDRA.
 Every proportion and every check was compared against the three sources.
 Knuckle and cotter are fully verified. The cotter joint is verified twice over, against two
 independent books.
@@ -135,7 +148,7 @@ individual manufacturers' practice. For the sleeve and cotter joint we searched 
 none covers it by name.
 Where no source exists, the software says so on every single run rather than implying one.""",
 
-20: """DHARMENDRA.
+21: """DHARMENDRA.
 The first of three errors we found in the published sources.
 The knuckle worked problem raises the pin from 40 to 55 millimetres to satisfy bending, then
 checks the eye using the original 40 millimetre pin.
@@ -144,7 +157,7 @@ of 65. Its own answer fails its own check by 23 percent.
 Our software instead enlarges the outer diameter of the eye until the check passes, and reports
 that it has done so.""",
 
-21: """DHARMENDRA.
+22: """DHARMENDRA.
 Two more.
 The cotter procedure checks crushing of the socket but never crushing between the cotter and the
 spigot. At its own final answer that omitted check reads 167 MPa against 110 allowed. Leutwiler
@@ -155,9 +168,9 @@ The page refutes itself, and it is out by a factor of ten.
 We found none of these by reading. We found them because the software computes every check and
 prints the arithmetic.""",
 
-22: """ANKUR. Section opener. Say: finally, how the work is validated and what it does not do.""",
+23: """ANKUR. Section opener. Say: finally, how the work is validated and what it does not do.""",
 
-23: """ANKUR.
+24: """ANKUR.
 An independent finite element cross check.
 First validated on a case with a known answer: a 20 mm bar in tension, formula 31.83, computed
 32.22, a difference of 1.2 percent.
@@ -169,7 +182,7 @@ moved between 157 and 191 MPa as we refined the mesh sixteen fold. So the softwa
 a finer mesh and reports NOT CONVERGED when the number will not settle, and tells you to design
 to the hand calculation.""",
 
-24: """ANKUR.
+25: """ANKUR.
 290 automated tests run on every change: the arithmetic, the geometry, the parsing, the drawing
 and the analysis.
 The row that matters most is the last one. There are tests that assert the three errors in the
@@ -179,7 +192,7 @@ One test found something no dimension check could: comparing the solids pairwise
 hook modelled 1.25 millimetres inside the strap, occupying metal another part already occupied,
 while every individual dimension was correct.""",
 
-25: """ANKUR.
+26: """ANKUR.
 What it does not do, said before anyone asks.
 Static loading only, so no fatigue and no stress concentration factors. Nominal dimensions only,
 so no tolerances or fits, which means the sheet is not yet a manufacturing drawing. Two of the
@@ -188,7 +201,31 @@ thread stripping is not checked.
 Future scope: riveted and welded joints follow the same pattern, then fatigue, then tolerances
 and fits, then a journal script so the assembly builds inside NX rather than being imported.""",
 
-26: """ANKUR.
+27: """ANKUR.
+Six objectives, set out at the start, each checked against the evidence rather than restated as
+done.
+Five of six are met without qualification: reading plain English, sizing and verifying with
+iteration, the drawing sheet, verification against literature, and browser use without install.
+The sixth, opening the exported file inside NX10 itself, is met in structure, AP214 schema, four
+separate solids, but not yet confirmed by watching it actually open there.
+If asked why show this at all instead of just claiming six for six: because recording the gap
+honestly is itself part of what Objective 5 asked for. A scorecard that hides its one open item
+would undercut the exact thing it is trying to demonstrate.""",
+
+28: """ANKUR.
+The timeline.
+Green is finished, amber is where we stand today, grey is what we propose for semester eight.
+Everything you have seen in this presentation is in the green and amber blocks.
+Phase one was the literature and the design procedure. Phase two was the sizing engine and all
+six joints with their forty-four checks. Phase three, where we are now, is the solid modelling,
+the drawing sheet, the verification against the three books, the finite element cross check,
+the tests and the deployment.
+Semester eight is a proposal taken from the limits on the previous slide, to be agreed with our
+guide: riveted and welded joints, fatigue, tolerances and fits, the two proportion sets that
+still have no source, an NX journal and a bill of materials.
+We are not giving week-by-week dates because we have not fixed them.""",
+
+29: """ANKUR.
 To close.
 Every dimension this software produces can be traced to a formula, and every formula to a page
 in a book. That is the difference between a tool that designs and one that only draws.

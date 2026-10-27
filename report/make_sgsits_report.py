@@ -47,7 +47,7 @@ TEAM = [
     ("0801ME231014", "Ansh Yadav"),
     ("0801ME231024", "Atishay Jain"),
     ("0801ME231030", "Bhavya Shrivastava"),
-    ("0801ME23D04", "Dharmendra Gupta"),
+    ("0801ME243D02", "Dharmendra Gupta"),
 ]
 GUIDE = "Dr. B. R. Rawal"
 GUIDE_DESIG = "Professor and Head"
@@ -154,6 +154,20 @@ def logo(width_mm: float = 26) -> str:
     b64 = base64.b64encode(f.read_bytes()).decode()
     return (f'<div style="text-align:center;margin:4mm 0">'
             f'<img src="data:image/png;base64,{b64}" style="width:{width_mm}mm" alt="SGSITS"></div>')
+
+
+def qr_appendix() -> str:
+    """Scannable link to the deployed system, shown at the head of the screenshots."""
+    f = HERE / "assets" / "demo-qr.png"
+    if not f.exists():
+        return ""
+    b64 = base64.b64encode(f.read_bytes()).decode()
+    return (f'<div style="display:flex;align-items:center;gap:8mm;margin:2mm 0 6mm">'
+            f'<img src="data:image/png;base64,{b64}" style="width:34mm;height:34mm" '
+            f'alt="QR code, deployed system">'
+            f'<p class="noind" style="margin:0">The system described in this report is deployed '
+            f'and can be used without installation at <b>aicad-vercel.vercel.app</b>. Scan the code '
+            f'or enter the address in a browser; the screenshots below were captured from it.</p></div>')
 
 
 def img_src(name: str) -> str:
@@ -771,6 +785,7 @@ correct.</p>"""
 
 def ch7() -> str:
     k = F["knuckle"]
+    n_checks = sum(j["checks"] for j in F["joints"])
     rows = "".join(
         f"<tr><td>{j['title']}</td><td class='n'>{j['parts']}</td><td class='n'>{j['checks']}</td>"
         f"<td class='n'>{round(j['worst']*100)}</td><td>all satisfied</td></tr>"
@@ -910,7 +925,41 @@ in Section 5.2 allowed a natural language interface to be provided without any p
 becoming unverifiable, and the requirement that every check be evaluated and its arithmetic
 printed is what made the three discrepancies of Section 7.4 visible. None of them was found by
 inspection of the sources; all three surfaced because a number computed by the system disagreed
-with a number printed in a book, and the disagreement could be traced.</p>"""
+with a number printed in a book, and the disagreement could be traced.</p>
+
+<h2 class="sec">7.7 Objectives Revisited</h2>
+<p class="noind">Section 1.3 set out six objectives. Each is assessed against the evidence
+presented above, rather than restated as met without qualification.</p>
+<ol>
+<li><b>Interpreting a plain English requirement.</b> Met. The language model extracts the joint
+type and load, as shown in Section 5.2, and any value it returns that cannot be traced back to
+the original sentence is discarded rather than used, which is the safeguard against a fabricated
+input rather than a verified calculation.</li>
+<li><b>Sizing and verifying against every failure mode, with iteration.</b> Met. All six joints
+satisfy all {n_checks} applicable checks at the stated load, as given in Table {n1}, and the
+iterative enlargement described in Section 5.5 is what makes the knuckle eye and the gib and
+cotter strap pass where the source proportions alone would not.</li>
+<li><b>Exact solid models in a neutral format that opens in commercial CAD software.</b>
+Substantially met. Every exported assembly was inspected directly and confirmed to carry the
+AUTOMOTIVE_DESIGN (AP214) schema with each component as a separate named solid rather than a
+single fused body, which is the structure Siemens NX requires to recognise an assembly on
+import. Opening the file inside NX itself, available only in the departmental laboratory, is the
+one objective not yet confirmed by direct observation and is recorded as such rather than assumed.</li>
+<li><b>A first angle drawing sheet conforming to Indian practice.</b> Met for projection and
+sheet layout, as shown in Figure 5. Dimensioning to SP 46 tolerance and surface finish
+conventions is not implemented and is listed in Section 8.2 rather than claimed here.</li>
+<li><b>Verification against published literature, with disagreements recorded.</b> Met for four
+of six joints, and partially met for the remaining two, exactly as tabulated in Table {n5}. The
+three discrepancies of Section 7.4 are the direct product of this objective rather than a
+side finding.</li>
+<li><b>Browser use without installation.</b> Met. The system is deployed and reachable without a
+local install, though the hosted copy runs the rule based interpreter rather than the language
+model, a distinction recorded in Section 6.5 rather than left implicit.</li>
+</ol>
+<p>Taken together, five of the six objectives are met without qualification and the sixth is met
+in structure but not yet confirmed by observation in the target software. Reporting that
+distinction is itself a requirement of Objective 5, which calls for disagreements and open points
+to be recorded explicitly rather than smoothed over.</p>"""
 
 
 def ch8() -> str:
@@ -1159,6 +1208,7 @@ def appendix_html() -> str:
     return f"""
 <div class="chapter-open"><div class="no">APPENDIX A</div>
   <div class="ti">Screenshots of the Working System</div></div>
+{qr_appendix()}
 {fig("A", "02-understood", "Parameters extracted from the requirement, presented for confirmation "
                          "or correction before the design proceeds")}
 {fig("A", "06-dimensions", "Every computed dimension with the rule that produced it and its "

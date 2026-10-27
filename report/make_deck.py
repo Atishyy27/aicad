@@ -22,7 +22,7 @@ F = json.loads((HERE / "facts.json").read_text())
 
 TEAM = [("0801ME231013", "Ankur Dodke"), ("0801ME231014", "Ansh Yadav"),
         ("0801ME231024", "Atishay Jain"), ("0801ME231030", "Bhavya Shrivastava"),
-        ("0801ME23D04", "Dharmendra Gupta")]
+        ("0801ME243D02", "Dharmendra Gupta")]
 GUIDE = "Dr. B. R. Rawal"
 GUIDE_DESIG = "Professor and Head, Department of Mechanical Engineering"
 INST = "Shri G. S. Institute of Technology and Science, Indore"
@@ -45,6 +45,16 @@ def shot(name: str) -> str:
 
 LOGO = f"data:image/png;base64,{b64(ASSETS / 'sgsits-logo.png')}" \
     if (ASSETS / "sgsits-logo.png").exists() else ""
+QR = f"data:image/png;base64,{b64(ASSETS / 'demo-qr.png')}" \
+    if (ASSETS / "demo-qr.png").exists() else ""
+
+
+def qr_block(size_mm: int = 24) -> str:
+    """Scannable link to the live system, with the URL written out beside it."""
+    return (f'<div style="margin-top:14px;display:flex;align-items:center;gap:12px;text-align:left">'
+            f'<img src="{QR}" style="width:{size_mm}mm;height:{size_mm}mm" alt="QR code, live demo">'
+            f'<div style="font-size:12px;line-height:1.5"><b style="color:var(--ink)">Live demo</b>'
+            f'<br>Scan, or open<br>{LIVE}</div></div>')
 
 CSS = """
 @page{size:338.7mm 190.5mm;margin:0}
@@ -175,7 +185,8 @@ def build() -> None:
             <b style="color:var(--ink)">{GUIDE}</b><br>{GUIDE_DESIG}</div>
           <h3 style="margin-top:12px">Institute</h3>
           <div style="font-size:12px;line-height:1.5;margin-top:4px">{INST}</div></div>
-      </div>""", "title", foot=f"Live at {LIVE}")
+      </div>
+      {qr_block(22)}""", "title", foot=f"Live at {LIVE}")
 
     divider("Part 1", "The problem",
             "Designing a standard joint is a fixed sequence of formulas. The sequence is the "
@@ -359,7 +370,7 @@ def build() -> None:
             "A knuckle joint for 50 kN, shown exactly as the software computes it.")
 
     dims = "".join(f"<tr><td class='mono'>{a}</td><td>{b}</td><td class='n'>{c:g}</td>"
-                   f"<td style='font-size:10px'>{(d or '-')[:66]}</td></tr>"
+                   f"<td style='font-size:10px'>{d or '-'}</td></tr>"
                    for a, b, c, d in k["dims"][:8])
     slide(f"""
       <div class="kick">Worked example &middot; 1 of 3</div>
@@ -448,6 +459,34 @@ def build() -> None:
       </div>""")
 
     slide(f"""
+      <div class="kick">Output &middot; NX10</div>
+      <h2>Verified the file structure. Opening it in NX10 itself is the one step still in the lab.</h2>
+      <div class="row r52">
+        <div class="col">
+          <div class="card l"><b>What we checked, directly, not assumed.</b> The exported
+          assembly was opened as text and read. Two things decide whether an assembly import
+          works at all, and both are confirmed below.</div>
+          <div class="eq" style="white-space:pre-wrap;line-height:1.55">FILE_SCHEMA(('AUTOMOTIVE_DESIGN {{ ... 214 ... }}'));
+
+#41  = PRODUCT('rod','rod', ...);
+#784 = PRODUCT('strap','strap', ...);
+#2141 = PRODUCT('cotter','cotter', ...);
+#2490 = PRODUCT('gib','gib', ...);</div>
+          <div class="cap">Exact lines read from assembly.step for the gib and cotter joint.</div>
+        </div>
+        <div class="col">
+          <table class="sm"><tr><th>Check</th><th>Result</th></tr>
+            <tr><td>Schema is AP214 (AUTOMOTIVE_DESIGN)</td><td>confirmed, exactly what NX10 reads</td></tr>
+            <tr><td>Parts stay separate, not fused</td><td>confirmed, 4 named solids for 4 parts</td></tr>
+            <tr><td>Opens in NX10 as an assembly</td><td>not yet observed, lab-only software</td></tr>
+          </table>
+          <div class="card r"><b>Said plainly, not glossed over.</b> This is the one objective of
+          six, from Section 1.3 of the report, not yet confirmed by watching it happen. The file
+          is built to the structure NX10 needs; nobody has opened it there yet.</div>
+        </div>
+      </div>""")
+
+    slide(f"""
       <div class="kick">Output &middot; geometry</div>
       <h2>Assembled, exploded, and coloured by how close each part is to its limit</h2>
       <div class="row r2">
@@ -475,11 +514,11 @@ def build() -> None:
         <tr><td>Gib and cotter</td><td>Unwin (1899), page 179</td>
             <td>breadth split, thickness and taper verified</td></tr>
         <tr><td>Flange coupling</td><td>NPTEL M4 L1 keys; Leutwiler Art. 275 bolts</td>
-            <td>all seven checks verified twice; proportions cannot be</td></tr>
+            <td>all seven checks verified twice; proportions not verifiable</td></tr>
         <tr><td>Sleeve and cotter</td><td>four books searched, none covers it</td>
-            <td>checks verified by correspondence; proportions not</td></tr>
+            <td>checks verified by correspondence; proportions unverified</td></tr>
         <tr><td>Hex bolted joint</td><td>NPTEL Module 4 Lesson 4</td>
-            <td>tightening relation verified; size table not</td></tr>
+            <td>tightening relation verified; size table unverified</td></tr>
       </table>
       <div class="card l" style="margin-top:9mm"><b>Where no source exists, the software says so
       on every run.</b> Leutwiler records that no standard set of flange coupling proportions was
@@ -614,6 +653,94 @@ def build() -> None:
         </div>
       </div>""")
 
+    OBJ = [
+        ("Interpret a plain English requirement", "Met",
+         "Language model extracts joint and load; anything not traceable to the sentence is dropped."),
+        ("Size and verify every failure mode, with iteration", "Met",
+         "All 44 applicable checks satisfied; iterative enlargement closes gaps the source proportions leave."),
+        ("Exact solids in a neutral format, opening in commercial CAD", "Substantially met",
+         "AP214 schema and 4 separate named solids confirmed by direct inspection; opening inside NX10 itself not yet observed."),
+        ("A first angle drawing sheet to Indian practice", "Met for projection and layout",
+         "SP 46 projection and title block done; tolerances and fits not implemented."),
+        ("Verify against literature, record disagreements", "Met for 4 of 6 joints",
+         "2 joints carry proportions with no supporting source, reported on every run, not hidden."),
+        ("Browser use without installation", "Met",
+         "Deployed and reachable without install; hosted copy runs the rule-based reader, not the language model."),
+    ]
+    rows = "".join(
+        f"<tr><td>{i}</td><td>{o}</td><td><b>{s}</b></td><td style='font-size:12px'>{e}</td></tr>"
+        for i, (o, s, e) in enumerate(OBJ, 1))
+    slide(f"""
+      <div class="kick">Objectives revisited</div>
+      <h2>Six objectives set at the start, assessed against the evidence, not restated as met</h2>
+      <table class="sm">
+        <tr><th>#</th><th>Objective</th><th>Status</th><th>Evidence</th></tr>
+        {rows}
+      </table>
+      <div class="card l" style="margin-top:9mm"><b>5 of 6 met without qualification.</b> The
+      sixth, opening the file inside NX10 itself, is met in file structure and not yet confirmed
+      by direct observation in the lab. Reporting that distinction is itself part of Objective 5:
+      disagreements and open points recorded explicitly, not smoothed over.</div>""")
+
+    # Timeline across both semesters. Green is finished, amber is where the project stands
+    # today, grey is planned. Marked honestly: only work that exists is shown as complete.
+    ph = [
+        ("Phase 1", "Semester 7", "done",
+         ["Problem formulation and scope",
+          "Literature review: NPTEL, Unwin 1899, Leutwiler 1917",
+          "Design procedure and failure modes extracted"]),
+        ("Phase 2", "Semester 7", "done",
+         ["Sizing engine and preferred size rounding",
+          "All six joints, 44 failure checks",
+          "Iterative correction when a check fails"]),
+        ("Phase 3", "Semester 7", "now",
+         ["Solid modelling and STEP export",
+          "First angle A3 sheet and DXF",
+          "Verification against the three sources",
+          "Finite element cross check, 290 tests",
+          "Web deployment, report and presentation"]),
+        ("Phase 4", "Semester 8, proposed scope", "next",
+         ["Riveted and welded joints",
+          "Fatigue loading and stress concentration",
+          "Tolerances and fits on the drawing",
+          "Verify the two proportion sets still without a source",
+          "NX journal script for direct assembly",
+          "Bill of materials and cost"]),
+    ]
+    colour = {"done": "#0e7c41", "now": "#9a5a00", "next": "#9aa6b4"}
+    label = {"done": "Complete", "now": "Current stage", "next": "Planned"}
+    cols = ""
+    for name, when, state, items in ph:
+        c = colour[state]
+        lis = "".join(f'<li style="margin-bottom:4px">{i}</li>' for i in items)
+        cols += (
+            f'<div style="flex:1;display:flex;flex-direction:column">'
+            f'<div style="width:13px;height:13px;border-radius:50%;background:{c};'
+            f'margin-bottom:9px;box-shadow:0 0 0 3px #fff,0 0 0 4.5px {c}33"></div>'
+            f'<div style="font-size:9.6px;letter-spacing:.09em;text-transform:uppercase;'
+            f'font-weight:800;color:{c}">{label[state]}</div>'
+            f'<div style="font-size:15px;font-weight:800;color:var(--ink);margin:3px 0 1px">'
+            f'{name}</div>'
+            f'<div style="font-size:10.6px;color:var(--mute);margin-bottom:7px">{when}</div>'
+            f'<ul style="font-size:11.4px;line-height:1.42;padding-left:14px;margin:0">{lis}</ul>'
+            f'</div>')
+    slide(f"""
+      <div class="kick">Timeline</div>
+      <h2>Where the project stands across both semesters</h2>
+      <div style="position:relative;margin-top:6mm">
+        <div style="position:absolute;top:6px;left:6px;right:6px;height:2px;
+          background:linear-gradient(90deg,#0e7c41 0%,#0e7c41 28%,#9a5a00 46%,#9aa6b4 62%,
+          #9aa6b4 100%)"></div>
+        <div style="display:flex;gap:7mm;position:relative">{cols}</div>
+      </div>
+      <div class="row r2" style="flex:none;margin-top:9mm">
+        <div class="card g"><b>Everything shown in green and amber exists today.</b> Six joints,
+        44 checks, the drawing sheet, the verification against three books and 290 tests are all
+        working and demonstrated in this presentation.</div>
+        <div class="card"><b>Semester 8 is a proposal, not a commitment.</b> These items come
+        from the limits listed on the previous slide and are to be agreed with the guide.</div>
+      </div>""")
+
     slide(f"""
       <div style="display:flex;flex-direction:column;justify-content:center;flex:1">
         <div class="kick">Conclusion</div>
@@ -628,6 +755,7 @@ def build() -> None:
           <div><div class="v">3</div><div class="l">errors found in published sources</div></div>
           <div><div class="v">{tests}</div><div class="l">automated tests</div></div>
         </div>
+        {qr_block(26)}
       </div>""", foot=f"{LIVE} &nbsp;&middot;&nbsp; " + " &middot; ".join(n for _, n in TEAM))
 
     html = (f"<!doctype html><html><head><meta charset='utf-8'><title>{TITLE}</title>"

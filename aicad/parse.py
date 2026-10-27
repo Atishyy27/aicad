@@ -228,7 +228,7 @@ def spec_from_ai_json(raw: dict, text: str, source: str) -> Spec:
 def _ask_anthropic(text: str, key: str, timeout: float) -> dict:
     """UNTESTED against the live API: no key existed when this was written."""
     body = {
-        "model": os.environ.get("AICAD_ANTHROPIC_MODEL", "claude-haiku-4-5"),
+        "model": os.environ.get("AICAD_ANTHROPIC_MODEL", "claude-sonnet-5"),
         "max_tokens": 400,
         "system": _SYSTEM + " Reply with the JSON object only.",
         "messages": [{"role": "user", "content": f"Request: {text}"}],
@@ -275,7 +275,7 @@ def _ask_claude_code(text: str, timeout: float, runner=subprocess.run) -> dict:
         "--output-format", "json",
         "--json-schema", json.dumps(_SCHEMA),
         "--tools", "",
-        "--model", os.environ.get("AICAD_CLAUDE_MODEL", "haiku"),
+        "--model", os.environ.get("AICAD_CLAUDE_MODEL", "sonnet"),
         "--no-session-persistence",
         "--setting-sources", "local",
         "--system-prompt", _SYSTEM,
