@@ -28,6 +28,19 @@ def box(x0, x1, y0, y1, z0, z1) -> cq.Workplane:
     )
 
 
+def soften(wp: cq.Workplane, op) -> cq.Workplane:
+    """Apply a fillet or chamfer, and keep the plain part if the kernel refuses it or the result
+    is not one valid solid. Edge finishing only removes material, so it can never cause an overlap."""
+    try:
+        out = op(wp)
+        solids = out.solids().vals()
+        if len(solids) == 1 and solids[0].isValid():
+            return out
+    except Exception:
+        pass
+    return wp
+
+
 def hole_z(diameter: float, span: float) -> cq.Workplane:
     return disc(diameter, 2 * span, -span)
 

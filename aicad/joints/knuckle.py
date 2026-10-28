@@ -165,7 +165,7 @@ def _checks(P, dims, s):
 def build_parts(dims: dict):
     import cadquery as cq
 
-    from ._shapes import box, disc, hole_x, hole_z, rod_along_x
+    from ._shapes import box, disc, hole_x, hole_z, rod_along_x, soften
 
     D, d, d2, d3 = dims["D"], dims["d"], dims["d2"], dims["d3"]
     t, t1, t2 = dims["t"], dims["t1"], dims["t2"]
@@ -184,13 +184,22 @@ def build_parts(dims: dict):
         .clean()
     )
 
-    def plate(z0):
-        return disc(d2, t1, z0).union(box(0, base_x, -d2 / 2, d2 / 2, z0, z0 + t1))
+    # a forged fork has no sharp outer corners: the plate rims and the long edges of the base
+    # share one radius, so the plates run into the base without a step
+    r_fork = max(2.0, round(min(0.4 * t1, 0.15 * d2)))
+
+    def plate(z0, outer_face):
+        p = disc(d2, t1, z0).union(box(0, base_x, -d2 / 2, d2 / 2, z0, z0 + t1)).clean()
+        return soften(p, lambda w: w.faces(outer_face).edges().fillet(r_fork))
+
+    base = box(base_x, base_x + base_len, -d2 / 2, d2 / 2, -outer, outer)
+    base = soften(base, lambda w: w.edges("|X").fillet(r_fork))
+    base = soften(base, lambda w: w.faces(">X").edges().fillet(r_fork / 2))
 
     fork = (
-        plate(inner)
-        .union(plate(-outer))
-        .union(box(base_x, base_x + base_len, -d2 / 2, d2 / 2, -outer, outer))
+        plate(inner, ">Z")
+        .union(plate(-outer, "<Z"))
+        .union(base)
         .union(rod_along_x(D, base_x + base_len / 2, base_len / 2 + rod_len))
         .cut(hole_z(d, span))
         .clean()
@@ -218,6 +227,18 @@ def build_parts(dims: dict):
     cone = cq.Solid.makeCone(
         r_big, r_small, length, pnt=cq.Vector(-length / 2, 0, taper_z), dir=cq.Vector(1, 0, 0)
     )
+
+    # finish the edges the way a machined part leaves the shop: chamfered rod ends and bores,
+    # rounded eye and fork faces, a radius where the rod runs into the eye
+    e = max(1.5, round(0.06 * D))
+    eye_rod = soften(eye_rod, lambda w: w.faces(">Z or <Z").edges().fillet(max(e, round(0.12 * t))))
+    eye_rod = soften(eye_rod, lambda w: w.faces("<X").chamfer(e))
+    eye_rod = soften(eye_rod, lambda w: w.edges(cq.selectors.BoxSelector(
+        (-d2 / 2 - D, -d2, -d2), (-d2 / 2 + D / 2, d2, d2))).edges("not %CIRCLE").fillet(e))
+    fork = soften(fork, lambda w: w.faces(">X").chamfer(e))
+    pin = soften(pin, lambda w: w.faces("<Z").chamfer(e))
+    pin = soften(pin, lambda w: w.faces(">Z").edges().fillet(e))
+    collar = soften(collar, lambda w: w.faces(">Z or <Z").edges().chamfer(e / 2))
 
     return {
         "single_eye_rod": eye_rod,
