@@ -33,6 +33,12 @@ CROSS = [
      "phrasing. The engineering, pin diameter, failure checks, is correctly NOT done by the "
      "model, because that has one right answer from a formula and a model would make it "
      "unverifiable. The division is the design decision, not an accident."),
+    ("\"Is this a PINN? Where is the physics in the AI?\"",
+     "Not a PINN, and say why that is a strength. A physics informed neural network learns the "
+     "design and is penalised when it breaks an equation, so a violation becomes unlikely. Here "
+     "the model never produces a dimension: the mechanics equations size the part, nine failure "
+     "checks verify it, and a failing member grows 1 mm and is rechecked. Physics is not a "
+     "penalty on the answer, it is the answer, so no output can break it."),
     ("\"Where is the novelty? NX and SolidWorks already do parametric modelling.\"",
      "Parametric CAD regenerates whatever parameters it is given; it does not choose them and "
      "will not object to an unsafe design. The novelty here is specifically the translation "

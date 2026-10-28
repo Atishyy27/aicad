@@ -741,6 +741,33 @@ def build() -> None:
         from the limits listed on the previous slide and are to be agreed with the guide.</div>
       </div>""")
 
+    slide("""
+      <div class="kick">Physics first</div>
+      <h2>The AI proposes, the physics decides</h2>
+      <div class="flow" style="margin-top:4mm">
+        <div class="ai"><div class="n">1 &middot; AI</div><div class="t">Read the sentence</div>
+          <div class="d">"knuckle joint for 50 kN" becomes joint = knuckle, P = 50,000 N.
+          Any number not in the sentence is thrown away.</div></div>
+        <div><div class="n">2 &middot; PHYSICS</div><div class="t">Size from the equations</div>
+          <div class="d">D = &radic;(4P / &pi;&sigma;<sub>t</sub>), pin from shear and from bending,
+          the larger wins.</div></div>
+        <div><div class="n">3 &middot; PHYSICS</div><div class="t">Check every failure</div>
+          <div class="d">Tension, double shear, bending, crushing: nine checks with the arithmetic
+          printed.</div></div>
+        <div><div class="n">4 &middot; PHYSICS</div><div class="t">Fail? Enlarge and recheck</div>
+          <div class="d">The member that fails grows 1 mm at a time until every check passes.</div></div>
+        <div><div class="n">5 &middot; CAD</div><div class="t">Build and draw</div>
+          <div class="d">Exact solids in STEP, the assembly, and a first angle A3 sheet.</div></div>
+      </div>
+      <div class="row r2" style="flex:none;margin-top:8mm">
+        <div class="card l"><b>A physics informed neural network (PINN)</b> learns a design and is
+        penalised when it breaks an equation. The penalty makes a violation unlikely, not
+        impossible.</div>
+        <div class="card g"><b>Here the equations are not a penalty, they are the answer.</b> No
+        dimension comes from the model, so no output can break a law of mechanics. The model only
+        reads; the physics sizes, checks and corrects.</div>
+      </div>""")
+
     slide(f"""
       <div style="display:flex;flex-direction:column;justify-content:center;flex:1">
         <div class="kick">Conclusion</div>

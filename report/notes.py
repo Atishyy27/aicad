@@ -225,7 +225,14 @@ guide: riveted and welded joints, fatigue, tolerances and fits, the two proporti
 still have no source, an NX journal and a bill of materials.
 We are not giving week-by-week dates because we have not fixed them.""",
 
-29: """ANKUR.
+29: """ATISHAY.
+If you are asked whether this is a PINN, or where the AI is, use this slide.
+Say: the language model reads the sentence and nothing else. Every dimension comes from the
+mechanics equations on the screen, and every one of the nine failure modes is checked.
+A PINN is a neural network that gets penalised when it breaks physics, so it is usually right.
+Here physics is not a penalty, it is the calculation, so it cannot be wrong in that way.
+If a check fails, the part grows a millimetre and every check runs again.""",
+30: """ANKUR.
 To close.
 Every dimension this software produces can be traced to a formula, and every formula to a page
 in a book. That is the difference between a tool that designs and one that only draws.
