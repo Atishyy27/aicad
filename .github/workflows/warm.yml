@@ -1,0 +1,28 @@
+# Keeps the Vercel container awake so the first build in a demo does not wait a minute.
+# A cold container took 69 s for its first knuckle joint on 28 Oct 2026; a warm one takes 4 to 11 s.
+# Runs every 10 minutes from 09:00 to 23:00 IST. GitHub may start a scheduled run a few minutes
+# late, so still open the site yourself before presenting.
+name: warm
+
+on:
+  schedule:
+    - cron: "*/10 3-17 * * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Build the smallest joint, the way the page does
+        run: |
+          set -eu
+          url=https://aicad-vercel.vercel.app
+          curl -fsS -m 30 "$url/" -o /dev/null
+          spec=$(curl -fsS -m 60 -X POST -H "Content-Type: application/json" \
+            -d '{"text":"M24 nut bolt, plates 30 mm thick, load 20 kN","parser":"rules"}' \
+            "$url/api/understand" | jq -c '.spec | with_entries(select(.value != null))')
+          ok=$(curl -fsS -m 150 -X POST -H "Content-Type: application/json" \
+            -d "{\"fields\":$spec,\"text\":\"M24 nut bolt\"}" "$url/api/build" | jq -r '.ok')
+          echo "build ok: $ok"
+          test "$ok" = "true"
