@@ -195,7 +195,7 @@ while every individual dimension was correct.""",
 26: """ANKUR.
 What it does not do, said before anyone asks.
 Static loading only, so no fatigue and no stress concentration factors. Nominal dimensions only,
-so no tolerances or fits, which means the sheet is not yet a manufacturing drawing. Two of the
+so no tolerances or fits, which means the sheet is not yet a manufacturing drawing. Three of the
 six joints have proportions with no book behind them, and the software says so every run. Nut
 thread stripping is not checked.
 Future scope: riveted and welded joints follow the same pattern, then fatigue, then tolerances
@@ -204,12 +204,12 @@ and fits, then a journal script so the assembly builds inside NX rather than bei
 27: """ANKUR.
 Six objectives, set out at the start, each checked against the evidence rather than restated as
 done.
-Five of six are met without qualification: reading plain English, sizing and verifying with
-iteration, the drawing sheet, verification against literature, and browser use without install.
-The sixth, opening the exported file inside NX10 itself, is met in structure, AP214 schema, four
-separate solids, but not yet confirmed by watching it actually open there.
-If asked why show this at all instead of just claiming six for six: because recording the gap
-honestly is itself part of what Objective 5 asked for. A scorecard that hides its one open item
+Three are met without qualification: reading plain English, sizing and verifying with
+iteration, and browser use without install. Three are met in part: the NX10 import is right in
+structure, AP214 with each part its own solid, but not yet watched opening in the lab; the sheet
+has projection and layout but no tolerances; and two joints are only partly verified.
+If asked why show this at all instead of just claiming six for six: because recording the gaps
+honestly is itself part of what Objective 5 asked for. A scorecard that hides its open items
 would undercut the exact thing it is trying to demonstrate.""",
 
 28: """ANKUR.

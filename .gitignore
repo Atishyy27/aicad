@@ -7,6 +7,5 @@ out/
 .DS_Store
 reference/
 
-report/shots/
 report/*.html
 report/.build/

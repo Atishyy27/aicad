@@ -637,8 +637,8 @@ def build() -> None:
           factors are outside the scope.</li>
           <li><b>Nominal dimensions only.</b> Tolerances and fits are not applied, so the sheet is
           not yet a manufacturing drawing.</li>
-          <li><b>Two of six joints have unverified proportions.</b> The sleeve and cotter joint
-          and the flange coupling. The software reports this on every run.</li>
+          <li><b>Three of six joints have unverified proportions.</b> The sleeve and cotter
+          joint, the flange coupling and the hex bolt size table. The software reports this on every run.</li>
           <li><b>Nut thread stripping is not checked</b> for the bolted joint.</li>
         </ul></div>
         <div class="col">
@@ -677,9 +677,9 @@ def build() -> None:
         <tr><th>#</th><th>Objective</th><th>Status</th><th>Evidence</th></tr>
         {rows}
       </table>
-      <div class="card l" style="margin-top:9mm"><b>5 of 6 met without qualification.</b> The
-      sixth, opening the file inside NX10 itself, is met in file structure and not yet confirmed
-      by direct observation in the lab. Reporting that distinction is itself part of Objective 5:
+      <div class="card l" style="margin-top:9mm"><b>Objectives 1, 2 and 6 are met; 3, 4 and 5 are met in
+      part.</b> Each open point is stated in the table: the NX10 import not yet observed, no
+      tolerances on the sheet, two joints partly verified. Reporting those points is itself part of Objective 5:
       disagreements and open points recorded explicitly, not smoothed over.</div>""")
 
     # Timeline across both semesters. Green is finished, amber is where the project stands

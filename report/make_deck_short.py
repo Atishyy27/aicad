@@ -283,8 +283,8 @@ def build_phase2() -> None:
         <div class="card"><b>Finite element validation.</b> 1.2% off a known case before trusting
         the method; 11.5% higher than the hand formula on the real eye rod, expected, because the
         formula ignores the stress concentration at the pin bore that the FEA sees directly.</div>
-        <div class="card"><b>5 of 6 stated objectives met without qualification.</b> The sixth,
-        opening the exported file inside NX10 itself, is verified in file structure (AP214 schema,
+        <div class="card"><b>Objectives 1, 2 and 6 met; 3, 4 and 5 met in part.</b> The NX10 import,
+        the main open point, is verified in file structure (AP214 schema,
         4 separate solids on the gib and cotter example), not yet watched opening on a lab machine.</div>
       </div>""")
 
