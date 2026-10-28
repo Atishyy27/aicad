@@ -19,13 +19,14 @@ def test_knuckle_50kn_rod_from_tension():
 
 def test_knuckle_50kn_pin_is_raised_for_bending():
     r = knuckle.design(load_n=50_000, design_factor=1.0)
-    # thicknesses come off the rod, not the pin (NPTEL M4L2): D = 30, t = 1.25 D, t1 = 0.75 D.
-    # sigma_b = 16 P (t1/3 + t/4) / (pi d^3) <= 75  ->  d >= 38.55 -> next preferred 40
-    assert r.raw["pin_bending"] == pytest.approx(38.55, abs=0.01)
+    # thicknesses come off the rod, not the pin (NPTEL M4L2): D = 30, t = 1.25 D, t1 = 0.75 D,
+    # each rounded up to a whole mm before the pin is sized: t = 38, t1 = 23.
+    # sigma_b = 16 P (t1/3 + t/4) / (pi d^3) <= 75  ->  d >= 38.77 -> next preferred 40
+    assert r.raw["pin_bending"] == pytest.approx(38.77, abs=0.01)
     assert r.dims["d"] == 40
-    assert r.dims["t"] == 37.5 and r.dims["t1"] == 22.5
+    assert r.dims["t"] == 38 and r.dims["t1"] == 23
     # 2 D would be 60; the eye grows past it because the raised pin eats into the metal
-    assert r.dims["d2"] == 63
+    assert r.dims["d2"] == 62
     assert "governed by pin bending" == r.rules["d"]
     assert any("bending" in n for n in r.notes)
 
@@ -161,3 +162,12 @@ def test_bigger_factor_means_bigger_parts(factor):
     d = REGISTRY["knuckle"].design(load_n=50_000, design_factor=factor)
     base = REGISTRY["knuckle"].design(load_n=50_000, design_factor=1.0)
     assert d.dims["d"] >= base.dims["d"]
+
+
+def test_knuckle_derived_sizes_are_standard_not_raw_multiples():
+    """16 Oct review: 52.5 and 43.75 mm cannot be bought or cut. Every derived size is rounded up."""
+    r = knuckle.design(load_n=50_000)
+    assert r.dims["d3"] == 55                      # 1.5 x 35 = 52.5 -> next preferred size
+    for k in ("t", "t1", "t2", "collar_t", "taper_d", "clearance"):
+        assert r.dims[k] == int(r.dims[k]), (k, r.dims[k])
+    assert r.all_passed

@@ -9,8 +9,8 @@ from __future__ import annotations
 
 import math
 
-from ..design import (DEFAULT_DESIGN_FACTOR, Check, Design, check_positive, load_data, next_preferred,
-                      sizing_load, stresses_from, times)
+from ..design import (DEFAULT_DESIGN_FACTOR, Check, Design, ceil_mm, check_positive, load_data,
+                      next_preferred, sizing_load, stresses_from, times)
 
 NAME = "knuckle"
 TITLE = "Knuckle joint"
@@ -68,9 +68,10 @@ def design(
         raw["rod_tension"] = math.sqrt(4 * Pd / (math.pi * s["tension"]))
         D = next_preferred(raw["rod_tension"], sizes)
 
-    # every thickness comes from the ROD diameter (NPTEL IIT KGP M4L2 fig 4.2.3.1);
+    # every thickness comes from the ROD diameter (NPTEL IIT KGP M4L2 fig 4.2.3.1), rounded up to a
+    # whole mm before anything is sized off it, so the pin is checked against the plate actually cut;
     # the pin is sized separately and raised when shear or bending needs it
-    t_eye, t_fork = k_t * D, k_t1 * D
+    t_eye, t_fork = ceil_mm(k_t * D), ceil_mm(k_t1 * D)
     d = props["pin_diameter_d"]["times"] * D
     governing = "pin = rod diameter"
     if P is not None:
@@ -106,29 +107,29 @@ def design(
         "D": D,
         "d": d,
         "d2": d2,
-        "d3": props["head_collar_diameter_d3"]["times"] * D,
+        "d3": next_preferred(props["head_collar_diameter_d3"]["times"] * D, sizes),
         "t": t_eye,
         "t1": t_fork,
-        "t2": props["head_thickness_t2"]["times"] * D,
+        "t2": ceil_mm(props["head_thickness_t2"]["times"] * D),
     }
     m = DATA["modelling_choices"]
-    dims["collar_t"] = times(m["collar_thickness"], d)
-    dims["taper_d"] = times(m["taper_pin_diameter"], D)
-    dims["clearance"] = times(m["fork_clearance"], d)
+    dims["collar_t"] = ceil_mm(times(m["collar_thickness"], d))
+    dims["taper_d"] = ceil_mm(times(m["taper_pin_diameter"], D))
+    dims["clearance"] = ceil_mm(times(m["fork_clearance"], d))
     dims["fork_base"] = times(m["fork_base_length"], d)
     dims["rod_len"] = m["rod_length"]["times"] * dims["d2"]
     dims = {k: round(v, 3) for k, v in dims.items()}
 
-    def rule(key, prop_key):
+    def rule(key, prop_key, rounding="rounded up to a whole mm"):
         p = props[prop_key]
-        return f"{key} = {p['times']} x D, the rod diameter ({p['meaning']}) [{p['source']}]"
+        return f"{key} = {p['times']} x D, the rod diameter ({p['meaning']}), {rounding} [{p['source']}]"
 
     rules = {
         "D": "given by user" if rod_diameter_mm is not None
         else "rod in tension: D = sqrt(4P / (pi sigma_t)), rounded up to a preferred size",
         "d": f"governed by {governing}",
         "d2": rule("d2", "eye_outer_diameter_d2"),
-        "d3": rule("d3", "head_collar_diameter_d3"),
+        "d3": rule("d3", "head_collar_diameter_d3", "rounded up to a preferred size"),
         "t": rule("t", "eye_thickness_t"),
         "t1": rule("t1", "fork_thickness_t1"),
         "t2": rule("t2", "head_thickness_t2"),

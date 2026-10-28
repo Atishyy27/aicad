@@ -35,7 +35,7 @@ def test_knuckle_pin_explanation_names_bending_as_the_reason():
     joint = REGISTRY["knuckle"]
     d = joint.design(load_n=50_000, design_factor=1.0)
     text = explain_dim(d, joint, "d")
-    assert "38.5" in text and "bending" in text
+    assert "38.77" in text and "bending" in text
 
 
 @pytest.mark.parametrize("question,key", [
