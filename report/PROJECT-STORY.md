@@ -25,7 +25,7 @@ the source's own worked example failing its own stated allowable by 23 percent, 
 can redo from the numbers printed on that page. The omitted crushing check is confirmed by a
 second, fully independent book, Leutwiler 1917, written 18 years before NPTEL exists as a course,
 listing the identical formula as one of ten standard failure modes. The bolt constant error is the
-source's own worked example contradicting its own printed formula by a factor of ten. In each case
+source's own worked example contradicting its own printed formula by a factor of one hundred. In each case
 the source refutes itself or disagrees with an independent peer; we are reporting that, not
 asserting our own superiority.
 

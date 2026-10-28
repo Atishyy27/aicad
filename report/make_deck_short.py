@@ -268,7 +268,7 @@ def build_phase2() -> None:
         <td>167&nbsp;MPa vs 110 allowed at the source's own numbers; Leutwiler (1917) lists this
         mode independently, identical formula</td></tr>
         <tr><td>Bolt tightening constant printed as 284<i>d</i>&nbsp;kN</td>
-        <td>Source's own M20 example only works out at 2840<i>d</i>&nbsp;N, a factor of ten
+        <td>Source's own M20 example only works out at 2840<i>d</i>&nbsp;N, a factor of one hundred
         out</td></tr>
       </table>
       <div class="card l" style="margin-top:7mm"><b>None found by reading.</b> All three surfaced

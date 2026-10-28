@@ -563,10 +563,10 @@ def build() -> None:
           <h3>Constant printed wrongly</h3>
           <p>The initial tightening load is printed as 284<i>d</i> kN. The worked example on the
           same page obtains 56.8 kN for an M20 bolt.</p>
-          <div class="eq">284 &times; 20 = 5.68 kN &nbsp; &ne; &nbsp; 56.8 kN<br>
+          <div class="eq">284 &times; 20 = 5,680 kN &nbsp; &ne; &nbsp; 56.8 kN<br>
             2840 &times; 20 = 56,800 N &nbsp; = &nbsp; 56.8 kN &#10003;</div>
           <div class="card r"><b>The page refutes itself.</b> The constant is 2840<i>d</i> newtons
-          and the printed relation is out by a factor of ten. Every bolted design now reports the
+          and the printed relation is out by a factor of one hundred. Every bolted design now reports the
           tightening load.</div>
         </div>
       </div>""")

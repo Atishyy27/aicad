@@ -384,7 +384,8 @@ slender to carry the bending moment placed upon it.</p>
 from a requirement written in ordinary English. The user enters a sentence such as
 <i>knuckle joint for 50 kN</i>. A language model extracts the parameters from that sentence. All
 subsequent work is deterministic: the joint is sized from standard design formulas, each computed
-diameter is rounded up to the next preferred size, every applicable failure mode is verified
+diameter is rounded up to the next preferred size and each derived thickness to the next whole
+millimetre, every applicable failure mode is verified
 against the allowable stress, any dimension that fails is increased until it passes, every
 component is generated as an exact solid model, and a first angle A3 drawing sheet is produced
 with dimension lines and a title block.</p>
@@ -900,7 +901,7 @@ establishes this as an omission rather than a matter of preference.</p>
 <h3 class="sub">7.4.3 A Constant Printed Incorrectly</h3>
 <p class="noind">The initial tightening load for a bolted joint is printed as 284<i>d</i> kN. The
 worked example on the same page obtains 56.8 kN for an M20 bolt, which is consistent only with a
-constant of 2840<i>d</i> newtons. The printed relation is therefore in error by a factor of ten,
+constant of 2840<i>d</i> newtons. The printed relation is therefore in error by a factor of one hundred,
 and the source refutes itself. The system uses 2840<i>d</i> N and reports the tightening load on
 every bolted design, since at M20 it amounts to 56,800 N before any service load is applied.</p>
 
@@ -946,7 +947,7 @@ single fused body, which is the structure Siemens NX requires to recognise an as
 import. Opening the file inside NX itself, available only in the departmental laboratory, is the
 one objective not yet confirmed by direct observation and is recorded as such rather than assumed.</li>
 <li><b>A first angle drawing sheet conforming to Indian practice.</b> Met for projection and
-sheet layout, as shown in Figure 5. Dimensioning to SP 46 tolerance and surface finish
+sheet layout, as shown in Figure 7.1. Dimensioning to SP 46 tolerance and surface finish
 conventions is not implemented and is listed in Section 8.2 rather than claimed here.</li>
 <li><b>Verification against published literature, with disagreements recorded.</b> Met for four
 of six joints, and partially met for the remaining two, exactly as tabulated in Table {n5}. The
@@ -954,10 +955,11 @@ three discrepancies of Section 7.4 are the direct product of this objective rath
 side finding.</li>
 <li><b>Browser use without installation.</b> Met. The system is deployed and reachable without a
 local install, though the hosted copy runs the rule based interpreter rather than the language
-model, a distinction recorded in Section 6.5 rather than left implicit.</li>
+model, a distinction recorded in Section 5.2 rather than left implicit.</li>
 </ol>
-<p>Taken together, five of the six objectives are met without qualification and the sixth is met
-in structure but not yet confirmed by observation in the target software. Reporting that
+<p>Taken together, Objectives 1, 2 and 6 are met without qualification. Objectives 3, 4 and 5 are
+met in part, and the open point in each is stated above: the import into NX is not yet observed,
+dimensioning to SP 46 tolerances is not implemented, and two joints remain partly unverified. Reporting that
 distinction is itself a requirement of Objective 5, which calls for disagreements and open points
 to be recorded explicitly rather than smoothed over.</p>"""
 
@@ -994,8 +996,9 @@ most generally applicable beyond the six joints implemented.</p>
   a stress concentration factor would extend the system to cyclically loaded joints.</li>
   <li><b>Tolerances and fits.</b> The drawing sheet carries nominal dimensions only. Adding fits
   for the pin and its bore would make the output directly usable for manufacture.</li>
-  <li><b>Verification of the remaining proportions.</b> Two of the six joints have proportions
-  without a supporting source. A design data handbook would settle both.</li>
+  <li><b>Verification of the remaining proportions.</b> Three of the six joints have proportions
+  without a supporting source: the sleeve and cotter joint, the flange coupling and the size table
+  of the hex bolted joint. A design data handbook would settle all three.</li>
   <li><b>Direct integration with commercial CAD.</b> Output is presently exchanged as STEP. A
   journal script for Siemens NX would allow the assembly to be constructed within that software
   rather than imported into it.</li>

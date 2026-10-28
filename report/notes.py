@@ -164,7 +164,7 @@ spigot. At its own final answer that omitted check reads 167 MPa against 110 all
 lists it as one of ten failure modes, which is what makes it an omission and not a preference.
 Second, the bolt tightening constant is printed as 284 d kilonewtons, but the worked example on
 the same page gives 56.8 kN for an M20 bolt. That only works if the constant is 2840 d newtons.
-The page refutes itself, and it is out by a factor of ten.
+The page refutes itself, and it is out by a factor of one hundred.
 We found none of these by reading. We found them because the software computes every check and
 prints the arithmetic.""",
 

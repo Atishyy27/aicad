@@ -271,7 +271,7 @@ consequence.
    as an omission rather than a preference.
 3. **A constant printed incorrectly.** The bolt tightening load is printed as 284*d* kN, while the
    worked example on the same page computes 56.8 kN for an M20 bolt — a result consistent only
-   with a constant of 2840*d* newtons, a factor of ten different from what is printed. The source
+   with a constant of 2840*d* newtons, a factor of one hundred different from what is printed. The source
    refutes itself on its own page.
 
 None of these three were found by inspection; all three surfaced because the system evaluates
