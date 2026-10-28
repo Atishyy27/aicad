@@ -59,7 +59,7 @@ def render(stem_html: str, out_name: str, title: str) -> None:
         pdf.unlink()
     subprocess.run([BRAVE, "--headless", "--disable-gpu", "--no-sandbox",
                     f"--print-to-pdf={pdf}", "--no-pdf-header-footer",
-                    "--virtual-time-budget=30000", f"file://{src}"],
+                    "--virtual-time-budget=30000", src.resolve().as_uri()],
                    capture_output=True, timeout=200)
     print(f"{pdf.name}  {pdf.stat().st_size // 1024} KB  {D.N} slides")
 

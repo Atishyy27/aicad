@@ -10,7 +10,7 @@
    "verified": true,
    "source": "NPTEL, IIT Kharagpur, Design of Machine Elements I, Module 4 Lesson 2 'Cotter and knuckle joint', section 4.2.3 and work",
    "duty": "Load P = 50,000 N",
-   "worst": 0.761904761904762
+   "worst": 0.7575757575757576
   },
   {
    "name": "cotter",
@@ -72,7 +72,7 @@
   "raw": {
    "rod_tension": 32.57,
    "pin_shear": 25.75,
-   "pin_bending": 43.72
+   "pin_bending": 43.95
   },
   "dims": [
    [
@@ -91,48 +91,48 @@
     "d2",
     "eye outer diameter",
     70.0,
-    "d2 = 2.0 x D, the rod diameter (outer diameter of eye) [NPTEL IIT KGP M4L2 fig 4.2.3.1]"
+    "d2 = 2.0 x D, the rod diameter (outer diameter of eye), rounded up to a whole mm [NPTEL IIT KGP M4L2 fig 4.2.3.1]"
    ],
    [
     "d3",
     "pin head and collar diameter",
-    52.5,
-    "d3 = 1.5 x D, the rod diameter (pin head and collar diameter) [NPTEL IIT KGP M4L2 fig 4.2.3.1]"
+    55.0,
+    "d3 = 1.5 x D, the rod diameter (pin head and collar diameter), rounded up to a preferred size [NPTEL IIT KGP M4L2 fig 4.2.3.1]"
    ],
    [
     "t",
     "eye thickness",
-    43.75,
-    "t = 1.25 x D, the rod diameter (thickness of single eye) [NPTEL IIT KGP M4L2 fig 4.2.3.1]"
+    44.0,
+    "t = 1.25 x D, the rod diameter (thickness of single eye), rounded up to a whole mm [NPTEL IIT KGP M4L2 fig 4.2.3.1]"
    ],
    [
     "t1",
     "fork plate thickness",
-    26.25,
-    "t1 = 0.75 x D, the rod diameter (thickness of each fork plate) [NPTEL IIT KGP M4L2 fig 4.2.3.1]"
+    27.0,
+    "t1 = 0.75 x D, the rod diameter (thickness of each fork plate), rounded up to a whole mm [NPTEL IIT KGP M4L2 fig 4.2.3.1]"
    ],
    [
     "t2",
     "pin head thickness",
-    17.5,
-    "t2 = 0.5 x D, the rod diameter (thickness of pin head) [NPTEL IIT KGP M4L2 fig 4.2.3.1]"
+    18.0,
+    "t2 = 0.5 x D, the rod diameter (thickness of pin head), rounded up to a whole mm [NPTEL IIT KGP M4L2 fig 4.2.3.1]"
    ],
    [
     "collar_t",
     "collar thickness",
-    22.5,
+    23.0,
     ""
    ],
    [
     "taper_d",
     "taper pin diameter (big end)",
-    8.75,
+    9.0,
     ""
    ],
    [
     "clearance",
     "gap between eye and fork base",
-    4.5,
+    5.0,
     ""
    ],
    [
@@ -166,58 +166,58 @@
    [
     "pin bending",
     "32M / (pi d^3), M = P/2 (t1/3 + t/4)",
-    55.0,
+    55.9,
     75,
     true
    ],
    [
     "eye tension",
     "P / ((d2 - d) t)",
-    45.7,
+    45.5,
     75,
     true
    ],
    [
     "eye shear",
     "P / ((d2 - d) t)",
-    45.7,
+    45.5,
     60,
     true
    ],
    [
     "eye crushing",
     "P / (d t)",
-    25.4,
+    25.3,
     150,
     true
    ],
    [
     "fork tension",
     "P / ((d2 - d) 2 t1)",
-    38.1,
+    37.0,
     75,
     true
    ],
    [
     "fork shear",
     "P / ((d2 - d) 2 t1)",
-    38.1,
+    37.0,
     60,
     true
    ],
    [
     "fork crushing",
     "P / (d 2 t1)",
-    21.2,
+    20.6,
     150,
     true
    ]
   ],
   "notes": [
    "Sized for 1.25 x the given load (62,500 N), then checked at 50,000 N. That margin is why the checks sit below their limits.",
-   "Pin raised to 45 mm for bending (needs 43.7 mm), the same step the NPTEL worked problem takes. Set pin_bending.mode to 'check_only' to keep the pin equal to the rod."
+   "Pin raised to 45 mm for bending (needs 43.9 mm), the same step the NPTEL worked problem takes. Set pin_bending.mode to 'check_only' to keep the pin equal to the rod."
   ]
  },
- "tests": "290 tests collected in 18.70s",
- "commit": "1ff02f4"
+ "tests": "291 tests collected",
+ "commit": "1d3bb75"
 }

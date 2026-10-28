@@ -15,7 +15,7 @@ HERE = Path(__file__).parent
 sys.path.insert(0, str(HERE))
 from notes import NOTES                                    # noqa: E402
 
-BRAVE = "/Applications/Brave Browser.app/Contents/MacOS/Brave Browser"
+BRAVE = __import__("os").environ.get("AICAD_BROWSER", "/Applications/Brave Browser.app/Contents/MacOS/Brave Browser")
 WHO = {"ANSH": "#1f6feb", "BHAVYA": "#0e7c41", "ATISHAY": "#9a5a00",
        "DHARMENDRA": "#b02418", "ANKUR": "#6d28d9"}
 
@@ -77,7 +77,7 @@ def build() -> None:
         out.unlink()
     subprocess.run([BRAVE, "--headless", "--disable-gpu", "--no-sandbox",
                     f"--print-to-pdf={out}", "--no-pdf-header-footer",
-                    "--virtual-time-budget=20000", f"file://{src}"],
+                    "--virtual-time-budget=20000", src.resolve().as_uri()],
                    capture_output=True, timeout=200)
     print(f"{out.name}  {out.stat().st_size // 1024} KB")
 

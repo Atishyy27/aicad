@@ -85,7 +85,7 @@ does not give is sized against a failure check until it passes.""",
 12: """ATISHAY.
 Knuckle joint, 50 kN. Three calculations decide everything.
 Rod from direct tension gives 32.57, so the rod becomes 35, the next standard size.
-The pin is sized twice. Double shear asks for 25.75. Bending asks for 43.72. We take the larger,
+The pin is sized twice. Double shear asks for 25.75. Bending asks for 43.95. We take the larger,
 so the pin becomes 45.
 Bending asks for nearly 1.7 times what shear asks for. A pin sized on shear alone would pass its
 own check and bend in service. The textbook takes the same step.

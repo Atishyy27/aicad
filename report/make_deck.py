@@ -17,7 +17,7 @@ HERE = Path(__file__).parent
 SHOTS = HERE / "shots"
 ASSETS = HERE / "assets"
 BUILD = HERE / ".build"
-BRAVE = "/Applications/Brave Browser.app/Contents/MacOS/Brave Browser"
+BRAVE = __import__("os").environ.get("AICAD_BROWSER", "/Applications/Brave Browser.app/Contents/MacOS/Brave Browser")
 F = json.loads((HERE / "facts.json").read_text())
 
 TEAM = [("0801ME231013", "Ankur Dodke"), ("0801ME231014", "Ansh Yadav"),
@@ -768,7 +768,7 @@ def build() -> None:
         pdf.unlink()
     subprocess.run([BRAVE, "--headless", "--disable-gpu", "--no-sandbox",
                     f"--print-to-pdf={pdf}", "--no-pdf-header-footer",
-                    "--virtual-time-budget=40000", f"file://{src}"],
+                    "--virtual-time-budget=40000", src.resolve().as_uri()],
                    capture_output=True, timeout=400)
     print(f"{pdf.name}  {pdf.stat().st_size // 1024} KB  {N} slides")
     make_pptx(pdf)

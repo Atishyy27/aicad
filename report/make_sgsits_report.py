@@ -35,7 +35,7 @@ from reportlab.pdfgen import canvas
 HERE = Path(__file__).parent
 SHOTS = HERE / "shots"
 BUILD = HERE / ".build"
-BRAVE = "/Applications/Brave Browser.app/Contents/MacOS/Brave Browser"
+BRAVE = __import__("os").environ.get("AICAD_BROWSER", "/Applications/Brave Browser.app/Contents/MacOS/Brave Browser")
 F = json.loads((HERE / "facts.json").read_text())
 
 # ---------------------------------------------------------------- the team and the front page
@@ -207,7 +207,7 @@ def render(html: str, stem: str) -> Path:
         out.unlink()
     subprocess.run([BRAVE, "--headless", "--disable-gpu", "--no-sandbox",
                     f"--print-to-pdf={out}", "--no-pdf-header-footer",
-                    "--virtual-time-budget=30000", f"file://{src}"],
+                    "--virtual-time-budget=30000", src.resolve().as_uri()],
                    capture_output=True, timeout=300)
     return out
 

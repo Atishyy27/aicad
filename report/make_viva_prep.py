@@ -17,7 +17,7 @@ from pathlib import Path
 HERE = Path(__file__).parent
 sys.path.insert(0, str(HERE))
 
-BRAVE = "/Applications/Brave Browser.app/Contents/MacOS/Brave Browser"
+BRAVE = __import__("os").environ.get("AICAD_BROWSER", "/Applications/Brave Browser.app/Contents/MacOS/Brave Browser")
 WHO = {"Ansh": "#1f6feb", "Bhavya": "#0e7c41", "Atishay": "#9a5a00",
        "Dharmendra": "#b02418", "Ankur": "#6d28d9"}
 
@@ -63,7 +63,7 @@ HARD = {
                 "something you added to make the demo look more thorough?\"",
                 "It is the step the source material itself takes, not an addition: the NPTEL "
                 "lesson sizes the same pin on both checks and adopts the larger. The reason it "
-                "matters is numeric, not stylistic: at 50 kN, bending demands 43.7 mm against "
+                "matters is numeric, not stylistic: at 50 kN, bending demands 43.9 mm against "
                 "shear's 25.75 mm, a pin sized on shear alone would pass its own check and still "
                 "bend in service."),
     "Dharmendra": ("\"You are a final year mechanical student saying a published lesson from "
@@ -130,7 +130,7 @@ def build() -> None:
         out.unlink()
     subprocess.run([BRAVE, "--headless", "--disable-gpu", "--no-sandbox",
                     f"--print-to-pdf={out}", "--no-pdf-header-footer",
-                    "--virtual-time-budget=20000", f"file://{src}"],
+                    "--virtual-time-budget=20000", src.resolve().as_uri()],
                    capture_output=True, timeout=200)
     print(f"{out.name}  {out.stat().st_size // 1024} KB")
 

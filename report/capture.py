@@ -9,7 +9,7 @@ from playwright.sync_api import sync_playwright
 
 URL = sys.argv[1] if len(sys.argv) > 1 else "https://aicad-vercel.vercel.app"
 REQUEST = sys.argv[2] if len(sys.argv) > 2 else "knuckle joint for 50 kN"
-BRAVE = "/Applications/Brave Browser.app/Contents/MacOS/Brave Browser"
+BRAVE = __import__("os").environ.get("AICAD_BROWSER", "/Applications/Brave Browser.app/Contents/MacOS/Brave Browser")
 OUT = Path(__file__).parent / "shots"
 OUT.mkdir(exist_ok=True)
 
