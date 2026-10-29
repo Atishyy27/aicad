@@ -132,3 +132,23 @@ def test_sheet_poll_answers_at_once(server):
                                      "text": "M24 bolt", "poll": True})
     assert time.perf_counter() - t < 2.0
     assert r.get("pending") or "ok" in r
+
+
+def test_user_material_is_designed_alongside_the_table(server):
+    extra = [{"name": "EN8 steel", "tension": 110, "shear": 55, "crushing": 220, "density": 7850, "rate_inr_per_kg": 85},
+             {"name": "broken", "tension": -5}]
+    r = _post(server, "/api/materials", {"fields": {"joint": "knuckle", "load_n": 50_000}, "extra": extra})
+    names = [x["material"] for x in r["rows"]]
+    assert "EN8 steel" in names and "broken" not in names and len(names) == 7
+    mine = next(x for x in r["rows"] if x["material"] == "EN8 steel")
+    assert mine["user"] and mine["ok"] and mine["cost_inr"] > 0
+
+
+def test_followup_scales_and_explains_derived_sizes():
+    from aicad.parse import Spec
+    from aicad.redesign import follow_up
+    s = Spec(joint="knuckle", load_n=50_000.0)
+    assert follow_up(s, "double the load", mode="rules").spec.load_n == 100_000
+    assert follow_up(s, "double rod diameter", mode="rules").spec.rod_diameter_mm == 70
+    r = follow_up(s, "what if we make the pin double length", mode="rules")
+    assert r.kind == "explain" and "t + 2 t1" in r.message

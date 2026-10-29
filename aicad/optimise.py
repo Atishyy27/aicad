@@ -27,10 +27,12 @@ def _volume_mm3(joint, dims) -> float:
         PLAIN_EDGES.on = False
 
 
-def compare(spec) -> list[dict]:
+def compare(spec, extra=None) -> list[dict]:
+    """Every material in the table, plus any the user adds (same keys: name, tension, shear,
+    crushing, density, rate_inr_per_kg)."""
     joint = REGISTRY[spec.joint]
     rows = []
-    for m in MATERIALS["materials"]:
+    for m in MATERIALS["materials"] + list(extra or []):
         s = replace(spec, tension_mpa=m["tension"], shear_mpa=m["shear"], crushing_mpa=m["crushing"], notes=[])
         try:
             d = joint.design(**s.design_kwargs())

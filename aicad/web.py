@@ -225,19 +225,38 @@ def size(fields: dict) -> dict:
         return {"ok": False, "error": str(exc)}
 
 
-def materials(fields: dict) -> dict:
-    """The same joint designed in every material in the table, with its mass and material cost."""
+def _clean_materials(extra) -> list:
+    """User-added materials: keep only well-formed rows with positive numbers."""
+    out = []
+    for m in (extra or [])[:10]:
+        try:
+            row = {"name": str(m["name"])[:40] or "custom", "is_grade": str(m.get("is_grade", "user added"))[:40],
+                   "user": True}
+            for k in ("tension", "shear", "crushing", "density", "rate_inr_per_kg"):
+                v = float(m[k])
+                if not 0 < v < 100_000:
+                    raise ValueError(k)
+                row[k] = v
+            out.append(row)
+        except (KeyError, TypeError, ValueError):
+            continue
+    return out
+
+
+def materials(fields: dict, extra=None) -> dict:
+    """The same joint designed in every material in the table, plus any the user adds, with mass and cost."""
     from .optimise import MATERIALS, compare
     spec = _spec_from_fields(fields)
     if spec.missing() or not spec.supported():
         return {"ok": False, "missing": spec.missing()}
-    by_name = {m["name"]: m for m in MATERIALS["materials"]}
+    extra = _clean_materials(extra)
+    by_name = {m["name"]: m for m in MATERIALS["materials"] + extra}
     rows = []
-    for r in compare(spec):
+    for r in compare(spec, extra):
         m = by_name.get(r["material"], {})
         rows.append({k: v for k, v in r.items() if k != "spec"} | {
             "tension": m.get("tension"), "shear": m.get("shear"), "crushing": m.get("crushing"),
-            "density": m.get("density")})
+            "density": m.get("density"), "user": bool(m.get("user"))})
     return {"ok": True, "rows": rows, "verified": MATERIALS.get("verified_against_book", False),
             "note": MATERIALS.get("note", "")}
 
@@ -411,8 +430,8 @@ class Handler(BaseHTTPRequestHandler):
             if self.path == "/api/size":
                 return self._json(200, size(body.get("fields", {})))
             if self.path == "/api/materials":
-                f = body.get("fields", {})
-                return self._json(200, cached("materials", f, lambda: materials(f)))
+                f, extra = body.get("fields", {}), body.get("extra") or []
+                return self._json(200, cached("materials", f | {"_extra": extra}, lambda: materials(f, extra)))
             if self.path == "/api/sheet":
                 f, t = body.get("fields", {}), body.get("text", "")
                 if body.get("poll"):

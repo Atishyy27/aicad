@@ -143,6 +143,22 @@ border-radius:9px;color:var(--ink);text-decoration:none;font-size:13px}.files a:
     <table class="mats"><thead><tr><th>material</th><th>size</th><th>mass</th><th>cost</th></tr></thead><tbody id="matRows">
       <tr><td colspan="4" class="muted">comparing...</td></tr></tbody></table>
     <p class="note" id="matNote"></p>
+    <details style="margin-top:8px"><summary class="muted" style="cursor:pointer">+ Add your own material</summary>
+      <div class="field"><label>name</label><input id="mName" type="text" placeholder="e.g. EN8 steel"
+        style="width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:7px 9px"></div>
+      <div class="row">
+        <div class="field" style="flex:1"><label>tension, MPa</label><input id="mT" type="number" min="1" step="any" placeholder="80"></div>
+        <div class="field" style="flex:1"><label>shear, MPa</label><input id="mS" type="number" min="1" step="any" placeholder="40"></div>
+        <div class="field" style="flex:1"><label>crushing, MPa</label><input id="mC" type="number" min="1" step="any" placeholder="160"></div>
+      </div>
+      <div class="row">
+        <div class="field" style="flex:1"><label>density, kg/m3</label><input id="mD" type="number" min="1" step="any" placeholder="7850"></div>
+        <div class="field" style="flex:1"><label>price, Rs/kg</label><input id="mR" type="number" min="0.01" step="any" placeholder="85"></div>
+      </div>
+      <div class="row"><button class="ghost" id="mAdd">Add and compare</button><button class="ghost" id="mClear">Remove mine</button></div>
+      <p class="note">Allowable stresses are working values: yield strength divided by your factor of safety
+      (shear usually half of tension, crushing about twice). Saved in this browser only.</p>
+    </details>
   </div>
 
   <div class="blk hidden" id="chatBlk">
@@ -344,16 +360,24 @@ function renderDims(r){
 function lastMass(){ if(matsKey!==dutyKey()) return null;
   const m=mats.find(x=>x.material===(material?material.material:"30C8 plain carbon steel")); return m&&m.mass_kg!=null?m.mass_kg.toFixed(2):null;}
 
+let userMats=[]; try{userMats=JSON.parse(localStorage.getItem("aicad-materials")||"[]");}catch(e){}
+function saveUserMats(){try{localStorage.setItem("aicad-materials",JSON.stringify(userMats));}catch(e){}}
+$("mAdd").onclick=()=>{
+  const v=id=>parseFloat($(id).value), m={name:($("mName").value||"custom material").trim(),tension:v("mT"),shear:v("mS"),
+    crushing:v("mC"),density:v("mD"),rate_inr_per_kg:v("mR"),is_grade:"user added"};
+  if(!(m.tension>0&&m.shear>0&&m.crushing>0&&m.density>0&&m.rate_inr_per_kg>0)){$("matNote").textContent="Fill every field with a positive number.";return;}
+  userMats=userMats.filter(x=>x.name!==m.name).concat([m]).slice(-10); saveUserMats(); matsKey=""; loadMaterials();};
+$("mClear").onclick=()=>{userMats=[];saveUserMats();matsKey="";loadMaterials();};
 async function loadMaterials(){
   const key=dutyKey(); const f=JSON.parse(key);
   $("matRows").innerHTML=`<tr><td colspan="4" class="muted">designing it in 6 materials...</td></tr>`;
-  const r=await post("/api/materials",{fields:f}); if(key!==dutyKey()) return;
+  const r=await post("/api/materials",{fields:f,extra:userMats}); if(key!==dutyKey()) return;
   if(!r.ok){$("matRows").innerHTML=`<tr><td colspan="4" class="muted">${esc(r.error||"not available")}</td></tr>`;return;}
   mats=r.rows; matsKey=key; const ok=mats.filter(m=>m.ok);
   const light=ok.length?ok.reduce((a,b)=>a.mass_kg<b.mass_kg?a:b):null, cheap=ok.length?ok.reduce((a,b)=>a.cost_inr<b.cost_inr?a:b):null;
   $("matRows").innerHTML=mats.map((m,i)=>`<tr data-i="${i}" class="${material&&material.material===m.material?"sel":""}">
    <td>${esc(m.material)}<div class="muted" style="font-size:10.5px">${esc(m.is_grade||"")} &middot; &sigma;t ${m.tension} MPa
-   ${m===light?' <span class="best">LIGHTEST</span>':""}${m===cheap?' <span class="best">CHEAPEST</span>':""}</div></td>
+   ${m===light?' <span class="best">LIGHTEST</span>':""}${m===cheap?' <span class="best">CHEAPEST</span>':""}${m.user?' <span class="best" style="color:var(--acc)">YOURS</span>':""}</div></td>
    <td>${m.ok?(m.size??"-")+" mm":"fails"}</td><td>${m.mass_kg!=null?m.mass_kg.toFixed(2)+" kg":"-"}</td>
    <td>${m.cost_inr!=null?"Rs "+Math.round(m.cost_inr).toLocaleString("en-IN"):"-"}</td></tr>`).join("");
   $("matNote").textContent="Size is the governing diameter. Mass is the joint without the rod stubs. Allowable stresses and rates are working values, to be confirmed against the design data book and a supplier.";
