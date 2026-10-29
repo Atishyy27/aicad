@@ -1,8 +1,8 @@
 """Hex bolt, washer and nut: sizing from a standard table and geometry for 3 parts.
 
 Axis along Z. The bolt head sits below z = 0, the clamped thickness (grip) runs
-from z = 0 up, then the washer, then the nut. Threads are shown as a plain
-cylinder, the usual cosmetic-thread convention in CAD assemblies.
+from z = 0 up, then the washer, then the nut. Threads are cosmetic rings cut around
+the shank at the pitch, not a true helix; strength checks use the stress area.
 """
 from __future__ import annotations
 
@@ -123,17 +123,39 @@ def _checks(P, dims, s):
     ]
 
 
-def build_parts(dims: dict):
-    from ._shapes import disc, hexagon, hole_z
+def _thread_rings(wp, d, pitch, z_start, z_end):
+    """Cut shallow V grooves at the pitch between z_start and z_end, never past the nominal diameter."""
+    import cadquery as cq
 
-    d, s, k, m = dims["d"], dims["s"], dims["k"], dims["m"]
+    n = min(40, int((z_end - z_start) / pitch))
+    if n < 1:
+        return wp
+    r, depth, half = d / 2, 0.3 * pitch, 0.35 * pitch
+    pts = [(r + 0.2, z_start)]
+    for i in range(n):
+        zc = z_start + (i + 0.5) * pitch
+        pts += [(r, zc - half), (r - depth, zc), (r, zc + half)]
+    pts += [(r + 0.2, z_start + n * pitch)]
+    cutter = cq.Workplane("XZ").polyline(pts).close().revolve(360, (0, 0, 0), (0, 1, 0))
+    return wp.cut(cutter).clean()
+
+
+def build_parts(dims: dict):
+    from ._shapes import disc, hexagon, hole_z, soften
+
+    d, s, k, m, pitch = dims["d"], dims["s"], dims["k"], dims["m"], dims["pitch"]
     w_in, w_out, w_h = dims["washer_in"], dims["washer_out"], dims["washer_h"]
     grip, L = dims["grip"], dims["L"]
     span = L + k + 10
 
-    bolt = hexagon(s, k, -k).union(disc(d, L, 0)).clean()
+    head = soften(hexagon(s, k, -k), lambda w: w.faces("<Z").chamfer(0.08 * s))
+    shank = soften(disc(d, L, 0), lambda w: w.faces(">Z").chamfer(0.75 * pitch))
+    bolt = head.union(shank).clean()
+    z_start = max(pitch, L - min(2 * d + 6, L))
+    bolt = soften(bolt, lambda w: _thread_rings(w, d, pitch, z_start, L - pitch))
     washer = disc(w_out, w_h, grip).cut(hole_z(w_in, span)).clean()
-    nut = hexagon(s, m, grip + w_h).cut(hole_z(d, span)).clean()
+    blank = soften(hexagon(s, m, grip + w_h), lambda w: w.faces(">Z or <Z").chamfer(0.06 * s))
+    nut = blank.cut(hole_z(d, span)).clean()
     return {"bolt": bolt, "washer": washer, "nut": nut}
 
 
