@@ -1,0 +1,20 @@
+\chapter{Conclusions and Scope of Future Work}
+
+\section{Conclusions}
+
+A system has been developed which accepts a machine joint requirement written in ordinary English and returns a complete design. Every dimension is computed from published design formulas, every applicable failure mode is verified against the allowable stress, every component is generated as an exact solid model, and a first angle sectional drawing is produced with dimensions, a parts list and a title block. Six joints are implemented, applying 44 distinct failure checks in total, and the implementation is covered by 301 automated tests. A material selection step offers six materials and accepts the user's own.
+
+The objective of keeping the design traceable has been met. Every dimension can be attributed either to a formula with a cited source or to an explicitly named failure check, and the working of each run is printed in full so that the result can be verified rather than accepted.
+
+The system was validated against worked examples from the reference text. The knuckle joint reproduces Bhandari Example 4.5 exactly, and the cotter joint reproduces nine of the ten sizes of Example 4.2. The exercise also revealed three errors in the sources themselves, one of which is a worked example whose own answer exceeds its allowable stress by 23 percent. These were found because the system evaluates every check on every design and reports the arithmetic. The division of responsibility, in which the language model reads the requirement and deterministic code does the engineering, is the element most generally applicable beyond these joints.
+
+\section{Scope for Future Work}
+
+\begin{enumerate}
+  \item \textbf{Additional joints.} Riveted and welded joints follow the same pattern and could be added without change to the architecture.
+  \item \textbf{Fatigue loading.} All sizing at present is static. An endurance limit and a stress concentration factor would extend the system to cyclically loaded joints.
+  \item \textbf{Tolerances, fits and GD\&T.} The sheet carries nominal dimensions only. Fits, tolerances and geometric dimensioning and tolerancing would make it directly usable for manufacture.
+  \item \textbf{Verification of remaining proportions.} Three joints have proportions without a supporting source: the sleeve and cotter joint, the flange coupling and the hex bolt size table. A design data handbook would settle all three.
+  \item \textbf{NX journal.} A journal script for Siemens NX would build the assembly within that software instead of importing STEP.
+  \item \textbf{Cotter factor of safety and costing.} A separate factor of safety for the cotter, as Bhandari uses, and a costed bill of materials.
+\end{enumerate}

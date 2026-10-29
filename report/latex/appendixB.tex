@@ -1,0 +1,11 @@
+\clearpage
+\phantomsection\addcontentsline{toc}{chapter}{Appendix B \quad Selected Source Code}
+\markboth{Appendix B}{}\expandafter\gdef\csname tp@\thepage\endcsname{}
+\begin{center}{\fontsize{14}{17}\selectfont\bfseries APPENDIX B\\ SELECTED SOURCE CODE}\end{center}
+\singlespacing\small\noindent The listings are read from \texttt{aicad/joints/knuckle.py} when the
+report is generated. The complete source is at github.com/Atishyy27/aicad.
+\begingroup
+\renewcommand{\lstlistingname}{Listing B.}\renewcommand{\thelstlisting}{\arabic{lstlisting}}
+\lstinputlisting[caption={Sizing the knuckle joint from the load (\texttt{design}, trimmed to the sizing lines)},captionpos=t]{listings/knuckle_sizing.txt}
+\lstinputlisting[caption={The nine failure checks of the knuckle joint (\texttt{\_checks})},captionpos=t]{listings/knuckle_checks.txt}
+\endgroup

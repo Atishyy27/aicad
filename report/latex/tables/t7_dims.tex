@@ -1,0 +1,20 @@
+\begin{table}[htbp]
+\centering\scriptsize
+\caption{Dimensions computed for the knuckle joint, with the rule behind each}\label{tab:dims}
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{1.3cm}>{\raggedright\arraybackslash}p{3.6cm}r>{\raggedright\arraybackslash}X}
+\toprule
+Symbol & Meaning & Value, mm & Rule and source \\
+\midrule
+\texttt{D} & rod diameter & 35 & rod in tension: D = sqrt(4P / (pi sigma\_t)), rounded up to a preferred size \\
+\texttt{d} & pin diameter & 45 & governed by pin bending \\
+\texttt{d2} & eye outer diameter & 90 & d2 = 2.0 x d, the pin diameter (outer diameter of eye and fork, d0 = 2d), rounded up to a standard size [Bhandari, Design of Machine Elements, sec 4.12, eq 4.26j] \\
+\texttt{d3} & pin head and collar diameter & 70 & d3 = 1.5 x d, the pin diameter (pin head and collar diameter, 1.5d), rounded up to a standard size [Bhandari, Design of Machine Elements, sec 4.12, eq 4.26o] \\
+\texttt{D1} & enlarged end, 1.1D & 40 & D1 = 1.1 x D, the rod diameter (enlarged rod diameter near the eye and fork, D1 = 1.1D), rounded up to a standard size [Bhandari, Design of Machine Elements, sec 4.12, eq 4.26b] \\
+\texttt{t} & eye thickness & 45 & t = 1.25 x D, the rod diameter (thickness of eye of rod B, b = 1.25D), rounded up to a standard size [Bhandari, Design of Machine Elements, sec 4.12, eq 4.26n] \\
+\texttt{t1} & fork plate thickness & 30 & t1 = 0.75 x D, the rod diameter (thickness of each fork eye, a = 0.75D), rounded up to a standard size [Bhandari, Design of Machine Elements, sec 4.12, eq 4.26m] \\
+\texttt{t2} & pin head thickness & 18 & t2 = 0.5 x D, the rod diameter (thickness of pin head), rounded up to a whole mm [NPTEL IIT KGP M4L2 fig 4.2.3.1] \\
+\texttt{collar\_t} & collar thickness & 23 &  \\
+\texttt{taper\_d} & taper pin diameter (big end) & 9 &  \\
+\bottomrule
+\end{tabularx}
+\end{table}

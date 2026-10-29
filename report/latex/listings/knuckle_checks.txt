@@ -1,0 +1,14 @@
+def _checks(P, dims, s):
+    D, dd, d2, t, t1 = dims["D"], dims["d"], dims["d2"], dims["t"], dims["t1"]
+    M = P / 2 * (t1 / 3 + t / 4)
+    return [
+        Check("rod tension", 4 * P / (math.pi * D**2), s["tension"], "4P / (pi D^2)"),
+        Check("pin double shear", P / (2 * math.pi / 4 * dd**2), s["shear"], "P / (2 pi/4 d^2)"),
+        Check("pin bending", 32 * M / (math.pi * dd**3), s["bending"], "32M / (pi d^3), M = P/2 (t1/3 + t/4)"),
+        Check("eye tension", P / ((d2 - dd) * t), s["tension"], "P / ((d2 - d) t)"),
+        Check("eye shear", P / ((d2 - dd) * t), s["shear"], "P / ((d2 - d) t)"),
+        Check("eye crushing", P / (dd * t), s["crushing"], "P / (d t)"),
+        Check("fork tension", P / ((d2 - dd) * 2 * t1), s["tension"], "P / ((d2 - d) 2 t1)"),
+        Check("fork shear", P / ((d2 - dd) * 2 * t1), s["shear"], "P / ((d2 - d) 2 t1)"),
+        Check("fork crushing", P / (dd * 2 * t1), s["crushing"], "P / (d 2 t1)"),
+    ]

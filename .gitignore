@@ -10,3 +10,11 @@ reference/
 report/*.html
 report/.build/
 .claude/
+report/latex/*.aux
+report/latex/*.log
+report/latex/*.fls
+report/latex/*.fdb_latexmk
+report/latex/*.toc
+report/latex/*.lof
+report/latex/*.lot
+report/latex/*.out

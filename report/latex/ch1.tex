@@ -1,0 +1,26 @@
+\chapter{Introduction}
+
+\section{Background}
+The standard joints of machine design, such as the knuckle joint, the cotter joint and the shaft coupling, are not designed by judgement: each is sized by a fixed sequence of formulas and verified against a fixed list of failure modes, as in Bhandari. The sequence is repetitive, since a change in load invalidates every dimension. Computer aided design software removes the labour of drawing but not of calculation; a parametric modeller does not object if a pin is too slender for the bending moment upon it.
+
+\section{Motivation}
+The motivation is the gap between stating a requirement and obtaining a verified design. At present a designer must translate a requirement such as \emph{a knuckle joint to carry 50 kN} into formulas by hand, check several failure modes, iterate wherever a check fails, and only then begin modelling and drafting.
+
+A system that accepts the requirement as written and returns a verified design, with solid models and a drawing sheet, would remove the repetition without removing the engineering, provided the calculation itself stays checkable.
+
+\section{Objectives}
+The objectives of the present work are as follows.
+\begin{enumerate}
+  \item To develop a system that accepts a design requirement in ordinary English and extracts the joint type, the applied load and the allowable stresses.
+  \item To size the joint using established design formulas and verify every applicable failure mode against the allowable stress, iterating wherever a check is not satisfied.
+  \item To generate exact solid models of every component and of the assembly in a neutral exchange format that opens in commercial CAD software.
+  \item To generate a first angle projection drawing sheet carrying dimensions and a title block in conformity with Indian drawing practice.
+  \item To verify every proportion and failure check used by the system against published design literature, recording any disagreement with a source explicitly.
+  \item To make the system usable through a web browser without any installation.
+\end{enumerate}
+
+\section{Scope of the Work}
+The work covers six standard joints under static loading. Fatigue, stress concentration factors, tolerances and fits, and manufacturing processes are outside its scope; the finite element facility is a single linear static cross check, not a complete analysis.
+
+\section{Organisation of the Report}
+Chapters 2 to 4 review the literature, state the problem and describe the case studies; Chapters 5 and 6 give the methodology and its implementation; Chapter 7 presents the results and their verification, and Chapter 8 concludes.

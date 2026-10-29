@@ -1,0 +1,323 @@
+\documentclass[12pt,a4paper]{report}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{newtxtext,newtxmath}
+\usepackage[top=1in,bottom=0.8in,left=1.5in,right=1in]{geometry}
+\usepackage{setspace}
+\usepackage{microtype}
+\usepackage{graphicx,tabularx,booktabs,multirow,amsmath,siunitx,pdflscape,subcaption,float,listings}
+\usepackage[font=small,labelfont=bf]{caption}
+\usepackage{titlesec,fancyhdr,etoolbox,array}
+\usepackage[hidelinks]{hyperref}
+\usepackage{tocloft}
+
+\newcommand{\aicad}{\textsf{aicad}}
+\input{tables/nums.tex}
+
+% -- text: 1.5 spacing, justified
+\onehalfspacing
+\setlength{\parindent}{10mm}
+\setlength{\parskip}{0pt}
+\setlength{\emergencystretch}{3em}
+\captionsetup[table]{position=above,skip=4pt}
+\captionsetup[figure]{position=below,skip=4pt}
+\renewcommand{\arraystretch}{1.1}
+\setlength{\tabcolsep}{4pt}
+
+% -- chapter title page: number and title alone, right aligned, 14 pt bold upper case
+\titleformat{\chapter}[display]{\raggedleft\fontsize{14}{20}\selectfont\bfseries}
+  {\MakeUppercase{\chaptertitlename}\ \thechapter}{6mm}
+  {\expandafter\gdef\csname tp@\thepage\endcsname{}\fontsize{14}{20}\selectfont\bfseries\MakeUppercase}[\clearpage]
+
+\titlespacing{\chapter}{0pt}{30mm}{0pt}
+\titleformat{name=\chapter,numberless}[block]{\centering\fontsize{16}{20}\selectfont\bfseries}{}{0pt}{\underline}
+\titlespacing{name=\chapter,numberless}{0pt}{0pt}{8pt}
+\titleformat{\section}{\normalfont\fontsize{12}{14}\selectfont\bfseries}{\thesection}{1em}{}
+\titleformat{\subsection}{\normalfont\fontsize{12}{14}\selectfont\bfseries}{\thesubsection}{1em}{}
+\titlespacing*{\section}{0pt}{10pt}{4pt}
+\titlespacing*{\subsection}{0pt}{8pt}{3pt}
+\renewcommand{\thetable}{\thechapter.\arabic{table}}
+\renewcommand{\thefigure}{\thechapter.\arabic{figure}}
+\renewcommand{\theequation}{\thechapter.\arabic{equation}}
+\setcounter{secnumdepth}{2}
+\setcounter{tocdepth}{1}
+
+% -- header and footer: one definition used for fancy and plain, so a chapter's first page
+% (which LaTeX forces to plain) differs only by the suppressed header
+\newcommand{\hdr}{}
+\newcommand{\hdrfoot}{\fancyhf{}\renewcommand{\headrulewidth}{0pt}\renewcommand{\footrulewidth}{0pt}
+  \fancyhead[R]{\fontsize{10}{12}\selectfont\ifcsname tp@\thepage\endcsname\else\hdr\fi}
+  \fancyfoot[L]{\fontsize{10}{12}\selectfont Department of Mechanical Engineering}
+  \fancyfoot[C]{\fontsize{10}{12}\selectfont\thepage}
+  \fancyfoot[R]{\fontsize{10}{12}\selectfont S.G.S.I.T.S., Indore}}
+\pagestyle{fancy}\hdrfoot
+\fancypagestyle{plain}{\hdrfoot}
+\fancypagestyle{empty}{\fancyhf{}\renewcommand{\headrulewidth}{0pt}\renewcommand{\footrulewidth}{0pt}}
+\renewcommand{\chaptermark}[1]{\markboth{#1}{}}
+\setlength{\headheight}{14pt}
+
+% -- code listings
+\lstset{basicstyle=\ttfamily\fontsize{8}{9}\selectfont,numbers=left,numberstyle=\tiny,numbersep=5pt,
+  breaklines=true,breakatwhitespace=false,columns=fullflexible,keepspaces=true,frame=single,
+  xleftmargin=1.2em,framexleftmargin=1.2em,aboveskip=4pt,belowskip=2pt,
+  postbreak=\mbox{\textcolor{gray}{$\hookrightarrow$}\space}}
+\usepackage{xcolor}
+
+\newcommand{\fmhead}[1]{\begin{center}{\fontsize{16}{20}\selectfont\bfseries\underline{#1}}\end{center}\vspace{2mm}}
+\newcommand{\toctoc}[1]{\clearpage\phantomsection\addcontentsline{toc}{chapter}{#1}}
+
+% institute heading used above the recommendation and the certificate
+\newcommand{\insthead}{%
+  \begin{center}
+  {\fontsize{14}{17}\selectfont\bfseries SHRI G.S. INSTITUTE OF TECHNOLOGY AND SCIENCE, INDORE (M.P.)}\\[1mm]
+  A Govt.\ Aided Autonomous Institute, Affiliated to RGPV, Bhopal\\[1mm]
+  {\fontsize{14}{17}\selectfont\bfseries DEPARTMENT OF MECHANICAL ENGINEERING}\\[2mm]
+  \includegraphics[width=22mm]{fig/sgsits-logo.png}\\[1mm]
+  {\fontsize{14}{17}\selectfont\bfseries 2026 -- 2027}
+  \end{center}}
+
+\newcommand{\projtitle}{Strategic Application of Artificial Intelligence in CAD}
+\newcommand{\teamnames}{Ankur Dodke, Ansh Yadav, Atishay Jain, Bhavya Shrivastava, Dharmendra Gupta}
+
+\usepackage{enumitem}
+\setlist{nosep,leftmargin=*}
+\begin{document}
+\pagenumbering{roman}
+\setcounter{page}{0}
+
+% ----------------------------------------------------------------- cover (counted, not printed)
+\thispagestyle{empty}
+\begin{center}\singlespacing
+{\fontsize{18}{23}\selectfont\bfseries STRATEGIC APPLICATION OF ARTIFICIAL INTELLIGENCE IN CAD\par}
+\vspace{8mm}
+\includegraphics[width=28mm]{fig/sgsits-logo.png}\par
+\vspace{8mm}
+{\fontsize{14}{17}\selectfont\bfseries\itshape A Project Report Submitted to\\
+Rajiv Gandhi Proudyogiki Vishwavidyalaya, Bhopal\\
+towards the partial fulfillment of the degree of Bachelor of Technology\\
+in Mechanical Engineering\par}
+\vspace{8mm}
+{\fontsize{16}{20}\selectfont\bfseries 2026 -- 2027\par}
+\vspace{10mm}
+\noindent\begin{minipage}[t]{0.42\textwidth}\raggedright
+{\fontsize{14}{17}\selectfont\bfseries Supervised by:}\\[2mm]
+Dr.\ B.\ R.\ Rawal\\Professor and Head\\Department of Mechanical Engineering
+\end{minipage}\hfill
+\begin{minipage}[t]{0.54\textwidth}\raggedleft
+{\fontsize{14}{17}\selectfont\bfseries Submitted by:}\\[2mm]
+\begin{tabular}{@{}r@{\hspace{4mm}}l@{}}
+0801ME231013 & Ankur Dodke\\
+0801ME231014 & Ansh Yadav\\
+0801ME231024 & Atishay Jain\\
+0801ME231030 & Bhavya Shrivastava\\
+0801ME243D02 & Dharmendra Gupta
+\end{tabular}
+\end{minipage}
+\vfill
+{\fontsize{14}{17}\selectfont\bfseries SHRI G.S. INSTITUTE OF TECHNOLOGY AND SCIENCE,\\ INDORE (M.P.)\par}
+{\normalsize A Govt.\ Aided Autonomous Institute, Affiliated to RGPV, Bhopal\par}
+\end{center}
+
+% ----------------------------------------------------------------- recommendation, certificate
+\clearpage\phantomsection\addcontentsline{toc}{chapter}{Recommendation}
+\insthead\fmhead{RECOMMENDATION}
+{\fontsize{12}{17}\selectfont\bfseries\noindent We are pleased to recommend that the project work entitled
+\textit{\projtitle} submitted by \teamnames{} may be accepted in partial fulfillment of the degree of
+Bachelor of Technology in Mechanical Engineering of Rajiv Gandhi Proudyogiki Vishwavidyalaya,
+Bhopal (M.P.) during the session 2026 -- 2027.\par}
+\vspace{8mm}\singlespacing\noindent\bfseries
+\begin{tabular}[t]{@{}l@{}}Dr.\ B.\ R.\ Rawal\\Professor and Head\\Department of Mechanical Engineering\end{tabular}\hfill
+\begin{tabular}[t]{@{}l@{}}Head of Department\\Professor and Head\\Department of Mechanical Engineering\end{tabular}
+\onehalfspacing\normalfont
+
+\vspace{6mm}\phantomsection\addcontentsline{toc}{chapter}{Certificate}
+\fmhead{CERTIFICATE}
+{\fontsize{12}{17}\selectfont\bfseries\noindent This is to certify that the Project entitled \textit{\projtitle}
+submitted by \teamnames{} is accepted in partial fulfillment of the degree of Bachelor of Technology
+in Mechanical Engineering of Rajiv Gandhi Proudyogiki Vishwavidyalaya, Bhopal during the session
+2026 -- 2027.\par}
+\vspace{14mm}\noindent\bfseries
+\begin{tabular}[t]{@{}c@{}}\rule{55mm}{0.6pt}\\Internal Examiner\\Date:\ \rule{25mm}{0.4pt}\end{tabular}\hfill
+\begin{tabular}[t]{@{}c@{}}\rule{55mm}{0.6pt}\\External Examiner\\Date:\ \rule{25mm}{0.4pt}\end{tabular}
+\normalfont
+
+% ----------------------------------------------------------------- declaration
+\toctoc{Declaration}
+\fmhead{DECLARATION}
+\noindent We, the undersigned students of the final year Bachelor of Technology course in
+Mechanical Engineering, Department of Mechanical Engineering, Shri G.S. Institute of Technology
+and Science, Indore (M.P.), declare that the project entitled \textit{\projtitle} is our own work
+conducted under the supervision of Dr.\ B.\ R.\ Rawal, Professor and Head, Department of
+Mechanical Engineering, Shri G.\ S.\ Institute of Technology and Science, Indore.
+
+\noindent\hspace{10mm}We affirm that this work is entirely original and has not been copied from any
+source. All sources consulted during the work have been duly acknowledged and cited in the
+references. Every design formula and empirical proportion used in the software developed for this
+project is attributed in the text to the published source from which it is taken, and every
+instance in which the software departs from a cited source is stated explicitly in Chapter 7
+together with the reason for the departure.
+
+\hspace{10mm}We further declare that, to the best of our knowledge, this project work does not
+contain any part of any work which has been submitted for the award of any degree either in this
+University or in any other University or from any website without proper citation.
+
+\vspace{14mm}\singlespacing\footnotesize\noindent
+\begin{tabularx}{\textwidth}{*{5}{>{\centering\arraybackslash}X}}
+\rule{0.9\linewidth}{0.5pt} & \rule{0.9\linewidth}{0.5pt} & \rule{0.9\linewidth}{0.5pt} &
+\rule{0.9\linewidth}{0.5pt} & \rule{0.9\linewidth}{0.5pt}\\
+Signature of the candidate & Signature of the candidate & Signature of the candidate &
+Signature of the candidate & Signature of the candidate\\
+Date & Date & Date & Date & Date\\[3mm]
+\textbf{Ankur Dodke} 0801ME231013 & \textbf{Ansh Yadav} 0801ME231014 &
+\textbf{Atishay Jain} 0801ME231024 & \textbf{Bhavya Shrivastava} 0801ME231030 &
+\textbf{Dharmendra Gupta} 0801ME243D02
+\end{tabularx}
+\normalsize\onehalfspacing
+
+% ----------------------------------------------------------------- acknowledgement
+\toctoc{Acknowledgement}
+\fmhead{ACKNOWLEDGEMENT}
+\noindent We express our sincere gratitude to Dr.\ B.\ R.\ Rawal, Professor and Head, Department of
+Mechanical Engineering, for the guidance and encouragement extended throughout this work. The
+direction to keep every computed dimension traceable to a published formula, rather than to a
+convenient result, shaped this project more than any other single input, and it is the reason the
+verification exercise reported in Chapter 7 was carried out at all.
+
+\hspace{10mm}We thank the faculty of the Department of Mechanical Engineering for their observations
+during the review presentations, which repeatedly sharpened the scope of the work, and the
+Institute for providing the facilities and the academic environment in which the work was carried
+out.
+
+\hspace{10mm}We acknowledge the National Programme on Technology Enhanced Learning and the Indian
+Institute of Technology Kharagpur, whose openly published course material on the design of machine
+elements is the primary reference for this work, and the Internet Archive, through which the out of
+copyright texts by Unwin and by Leutwiler were obtained.
+
+\hspace{10mm}Finally, we thank our families and our classmates for their support during the course of
+this project.
+
+\vspace{10mm}\begin{flushright}\singlespacing
+Ankur Dodke (0801ME231013)\\Ansh Yadav (0801ME231014)\\Atishay Jain (0801ME231024)\\
+Bhavya Shrivastava (0801ME231030)\\Dharmendra Gupta (0801ME243D02)\\[3mm]
+Date:\ \rule{30mm}{0.4pt}\end{flushright}\onehalfspacing
+
+% ----------------------------------------------------------------- abstract
+\toctoc{Abstract}
+\fmhead{ABSTRACT}
+\noindent Designing a standard machine joint is a repetitive calculation. For a knuckle joint the
+designer computes the rod diameter from direct tension, sizes the pin separately for double shear
+and for bending, adopts the larger of the two requirements, derives the remaining proportions from
+the rod diameter, and then verifies nine distinct failure modes against allowable stresses. A change
+in the applied load invalidates every one of those results and requires the entire sequence again.
+Computer aided design software removes the labour of drawing but not the labour of calculation: a
+modeller regenerates whatever dimensions it is given and will not object if a pin is too slender to
+carry the bending moment placed upon it.
+
+\hspace{10mm}This project presents a software system that performs the complete sequence
+automatically from a requirement written in ordinary English. The user enters a sentence such as
+\textit{knuckle joint for 50 kN}. A language model extracts the parameters from that sentence. All
+subsequent work is deterministic: the joint is sized from standard design formulas, each computed
+diameter is rounded up to the next preferred size and each derived thickness to the next whole
+millimetre, every applicable failure mode is verified against the allowable stress, any dimension
+that fails is increased until it passes, every component is generated as an exact solid model, and a
+first angle A3 drawing sheet is produced with dimension lines and a title block.
+
+\hspace{10mm}Six joints are implemented: the knuckle joint, the socket and spigot cotter joint, the
+sleeve and cotter joint, the gib and cotter joint, the hex bolted joint and the protected type rigid
+flange coupling. Together they apply \NChecks{} distinct failure checks. Every proportion and every
+check was compared against published design literature, and the comparison identified three errors
+in the sources themselves, including a worked example whose own answer exceeds its own allowable
+stress by 23 percent. The implementation is covered by \NTests{} automated tests and is deployed as
+a web application requiring no installation.
+
+\hspace{10mm}The central design decision is that the language model reads the requirement only. It
+selects no dimension and performs no check. Interpreting a phrase is a problem of language;
+selecting a pin diameter is a problem of engineering with a single correct answer, and it remains
+with deterministic code whose every step can be traced to a printed page.
+
+% ----------------------------------------------------------------- contents and lists
+\clearpage\singlespacing
+\phantomsection\addcontentsline{toc}{chapter}{Table of Contents}
+\renewcommand{\contentsname}{TABLE OF CONTENTS}
+\renewcommand{\cftchapfont}{\small\bfseries}
+\renewcommand{\cftchappagefont}{\bfseries}
+\setlength{\cftbeforechapskip}{2pt}
+\setlength{\cftbeforesecskip}{0pt}
+\renewcommand{\cftchapdotsep}{\cftdotsep}
+\renewcommand{\cftsecfont}{\footnotesize}\renewcommand{\cftsecpagefont}{\footnotesize}
+\setlength{\cftsecindent}{9mm}\setlength{\cftsecnumwidth}{9mm}
+\setlength{\cftchapnumwidth}{9mm}
+\renewcommand{\cftchappresnum}{}
+\renewcommand{\cftfigfont}{\footnotesize}\renewcommand{\cfttabfont}{\footnotesize}
+\renewcommand{\cftfigpresnum}{Figure~}\renewcommand{\cfttabpresnum}{Table~}
+\setlength{\cftfignumwidth}{18mm}\setlength{\cfttabnumwidth}{15mm}
+\setlength{\cftbeforefigskip}{2pt}\setlength{\cftbeforetabskip}{2pt}
+\tableofcontents
+\vspace{4mm}
+\phantomsection\addcontentsline{toc}{chapter}{List of Figures}
+\renewcommand{\listfigurename}{LIST OF FIGURES}
+\listoffigures
+\vspace{4mm}
+\phantomsection\addcontentsline{toc}{chapter}{List of Tables}
+\renewcommand{\listtablename}{LIST OF TABLES}
+\listoftables
+\vspace{4mm}
+\phantomsection\addcontentsline{toc}{chapter}{List of Symbols and Abbreviations}
+\fmhead{LIST OF SYMBOLS}
+\footnotesize
+\begin{tabularx}{\textwidth}{@{}l X l@{}}
+\toprule Symbol & Meaning & Unit\\\midrule
+$P$ & Applied axial load & N\\
+$T$ & Transmitted torque & N\,mm\\
+$D$ & Rod diameter & mm\\
+$d$ & Pin or spigot diameter & mm\\
+$d_2$ & Outer diameter of the eye or socket & mm\\
+$t$ & Thickness of the eye, or of the cotter & mm\\
+$t_1$ & Thickness of each fork plate & mm\\
+$b$ & Breadth of the cotter and gib & mm\\
+$\sigma_t$ & Allowable tensile stress & MPa\\
+$\sigma_b$ & Allowable bending stress & MPa\\
+$\sigma_c$ & Allowable crushing stress & MPa\\
+$\tau$ & Allowable shear stress & MPa\\
+\bottomrule\end{tabularx}
+\fmhead{LIST OF ABBREVIATIONS}
+\begin{tabularx}{\textwidth}{@{}l X@{}}
+\toprule Abbreviation & Expansion\\\midrule
+CAD & Computer Aided Design\\
+STEP & Standard for the Exchange of Product data\\
+DXF & Drawing Exchange Format\\
+FEA & Finite Element Analysis\\
+NPTEL & National Programme on Technology Enhanced Learning\\
+OCCT & Open CASCADE Technology\\
+BIS & Bureau of Indian Standards\\
+MPa & Megapascal, newton per square millimetre\\
+\bottomrule\end{tabularx}
+\normalsize\onehalfspacing
+
+% ----------------------------------------------------------------- chapters
+\clearpage
+\pagenumbering{arabic}\renewcommand{\hdr}{\leftmark}
+\newcommand{\inchapter}[1]{\IfFileExists{#1.tex}{\include{#1}}{\chapter{Placeholder #1}}}
+\IfFileExists{ch1.tex}{\include{ch1}}{\chapter{Introduction}}
+\IfFileExists{ch2.tex}{\include{ch2}}{\chapter{Literature Review}}
+\IfFileExists{ch3.tex}{\include{ch3}}{\chapter{Gap Identification and Problem Formulation}}
+\IfFileExists{ch4.tex}{\include{ch4}}{\chapter{About the Case Study and Data Collection}}
+\IfFileExists{ch5.tex}{\include{ch5}}{\chapter{Analysis and Design Methodology}}
+\IfFileExists{ch6.tex}{\include{ch6}}{\chapter{Implementation}}
+\IfFileExists{ch7.tex}{\include{ch7}}{\chapter{Results and Discussion}}
+\IfFileExists{ch8.tex}{\include{ch8}}{\chapter{Conclusions and Scope of Future Work}}
+
+% ----------------------------------------------------------------- appendices
+\clearpage
+\input{appendixA.tex}
+\input{appendixB.tex}
+
+% ----------------------------------------------------------------- references
+\clearpage\phantomsection\addcontentsline{toc}{chapter}{References}
+\markboth{References}{}
+\fmhead{REFERENCES}
+\singlespacing\footnotesize
+\begin{list}{}{\setlength{\leftmargin}{9mm}\setlength{\labelwidth}{9mm}\setlength{\itemsep}{2pt}\setlength{\parsep}{0pt}}
+\input{refs.tex}
+\end{list}
+\end{document}

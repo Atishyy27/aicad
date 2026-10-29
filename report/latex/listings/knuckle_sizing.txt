@@ -1,0 +1,64 @@
+    s = stresses_from(DATA, tension_mpa, shear_mpa, crushing_mpa)
+    sizes = DATA["preferred_diameters_mm"]
+    props = DATA["proportions"]
+    k_t, k_t1 = props["eye_thickness_t"]["times"], props["fork_thickness_t1"]["times"]
+    bending_mode = bending_mode or DATA["pin_bending"]["mode"]
+    factor = float(design_factor if design_factor is not None else DEFAULT_DESIGN_FACTOR)
+    P = load_n
+    Pd = sizing_load(P, factor)
+    raw, notes = {}, []
+    if rod_diameter_mm is not None:
+        D = float(rod_diameter_mm)
+    else:
+        raw["rod_tension"] = math.sqrt(4 * Pd / (math.pi * s["tension"]))
+        D = next_preferred(raw["rod_tension"], sizes)
+    # the eye and fork thicknesses come from the ROD diameter (b = 1.25D, a = 0.75D) and are rounded
+    # up to the next standard size before anything is sized off them, as Bhandari does in Ex 4.5
+    # (37.5 -> 40, 22.5 -> 25); the pin is sized separately and raised when shear or bending needs it
+    t_eye, t_fork = next_preferred(k_t * D, sizes), next_preferred(k_t1 * D, sizes)
+    d = props["pin_diameter_d"]["times"] * D
+    governing = "pin = rod diameter"
+    if P is not None:
+        raw["pin_shear"] = math.sqrt(2 * Pd / (math.pi * s["shear"]))
+        if raw["pin_shear"] > d + 1e-9:
+            d, governing = next_preferred(raw["pin_shear"], sizes), "pin double shear"
+        # sigma_b = 16 P (t1/3 + t/4) / (pi d^3), with t and t1 fixed by the rod diameter
+        raw["pin_bending"] = (16 * Pd * (t_fork / 3 + t_eye / 4) / (math.pi * s["bending"])) ** (1 / 3)
+        if bending_mode == "size" and raw["pin_bending"] > d + 1e-9:
+            d, governing = next_preferred(raw["pin_bending"], sizes), "pin bending"
+            notes.append(
+                f"Pin raised to {d:g} mm for bending (needs {raw['pin_bending']:.1f} mm), the same step "
+                "Bhandari Ex 4.5 and the NPTEL worked problem take. Set pin_bending.mode to 'check_only' to keep the pin equal to the rod."
+            )
+    # the eye and fork outside diameter follows the PIN, d0 = 2d (Bhandari eq 4.26j), so a pin
+    # raised for bending carries its eye with it. If a check still fails, grow it further: the
+    # NPTEL worked problem raises the pin but checks the eye against the old one, and fails.
+    d2 = props["eye_outer_diameter_d2"]["times"] * d
+    if P is not None:
+        grown = False
+        for _ in range(400):
+            trial = dict(D=D, d=d, d2=d2, t=t_eye, t1=t_fork)
+            if all(c.passed for c in _checks(Pd, trial, s) if c.name.startswith(("eye", "fork"))):
+                break
+            d2 += 1
+            grown = True
+        if grown:
+            notes.append(f"Eye and fork outer diameter grown to {d2:g} mm because the bigger pin "
+                         "leaves less metal around the hole.")
+    dims = {
+        "D": D,
+        "d": d,
+        "d2": d2,
+        "d3": next_preferred(props["head_collar_diameter_d3"]["times"] * d, sizes),
+        "D1": next_preferred(props["enlarged_rod_D1"]["times"] * D, sizes),
+        "t": t_eye,
+        "t1": t_fork,
+        "t2": ceil_mm(props["head_thickness_t2"]["times"] * D),
+    }
+    m = DATA["modelling_choices"]
+    dims["collar_t"] = ceil_mm(times(m["collar_thickness"], d))
+    dims["taper_d"] = ceil_mm(times(m["taper_pin_diameter"], D))
+    dims["clearance"] = float(m["fork_clearance"]["mm"])
+    dims["fork_base"] = times(m["fork_base_length"], d)
+    dims["rod_len"] = m["rod_length"]["times"] * dims["d2"]
+    dims = {k: round(v, 3) for k, v in dims.items()}

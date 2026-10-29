@@ -1,0 +1,19 @@
+\begin{table}[htbp]
+\centering\footnotesize
+\caption{Failure checks for the knuckle joint, evaluated at the actual load of 50 kN}\label{tab:checks}
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{2.4cm}>{\raggedright\arraybackslash}Xrrr>{\raggedright\arraybackslash}p{1.2cm}}
+\toprule
+Failure mode & Expression & Stress, MPa & Allowable, MPa & Utilisation, \% & Result \\
+\midrule
+rod tension & \texttt{4P / (pi D\^{}2)} & 51.969 & 75 & 69 & safe \\
+pin double shear & \texttt{P / (2 pi/4 d\^{}2)} & 15.719 & 60 & 26 & safe \\
+pin bending & \texttt{32M / (pi d\^{}3), M = P/2 (t1/3 + t/4)} & 59.3829 & 75 & 79 & safe \\
+eye tension & \texttt{P / ((d2 - d) t)} & 24.6914 & 75 & 33 & safe \\
+eye shear & \texttt{P / ((d2 - d) t)} & 24.6914 & 60 & 41 & safe \\
+eye crushing & \texttt{P / (d t)} & 24.6914 & 150 & 16 & safe \\
+fork tension & \texttt{P / ((d2 - d) 2 t1)} & 18.5185 & 75 & 25 & safe \\
+fork shear & \texttt{P / ((d2 - d) 2 t1)} & 18.5185 & 60 & 31 & safe \\
+fork crushing & \texttt{P / (d 2 t1)} & 18.5185 & 150 & 12 & safe \\
+\bottomrule
+\end{tabularx}
+\end{table}

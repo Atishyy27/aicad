@@ -1,0 +1,51 @@
+\chapter{Literature Review}
+
+\section{Design of Cotter and Knuckle Joints}
+
+The course text, Bhandari's \textit{Design of Machine Elements}, treats the cotter joint and the knuckle joint in sections 4.9 to 4.12. It gives the strength equations for every failure mode, the empirical proportions of each joint, and complete worked examples: Examples 4.2 and 4.4 for the cotter joint and Example 4.5 for the knuckle joint. The software follows Bhandari's proportions for the knuckle joint, in which the outside diameter of the eye and the pin head are taken from the pin diameter ($d_0 = 2d$, $1.5d$) and the rod is enlarged to $1.1D$ at the eye. For the cotter joint it follows his procedure, in which the spigot and the socket are sized from their own tension equations. These worked examples are the cases against which the software is tested in Chapter 7.
+
+A second reference is the Design of Machine Elements course published by IIT Kharagpur through NPTEL. Module 4 treats pin joints, keys and threaded fasteners, and Lesson 2 gives the complete design procedure for the socket and spigot cotter joint and for the knuckle joint, including the empirical proportions as multiples of the rod diameter and the full list of failure modes to be verified.
+
+Two out-of-copyright texts, obtained from the Internet Archive, were also used. Unwin, in \textit{The Elements of Machine Design} (1899), treats the gib and cotter joint on page 179, giving the division of the slot breadth between the cotter and the gib, the thickness of both as a fraction of that breadth, and the permissible range of taper. Leutwiler, in \textit{Elements of Machine Design} (1917), lists in Article 98 ten distinct ways in which a cotter joint may fail, with the expression governing each.
+
+Two independent treatments of the cotter joint, published eighteen years apart, proved significant. Where they agree, the adopted expression may be regarded as settled. Where they disagree, the disagreement is itself a finding and is reported in Section 7.4.
+
+\section{Design of Shaft Couplings}
+
+Leutwiler, in Article 275, presents the analysis of the flange coupling as three groups of failure: failure of the key by shear or crushing, failure of the coupling bolts by shear or crushing, and shearing of the flange at the hub. His expressions for the bolt diameter are adopted here.
+
+The same article records that no uniform set of flange coupling proportions had been proposed as a standard, and that published tables represent the practice of individual manufacturers. This limits what may be claimed about the proportions used in the present work, and the limitation is stated in Section 7.3 rather than passed over. The two key equations, shear across the whole key and bearing across half the key thickness, are taken from Module 4 Lesson 1 of the NPTEL course.
+
+\section{Standards Consulted}
+
+Indian Standards were consulted for drawing practice and for the fasteners and keys used in the joints implemented. SP 46 governs first angle projection and the title block. IS 2048 covers parallel keys and keyways, IS 1363 and IS 1364 cover hexagon head bolts, screws and nuts, and IS 2693 covers cast iron flange couplings.
+
+\section{Existing Approaches to Design Automation}
+
+Three approaches exist. Parametric CAD regenerates a model when its parameters change but does not determine them, and regenerates an unsafe model as readily as a safe one. Language model systems generate modelling code from a description, but their dimensions cannot be traced to a calculation and no failure mode is verified. Expert systems and design handbook software are reliable within their range, but hide the calculation, so a result cannot be checked against a source.
+
+\section{Comparison with Existing Tools}
+
+Table~\ref{tab:tools} compares the present work with seven existing tools and research systems. The entries are taken from each vendor's website, or from the published paper in the case of Text2CAD, as stated on 29 October 2026. They record what each source claims, not what was found by testing the tool, and ``Not stated'' means only that the source does not state the feature.
+
+\begin{table}[h]
+\caption{Comparison of existing tools with the present work}\label{tab:tools}
+\centering
+\footnotesize
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{2.8cm} *{6}{>{\raggedright\arraybackslash}X}@{}}
+\toprule
+Tool & Natural language input & Sizing traceable to formulas & Failure mode checks & Standard size rounding & 2D drawing sheet & STEP export \\
+\midrule
+BuildCAD AI & Yes & Not stated & Not stated & Not stated & Not stated & Yes \\
+Zoo Text-to-CAD & Yes & Not stated & Not stated & Not stated & Not stated & Yes \\
+CADAM (Adam) & Yes & Not stated & Not stated & Not stated & DXF only & No \\
+Leo AI & Yes & Cited calculations & Not stated & Not stated & Not stated & Not stated \\
+MITCalc & No & Yes & Not stated & Not stated & DXF insert & Not stated \\
+KISSsoft & No & Yes & Not stated & Not stated & Not stated & Not stated \\
+Text2CAD (NeurIPS 2024) & Yes & No & Not stated & Not stated & Not stated & Not stated \\
+\textbf{Present work} & Yes & Yes & Yes & Yes & Yes & Yes \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Two groups are visible. The tools that accept natural language, namely BuildCAD AI, Zoo Text-to-CAD, CADAM and Text2CAD, generate geometry, and none of them states that a dimension is sized from a design formula or verified against a failure mode. The tools that do carry out machine element calculation, namely MITCalc and KISSsoft, work from form input rather than from a written requirement. Leo AI is the nearest to the present work in that it cites its calculations, but its output formats are not stated. No source examined states the combination of natural language input, traceable sizing, failure checks, rounding to standard sizes and a drawing sheet.

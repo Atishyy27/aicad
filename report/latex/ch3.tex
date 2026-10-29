@@ -1,0 +1,18 @@
+\chapter{Gap Identification and Problem Formulation}
+
+\section{Gap Identified}
+The review in Chapter 2 shows that the gap lies neither in modelling nor in language interpretation, both of which are mature, but in the connection between them. What is absent is a system in which a written requirement is interpreted by a language model, the resulting parameters drive a deterministic design calculation taken from published literature, and the calculation remains open to inspection by the user. Table~\ref{tab:tools} shows that none of the tools compared in Section~2.5 states all of these capabilities together.
+
+Three deficiencies follow. First, parametric CAD regenerates geometry but verifies no failure mode. Second, systems that generate modelling code from a description produce dimensions that cannot be attributed to any formula. Third, where design calculation is automated, the working is generally hidden, so the result must be trusted rather than checked.
+
+\section{Problem Formulation}
+Given a design requirement expressed in ordinary English, the task is to produce a complete design of the specified machine joint such that every dimension is obtained from a published design formula or a named failure check, every applicable failure mode is verified against its allowable stress, the geometry is generated in a neutral exchange format, a first angle drawing sheet is produced, and the entire working is reported to the user in a form that permits independent verification.
+
+\section{Conditions the Solution Must Satisfy}
+\begin{enumerate}
+  \item No dimension may be produced without an attributable basis, which is either a design formula with a cited source or an explicitly named failure check.
+  \item The language model may interpret the requirement but may not select any dimension or perform any check.
+  \item Any numerical value returned by the language model that does not appear in the original requirement must be discarded, so that an invented figure cannot enter the calculation.
+  \item Every applicable failure mode must be evaluated on every run and its arithmetic reported, not merely its outcome.
+  \item Where the empirical proportions used have no supporting source, the system must state that fact rather than imply a source it does not have.
+\end{enumerate}

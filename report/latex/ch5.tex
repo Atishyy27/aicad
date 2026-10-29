@@ -1,0 +1,69 @@
+\chapter{Analysis and Design Methodology}
+
+\section{Overall Approach}
+The system is organised as five stages executed in sequence. The written requirement is interpreted into parameters, the joint is sized, every failure mode is verified, the geometry is generated, and the drawing sheet is produced. Each stage passes a definite result to the next, and the intermediate result of every stage is reported to the user.
+
+\section{Role of the Language Model}
+The language model is used at the first stage only. It receives the written requirement and returns the joint type, the applied load in newtons, and any allowable stresses stated. It selects no dimension, applies no proportion and performs no check. Table~\ref{tab:roles} sets out the division of responsibility.
+
+\begin{table}[htbp]
+\centering
+\caption{Division of responsibility between the language model and the deterministic calculation}
+\label{tab:roles}
+\small
+\begin{tabularx}{\textwidth}{@{}lll@{}}
+\toprule
+Stage & Performed by & Verifiable against \\
+\midrule
+Interpretation of the requirement & Language model & the requirement as written \\
+Sizing of every dimension & Deterministic calculation & cited design formula \\
+Verification of failure modes & Deterministic calculation & cited design formula \\
+Generation of solid geometry & Modelling kernel & the computed dimensions \\
+Generation of the drawing sheet & FreeCAD & the assembled geometry \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+This division is deliberate and is the principal design decision of the project. Determining that the phrase \emph{50 kN} denotes a load of 50,000 N, and that \emph{socket and spigot} names the cotter joint, is a problem of language interpretation, at which such a model is effective. Determining the diameter of a pin is a problem of engineering with a single correct answer obtainable from a formula, and it is therefore performed by deterministic code whose every step is traceable to a published page.
+
+A safeguard is applied to the output of the model. Any numerical value it returns that does not appear in the original requirement is discarded and the user is informed, which prevents a plausible but invented figure from entering the calculation. Where no language model is available, the system falls back to pattern matching rules and reports which interpreter was used.
+
+\section{Sizing Procedure}
+The governing dimension is computed first from the primary failure mode. For a knuckle joint this is the rod diameter $D$ obtained from direct tension under load $P$ and allowable tensile stress $\sigma_t$, given by Equation~(\ref{eq:rod}).
+\begin{equation}
+D = \sqrt{\frac{4P}{\pi\,\sigma_t}}
+\label{eq:rod}
+\end{equation}
+The computed value is rounded up to the next standard preferred size rather than used as computed. Where a component has more than one independent failure mode, as the pin has in both double shear and bending, it is sized from each applicable expression and the larger requirement is adopted. The pin diameter $d$ follows from double shear at allowable shear stress $\tau$, Equation~(\ref{eq:shear}), and from bending at allowable bending stress $\sigma_b$, Equation~(\ref{eq:bend}), where $a$ is the eye thickness and $b$ the fork thickness.
+\begin{equation}
+d = \sqrt{\frac{2P}{\pi\,\tau}}
+\label{eq:shear}
+\end{equation}
+\begin{equation}
+d = \sqrt[3]{\frac{32}{\pi\,\sigma_b}\cdot\frac{P}{2}\left(\frac{a}{3}+\frac{b}{4}\right)}
+\label{eq:bend}
+\end{equation}
+The remaining dimensions follow from the empirical proportions of Bhandari (Equation 4.26), expressed as multiples of the governing dimension. The eye diameter is $d_0 = 2d$, the pin head diameter is $1.5d$, the enlarged rod end is $D_1 = 1.1D$, the eye thickness is $a = 0.75D$, the fork thickness is $b = 1.25D$, and the clearance is $x = 10$ mm. Thicknesses are rounded up to standard sizes. For the cotter joint, the spigot and the socket are sized from their respective tension equations and the diameters are rounded up to the next 5 mm.
+
+\section{Design Factor}
+A design factor of 1.25 is applied. The joint is sized for 1.25 times the stated load, and the resulting stresses are then reported at the actual load. The governing check therefore reports approximately 75 to 80 percent of the allowable stress rather than 100 percent, so that margin remains in hand. Sizing exactly to the allowable produces a design that satisfies every check on paper while retaining nothing for material variation or for overload.
+
+\section{Verification of Failure Modes}
+Every applicable failure mode is evaluated and compared with the corresponding allowable stress. Where a check is not satisfied, the dimension responsible is increased by one millimetre and the entire check set is evaluated again. The process repeats until all checks are satisfied. The dimension that was increased, and the check that caused the increase, are both reported to the user.
+
+\section{Generation of Geometry and Drawings}
+Each component is generated as an exact solid using a parametric modelling kernel and is written in the STEP AP214 neutral exchange format, which opens in Siemens NX, SolidWorks, FreeCAD, Onshape and Fusion. The assembly is written as a further STEP file with each component in its assembled position.
+
+The drawing sheet is produced by driving FreeCAD headless, without its graphical interface, on an A3 sheet in first angle projection in accordance with Indian practice. The assembled geometry is projected to obtain the front view, left side view and plan, together with an isometric view, dimension lines and a title block; the same views are also written in DXF format. The front view is drawn as a sectional view A--A with the cut faces hatched in accordance with SP~46. Pins, bolts, keys, shafts and cotters are not hatched, as they are solid parts lying in the cutting plane. Centre lines are drawn on all axes and through all bores, and leader callouts annotate the views, including the 1 in 50 taper of the knuckle pin. A parts list accompanies the title block and gives, for each component, the part number, name, material and quantity.
+
+\section{Finite Element Cross Check}
+An optional finite element analysis is provided as an independent check on the calculated stress. One component is meshed with gmsh and solved as a linear static problem using the CalculiX solver, and the resulting peak stress is compared with the value obtained from the formula. Where the computed peak exceeds the calculated value by more than half, the analysis is repeated on a mesh of half the element size. If the peak then moves by more than 5 percent the result is reported as not converged, since a peak that continues to change with mesh refinement indicates a stress concentration at a sharp corner or at a constrained face rather than a stress to which a component may be designed.
+
+\section{Material Selection}
+Material selection is a separate step between interpreting the requirement and building the joint. The software holds six materials with their Indian standard designations: the plain carbon steels 30C8, 40C8 and 45C8 to IS~1570, the alloy steel 40Cr1, grey cast iron FG~260 to IS~210 and the aluminium alloy 64430 to IS~733. For each it records working allowable stresses in tension, shear and crushing, the density, and an indicative rate per kilogram.
+
+When a requirement has been read, the joint is designed completely in every material. The governing dimension is sized from that material's allowable stresses, every failure check is evaluated, and the mass is obtained from the volume of the generated solids. The user is shown which materials pass, the size each requires, the mass and the material cost, with the lightest and the cheapest passing material marked. The material the user selects then supplies the allowable stresses for every check in the design. Table~\ref{tab:materials} gives the result for the worked example of Section~7.2.
+
+\input{tables/t5_materials}
+
+The comparison makes the trade off explicit. A stronger steel reduces the rod diameter and the mass, while cast iron, weak in tension, requires the largest section. The allowable stresses and rates in the table are working values; before they are used for a real component they are to be confirmed against a design data book and a supplier's quotation, and the software states this on every run.
