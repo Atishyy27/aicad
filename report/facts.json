@@ -224,7 +224,7 @@
    "Pin raised to 45 mm for bending (needs 44.8 mm), the same step Bhandari Ex 4.5 and the NPTEL worked problem take. Set pin_bending.mode to 'check_only' to keep the pin equal to the rod."
   ]
  },
- "tests": "296 tests collected",
+ "tests": "301 tests collected",
  "commit": "1d3bb75",
  "materials": {
   "factor_of_safety": null,
