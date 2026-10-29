@@ -50,6 +50,41 @@ def _parts_list(names, material: str) -> list:
     return [[i, k.replace("_", " ").upper(), material, q] for i, (k, q) in enumerate(rows.items(), 1)]
 
 
+# Parts drawn unhatched when the cutting plane runs along their length (SP 46 / machine drawing
+# convention): pins, bolts, nuts, washers, keys, cotters, gibs and shafts.
+UNSECTIONED = ("pin", "bolt", "nut", "washer", "key", "cotter", "gib", "shaft")
+
+
+def section_loops(joint, dims) -> list:
+    """Outlines of the faces cut by the plane y = 0, part by part, as 3D point loops.
+    Computed here with CadQuery, where it can be tested, and only drawn inside FreeCAD."""
+    out = []
+    try:
+        import cadquery as cq
+        from .joints._shapes import PLAIN_EDGES
+        PLAIN_EDGES.on = False
+        for name, wp in joint.build_parts(dims).items():
+            if any(w in name for w in UNSECTIONED):
+                continue
+            solid = wp.val()
+            bb = solid.BoundingBox()
+            big = 4 * max(bb.xlen, bb.ylen, bb.zlen, 1.0)
+            half = solid.cut(cq.Solid.makeBox(big, big, big, cq.Vector(-big / 2, -big, -big / 2)))
+            loops = []
+            for f in half.Faces():
+                fb = f.BoundingBox()
+                if fb.ylen > 1e-3 or abs(fb.ymin) > 1e-3:
+                    continue                      # not a face lying in the cutting plane
+                for w in [f.outerWire()] + f.innerWires():
+                    pts = [(round(v.x, 3), 0.0, round(v.z, 3)) for v in w.positions([i / 96 for i in range(96)])]
+                    loops.append(pts)
+            if loops:
+                out.append({"part": name, "loops": loops})
+    except Exception:
+        return []
+    return out
+
+
 def run_pack(out: Path, joint, design, request: str, timeout: float = 600, material: str | None = None) -> dict:
     exe = find_freecadcmd()
     if exe is None:
@@ -72,6 +107,7 @@ def run_pack(out: Path, joint, design, request: str, timeout: float = 600, mater
         "dim_specs": joint.drawing_dims(design.dims) if hasattr(joint, "drawing_dims") else [],
         "centre": getattr(joint, "CENTRE_LINES", {"FRONT VIEW": "h", "TOP VIEW (PLAN)": "h", "LEFT SIDE VIEW": "hv"}),
         "parts_list": _parts_list(list(parts_named), material or "30C8 STEEL, IS 1570"),
+        "section": section_loops(joint, design.dims),
     }
     (out / "freecad_job.json").write_text(json.dumps(job, indent=1))
     env = dict(os.environ, AICAD_JOB=str(out / "freecad_job.json"))
@@ -373,6 +409,21 @@ def build_sheet(comp, job) -> str:
         "TOP VIEW (PLAN)": ((0, 0, 1), (0, 1, 0)),
     }
     proj = {k: _project(comp, n, up) for k, (n, up) in views.items()}
+    # Sectional front view: project only the half behind the cutting plane y = 0, keeping the
+    # full view's extents so dimensions and centre lines still land in the same place.
+    sectioned = False
+    if job.get("section"):
+        try:
+            import FreeCAD
+            import Part
+            b = comp.BoundBox
+            big = 4 * max(b.XLength, b.YLength, b.ZLength, 1.0)
+            half = comp.cut(Part.makeBox(big, big, big, FreeCAD.Vector(-big / 2, -big, -big / 2)))
+            svg_half, _ = _project(half, *views["FRONT VIEW"], hidden=False)
+            proj["FRONT VIEW"] = (svg_half, proj["FRONT VIEW"][1])
+            sectioned = True
+        except Exception as exc:  # keep the plain view rather than lose the sheet
+            _mark(f"section skipped: {exc}")
     iso = _project(comp, (1, -1, 1), (0, 0, 1), hidden=False)
 
     # regions (x0, y0, x1, y1) on the sheet, inside the 20/10 mm borders
@@ -397,7 +448,8 @@ def build_sheet(comp, job) -> str:
         s = s_iso if k == "ISOMETRIC" else s_ortho
         cx, cy = (reg[0] + reg[2]) / 2, (reg[1] + reg[3]) / 2 - 3
         body.append(_place(svg, bb, s, cx, cy))
-        body.append(_text(cx, reg[3] - 2, k + ("" if k != "ISOMETRIC" else f" ({_scale_label(s)})"), 3, "middle", "bold"))
+        label = "SECTIONAL FRONT VIEW A-A" if (k == "FRONT VIEW" and sectioned) else k
+        body.append(_text(cx, reg[3] - 2, label + ("" if k != "ISOMETRIC" else f" ({_scale_label(s)})"), 3, "middle", "bold"))
         placed[k] = (s, cx, cy, bb)
 
     def to_sheet(view, p):
@@ -408,6 +460,30 @@ def build_sheet(comp, job) -> str:
         u, v = P.dot(H), P.dot(V)
         s, cx, cy, (x0, x1, y0, y1) = placed[view]
         return (cx + s * (u - (x0 + x1) / 2), cy + s * (y0 + y1) / 2 - s * v)
+
+    # hatching on every cut face of a sectioned part, 45 degrees, thin lines 2 mm apart
+    if sectioned:
+        try:
+            body.insert(0, '<defs><pattern id="hatch" patternUnits="userSpaceOnUse" width="2" height="2" '
+                           'patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="2" stroke="#000" '
+                           'stroke-width="0.18"/></pattern></defs>')
+            for part in job["section"]:
+                d = ""
+                for loop in part["loops"]:
+                    pts = [to_sheet("FRONT VIEW", p) for p in loop]
+                    d += "M" + " L".join(f"{x:.2f},{y:.2f}" for x, y in pts) + " Z "
+                body.append(f'<path d="{d}" fill="url(#hatch)" fill-rule="evenodd" stroke="#000" stroke-width="0.35"/>')
+            # cutting plane A-A on the plan: thick ends with arrows looking at the section
+            s_, cx_, cy_, (x0_, x1_, y0_, y1_) = placed["TOP VIEW (PLAN)"]
+            if y0_ <= 0 <= y1_:
+                yy = cy_ + s_ * (y0_ + y1_) / 2
+                for xe, sgn in ((cx_ + s_ * (x0_ - (x0_ + x1_) / 2) - 6, -1), (cx_ + s_ * (x1_ - (x0_ + x1_) / 2) + 6, 1)):
+                    body.append(f'<line x1="{xe - 3 * sgn:.2f}" y1="{yy:.2f}" x2="{xe:.2f}" y2="{yy:.2f}" stroke="#000" stroke-width="0.7"/>')
+                    body.append(f'<line x1="{xe:.2f}" y1="{yy:.2f}" x2="{xe:.2f}" y2="{yy - 5:.2f}" stroke="#000" stroke-width="0.35"/>')
+                    body.append(_arrow(xe, yy - 5, 0, -1))
+                    body.append(_text(xe + 1.5 * sgn, yy - 7, "A", 3.5, "middle", "bold"))
+        except Exception as exc:
+            _mark(f"hatching skipped: {exc}")
 
     # centre lines (SP 46 long chain, thin) through the joint axis and any cross axis
     chain = f'stroke="#000" stroke-width="0.18" fill="none" stroke-dasharray="8,1.5,1.5,1.5"'

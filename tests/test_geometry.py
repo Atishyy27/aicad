@@ -134,3 +134,14 @@ def test_exploded_view_separates_every_part(name):
     for (a, va), (b, vb) in itertools.combinations(moved.items(), 2):
         common = va.intersect(vb)
         assert (common.Volume() if common.Solids() else 0.0) < 1e-6, f"{a} and {b} still touch when exploded"
+
+
+def test_section_hatches_eye_fork_and_collar_but_not_pins():
+    from aicad.freecad_pack import section_loops
+    joint = REGISTRY["knuckle"]
+    loops = {s["part"]: s["loops"] for s in section_loops(joint, joint.design(load_n=50_000).dims)}
+    assert {"single_eye_rod", "fork", "collar"} <= set(loops)
+    assert not any("pin" in name for name in loops)
+    for part in loops.values():
+        for loop in part:
+            assert len(loop) > 10 and all(abs(p[1]) < 1e-6 for p in loop)
