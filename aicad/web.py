@@ -376,8 +376,9 @@ class Handler(BaseHTTPRequestHandler):
     out_root = OUT_ROOT
     freecad = True
 
-    def log_message(self, format, *args):  # noqa: A002  keep the terminal quiet
-        pass
+    def log_message(self, format, *args):  # noqa: A002  quiet unless AICAD_LOG is set
+        if os.environ.get("AICAD_LOG"):
+            print(f"{datetime.now():%H:%M:%S} {self.address_string()} {format % args}", flush=True)
 
     def _send(self, code: int, body: bytes, ctype: str):
         self.send_response(code)

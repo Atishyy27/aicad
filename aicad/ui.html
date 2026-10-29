@@ -94,6 +94,9 @@ border-radius:9px;color:var(--ink);text-decoration:none;font-size:13px}.files a:
 @media (max-width:720px){body{overflow:auto}main{display:block}aside,section.right{border:0}.center{min-height:60vh}}
 </style></head>
 <body>
+<div id="toasts" style="position:fixed;right:14px;bottom:14px;z-index:50;display:flex;flex-direction:column;gap:6px;max-width:380px"></div>
+<details id="actBox" style="position:fixed;left:14px;bottom:14px;z-index:50;max-width:520px;background:var(--panel,#111a);border:1px solid #8884;border-radius:8px;padding:6px 10px;font:12px/1.4 ui-monospace,Consolas,monospace">
+<summary style="cursor:pointer">Activity <span id="actN">0</span></summary><div id="act" style="max-height:260px;overflow:auto;margin-top:6px"></div></details>
 <header>
   <div class="logo"><i></i>aicad</div>
   <div class="tag">Say what you need. It sizes the joint, checks every way it can fail, and draws it.</div>
@@ -236,8 +239,25 @@ document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{
   document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("on",x===t));
   document.querySelectorAll(".pane").forEach(p=>p.classList.toggle("hidden",p.id!==t.dataset.p));});
 
-async function post(u,b){const r=await fetch(u,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(b)});
-  const t=await r.text(); try{return JSON.parse(t);}catch(e){return {ok:false,error:"server said: "+t.slice(0,200)};}}
+// every request, answer and error lands in the Activity log (bottom left); errors also pop a toast
+let actN=0;
+function act(msg,kind=""){const t=new Date().toLocaleTimeString();actN++;$("actN").textContent=actN;
+  const c=kind==="bad"?"#e5534b":kind==="ok"?"#3fb950":"inherit";
+  $("act").insertAdjacentHTML("afterbegin",`<div style="color:${c}">${t} &middot; ${esc(msg)}</div>`);
+  console.log("[aicad]",msg); if(kind==="bad") toast(msg,"bad");}
+function toast(msg,kind=""){const d=document.createElement("div");
+  d.style.cssText=`padding:8px 12px;border-radius:8px;font-size:13px;color:#fff;background:${kind==="bad"?"#b62324":"#1f6feb"};box-shadow:0 4px 14px #0006`;
+  d.textContent=msg;$("toasts").appendChild(d);setTimeout(()=>d.remove(),kind==="bad"?9000:4000);}
+async function post(u,b){const t0=performance.now();let r;
+  try{const res=await fetch(u,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(b)});
+    const t=await res.text(); try{r=JSON.parse(t);}catch(e){r={ok:false,error:"server said: "+t.slice(0,200)};}}
+  catch(e){r={ok:false,error:"network: "+e.message};}
+  const ms=Math.round(performance.now()-t0), err=r.error||(r.ok===false&&r.missing?"missing: "+r.missing.join(", "):null);
+  act(`${u} ${ms} ms ${err?"FAILED: "+err:"ok"}${r.source?" (read by "+r.source+")":""}`, err?"bad":"ok");
+  (r.notes||[]).forEach(n=>act("note: "+n));
+  return r;}
+window.addEventListener("error",e=>act("page error: "+e.message,"bad"));
+window.addEventListener("unhandledrejection",e=>act("page error: "+(e.reason&&e.reason.message||e.reason),"bad"));
 function pill(t,cls=""){$("statusPill").textContent=t;$("statusPill").className="pill "+cls;}
 function busy(on,msg){$("busy").classList.toggle("hidden",!on);if(msg)$("busyMsg").textContent=msg;}
 
@@ -290,6 +310,7 @@ $("go").onclick=async()=>{
     const r=await post("/api/understand",{text,parser:$("parser").value});
     if(!r.spec){pill("could not read it","bad");$("readBy").textContent=r.error||"";return;}
     const s=r.spec;
+    if(!s.joint){ await freeform(text); return; }
     $("joint").innerHTML=Object.entries(r.joints).map(([k,v])=>`<option value="${k}">${esc(v.title)} (${v.parts} parts)</option>`).join("");
     $("joint").value=s.joint&&r.joints[s.joint]?s.joint:"knuckle";
     setRange("load",s.load_n!=null?Math.round(s.load_n/1000):null,50);
@@ -403,6 +424,25 @@ async function doBuild(){
   $("log").textContent=(r.steps||[]).join("\n");
   renderFiles(r,null);
   loadSheet(f);
+}
+
+// not one of the six joints: ask the AI to write CadQuery code, run it in a sandbox, and show it
+// only if the solid it built matches the sizes in the sentence (aicad/codegen.py)
+async function freeform(text){
+  act("not one of the six joints, so trying experimental code generation for: "+text);
+  toast("Not a listed joint. Generating it with AI (experimental, about 10-60 s)...");
+  $("empty").classList.add("hidden"); $("viewer").classList.remove("hidden");
+  busy(true,"AI is writing and checking the CAD code...");
+  const r=await post("/api/codegen",{text});
+  busy(false);
+  (r.attempts||[]).forEach(a=>act(`attempt ${a.attempt}: ${a.ok?"passed":"rejected"}${(a.reasons||[]).length?" ("+a.reasons.join("; ")+")":""}`,a.ok?"ok":""));
+  if(!r.ok){pill("could not generate it","bad");$("vTitle").textContent="Not generated";
+    $("readBy").textContent="Generation failed: "+(r.error||((r.attempts||[]).map(a=>(a.reasons||[]).join("; ")).join(" | "))||"unknown");return;}
+  pill("generated (experimental)","ok");
+  $("vTitle").textContent="Experimental part"; $("vDuty").textContent="AI-generated geometry, size-checked, NOT strength-checked";
+  $("viewer").src=r.files.viewer;
+  $("readBy").innerHTML=`Generated by AI and verified for size and validity. <a href="${r.files.step}" download>STEP</a> &middot; <a href="${r.files.code}" target="_blank">code</a>`;
+  act("experimental part ready: "+r.files.step,"ok");
 }
 
 async function loadSheet(f){
