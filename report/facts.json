@@ -121,19 +121,19 @@
     "collar_t",
     "collar thickness",
     23.0,
-    ""
+    "collar_t = 0.5 x d, the pin diameter, rounded up to a whole mm; modelling choice, not a book value"
    ],
    [
     "taper_d",
     "taper pin diameter (big end)",
     9.0,
-    ""
+    "taper_d = 0.25 x D, the rod diameter (split pin mean diameter), rounded up to a whole mm [NPTEL IIT KGP M4L2]"
    ],
    [
     "clearance",
     "gap between eye and fork base",
     5.0,
-    ""
+    "clearance = 0.1 x d, the pin diameter, rounded up to a whole mm; modelling choice, not a book value"
    ],
    [
     "fork_base",
@@ -219,5 +219,38 @@
   ]
  },
  "tests": "291 tests collected",
- "commit": "1d3bb75"
+ "commit": "1d3bb75",
+ "materials": {
+  "factor_of_safety": null,
+  "grades": [
+   {
+    "grade": "30C8",
+    "standard": "IS 1570",
+    "class": "plain carbon steel",
+    "yield_mpa": null,
+    "ultimate_mpa": null
+   },
+   {
+    "grade": "40C8",
+    "standard": "IS 1570",
+    "class": "plain carbon steel",
+    "yield_mpa": null,
+    "ultimate_mpa": null
+   },
+   {
+    "grade": "45C8",
+    "standard": "IS 1570",
+    "class": "plain carbon steel",
+    "yield_mpa": null,
+    "ultimate_mpa": null
+   },
+   {
+    "grade": "FG 200",
+    "standard": "IS 210",
+    "class": "grey cast iron",
+    "yield_mpa": null,
+    "ultimate_mpa": null
+   }
+  ]
+ }
 }

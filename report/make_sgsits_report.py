@@ -38,6 +38,11 @@ BUILD = HERE / ".build"
 BRAVE = __import__("os").environ.get("AICAD_BROWSER", "/Applications/Brave Browser.app/Contents/MacOS/Brave Browser")
 F = json.loads((HERE / "facts.json").read_text())
 
+# Sections describing work that has not shipped are written but stay switched off. Flip a flag
+# to True only once the corresponding change is live, so the report never claims more than exists.
+FEATURES = {"materials": False, "drawing_v2": False, "fast_build": False}
+CMP_TAB = ""   # number of the comparison table in Chapter 2, cited from Chapter 3
+
 # ---------------------------------------------------------------- the team and the front page
 # Enrolment numbers taken from the team's own presentation, which uses the full form.
 # Full enrolment form: 0801ME23 followed by the roll digits, and 0801ME23D0x for the
@@ -486,7 +491,27 @@ those sources. Chapter 8 concludes and identifies the scope for further work.</p
 
 
 def ch2() -> str:
-    return """
+    global CMP_TAB
+    Y, N, NS = "Yes", "No", "Not stated"
+    cmp_rows = [
+        ("BuildCAD AI", Y, NS, NS, NS, NS, Y),
+        ("Zoo Text-to-CAD", Y, NS, NS, NS, NS, Y),
+        ("CADAM (Adam)", Y, NS, NS, NS, "DXF only", N),
+        ("Leo AI", Y, "Cited calculations", NS, NS, NS, NS),
+        ("MITCalc", N, Y, NS, NS, "DXF insert", NS),
+        ("KISSsoft", N, Y, NS, NS, NS, NS),
+        ("Text2CAD (NeurIPS 2024)", Y, N, NS, NS, NS, NS),
+        ("<b>Present work</b>", Y, Y, Y, Y, Y, Y),
+    ]
+    cmp_body = "".join("<tr>" + "".join(f"<td>{c}</td>" for c in r) + "</tr>" for r in cmp_rows)
+    t_cmp, n_cmp = tab(2, "Comparison of the present work with existing tools, as stated on the "
+                          "vendors' websites on 29 October 2026",
+                       "<tr><th>Tool</th><th>Natural language input</th>"
+                       "<th>Sizing traceable to formulas</th><th>Failure mode checks</th>"
+                       "<th>Standard size rounding</th><th>2D drawing sheet</th>"
+                       "<th>STEP export</th></tr>", cmp_body, "sm")
+    CMP_TAB = n_cmp
+    return f"""
 <h2 class="sec">2.1 Design of Cotter and Knuckle Joints</h2>
 <p class="noind">The primary reference used in this work is the course material on the Design of
 Machine Elements published by the Indian Institute of Technology Kharagpur through the National
@@ -537,17 +562,33 @@ geometry that cannot be justified is of limited value.</p>
 <p>A third group of approaches embeds engineering knowledge in expert systems and design
 handbooks implemented as software. These are reliable within the range for which they were
 written, but the calculation is typically hidden from the user, so a result cannot be checked
-against a source without access to the implementation.</p>"""
+against a source without access to the implementation.</p>
+
+<h2 class="sec">2.5 Comparison with Existing Tools</h2>
+<p class="noind">Table {n_cmp} compares the present work with seven existing tools and research
+systems. The entries are taken from each vendor's website, or from the published paper in the case
+of Text2CAD, as stated on 29 October 2026. They record what each source claims, not what was found
+by testing the tool, and an entry marked as not stated means only that the source does not state
+the feature.</p>
+{t_cmp}
+<p>Two groups are visible. The tools that accept natural language, namely BuildCAD AI, Zoo
+Text-to-CAD, CADAM and Text2CAD, generate geometry, and none of them states that a dimension is
+sized from a design formula or verified against a failure mode. The tools that do carry out machine
+element calculation, namely MITCalc and KISSsoft, work from form input rather than from a written
+requirement. Leo AI is the nearest to the present work in that it cites its calculations, but its
+output formats are not stated. No source examined states the combination of natural language
+input, traceable sizing, failure checks, rounding to standard sizes and a drawing sheet.</p>"""
 
 
 def ch3() -> str:
-    return """
+    return f"""
 <h2 class="sec">3.1 Gap Identified</h2>
 <p class="noind">From the review presented in Chapter 2, the gap lies neither in modelling nor in
 language interpretation, both of which are mature, but in the connection between them. What is
 absent is a system in which a written requirement is interpreted by a language model, the
 resulting parameters drive a deterministic design calculation taken from published literature,
-and the calculation itself remains open to inspection by the user.</p>
+and the calculation itself remains open to inspection by the user. Table {CMP_TAB} shows that none
+of the tools compared in Section 2.5 states all of these capabilities together.</p>
 <p>Three specific deficiencies follow from this. First, parametric CAD regenerates geometry but
 verifies no failure mode. Second, systems that generate modelling code from a description produce
 dimensions that cannot be attributed to any formula. Third, where design calculation is
@@ -706,7 +747,7 @@ in its assembled position.</p>
 <p>The drawing sheet is produced by driving FreeCAD without its graphical interface. The
 assembled geometry is projected to obtain the front view, the left side view and the plan,
 arranged in first angle projection in accordance with Indian practice, together with an isometric
-view, dimension lines and a title block. The same views are also written in DXF format.</p>
+view, dimension lines and a title block. The same views are also written in DXF format.</p>{drawing_v2_para()}
 
 <h2 class="sec">5.7 Finite Element Cross Check</h2>
 <p class="noind">An optional finite element analysis is provided as an independent check on the
@@ -716,7 +757,63 @@ formula. Where the computed peak exceeds the calculated value by more than half,
 repeated on a mesh of half the element size. If the peak then moves by more than five percent the
 result is reported as not converged, since a peak that continues to change with mesh refinement
 indicates a stress concentration at a sharp corner or at a constrained face rather than a stress
-to which a component may be designed.</p>"""
+to which a component may be designed.</p>{materials_section()}"""
+
+
+def materials_section() -> str:
+    """Section 5.8, rendered only when FEATURES['materials'] is on."""
+    if not FEATURES["materials"]:
+        return ""
+    M = F.get("materials", {})
+    fos = M.get("factor_of_safety")
+    rows = ""
+    for g in M.get("grades", []):
+        cast = g["class"].endswith("iron")
+        base = g.get("ultimate_mpa") if cast else g.get("yield_mpa")
+        if base is None:
+            continue                       # no verified property value yet: no row
+        cells = (f"<td>{g['grade']}</td><td>{g['standard']}</td><td class='n'>"
+                 f"{g.get('yield_mpa') if g.get('yield_mpa') is not None else '-'}</td>"
+                 f"<td class='n'>{g.get('ultimate_mpa') if g.get('ultimate_mpa') is not None else '-'}</td>")
+        if fos:
+            t = base / fos
+            cells += (f"<td class='n'>{t:.0f}</td><td class='n'>{0.5*t:.0f}</td>"
+                      f"<td class='n'>{2*t:.0f}</td>")
+        else:
+            cells += "<td class='n'>-</td><td class='n'>-</td><td class='n'>-</td>"
+        rows += f"<tr>{cells}</tr>"
+    table = ref = ""
+    if rows:
+        table, nm = tab(5, "Material grades offered, with the allowable stresses derived from them",
+                        "<tr><th>Grade</th><th>Standard</th><th class='n'>Yield, MPa</th>"
+                        "<th class='n'>Ultimate, MPa</th><th class='n'>Tension, MPa</th>"
+                        "<th class='n'>Shear, MPa</th><th class='n'>Crushing, MPa</th></tr>",
+                        rows, "sm")
+        ref = f" The property values and the resulting allowable stresses are given in Table {nm}."
+    return f"""
+
+<h2 class="sec">5.8 Material Selection</h2>
+<p class="noind">The user selects the material of the joint from a list of Indian standard
+grades. Three are plain carbon steels to IS 1570, namely 30C8, 40C8 and 45C8, and one is grey cast
+iron to IS 210, namely FG 200.{ref}</p>
+<p>For the steels the allowable tensile stress is the yield strength divided by the factor of
+safety. For the cast iron it is the ultimate strength divided by the factor of safety, since grey
+cast iron shows no distinct yield point. In both cases the allowable shear stress is taken as 0.5
+times the allowable tensile stress and the allowable crushing stress as 2 times it. The material
+chosen is passed to every failure check, so that the allowable stress in each check follows the
+selected grade and not a fixed working value.</p>{table}"""
+
+
+def drawing_v2_para() -> str:
+    """Addition to Section 5.6, rendered only when FEATURES['drawing_v2'] is on."""
+    if not FEATURES["drawing_v2"]:
+        return ""
+    return """
+<p>The drawing sheet is further developed in the following respects. The front view is drawn as a
+half sectional view, with the cut faces hatched in accordance with SP 46. Centre lines are drawn
+on all axes and through all bores. Dimensions are placed on the views themselves. The taper pin of
+the knuckle joint is drawn with its taper of 1 in 50. A parts list accompanies the title block and
+gives, for each component, the part number, the name, the material and the quantity.</p>"""
 
 
 def ch6() -> str:
@@ -781,7 +878,32 @@ cannot subsequently be altered to reproduce the printed answers without a test f
 could have detected. The geometry tests compare the solids of every pair of components and
 require that no two occupy the same space. That test found a hooked gib modelled 1.25 mm inside
 the strap, an error invisible in the dimension list because every individual dimension was
-correct.</p>"""
+correct.</p>{build_time_section()}"""
+
+
+def build_time_section() -> str:
+    """Section 6.6, rendered only when FEATURES['fast_build'] is on."""
+    if not FEATURES["fast_build"]:
+        return ""
+    t, nt = tab(6, "Measured time of each stage of a build",
+                "<tr><th>Stage</th><th>Time</th></tr>",
+                "<tr><td>Sizing and the nine failure checks</td><td>under 1 ms</td></tr>"
+                "<tr><td>Five solid models</td><td>0.9 s</td></tr>"
+                "<tr><td>STEP and viewer files</td><td>negligible</td></tr>"
+                "<tr><td>FreeCAD drawing sheet</td><td>about 33 s of the 35 s build</td></tr>",
+                "sm")
+    return f"""
+
+<h2 class="sec">6.6 Build Time</h2>
+<p class="noind">The time taken by each stage of a build was measured. Table {nt} gives the
+result. The calculation and the solid models take about a second between them, and the drawing
+sheet produced by FreeCAD accounts for about 33 s of a 35 s build.</p>
+{t}
+<p>Three changes follow from this measurement. The system now returns the model and the failure
+checks first and produces the drawing sheet in the background, so that the user can read the
+result while the sheet is still being drawn. Identical requests are cached, so that a repeated
+request does not repeat the work. The example joints offered on the entry screen are built in
+advance.</p>"""
 
 
 def ch7() -> str:
@@ -804,7 +926,7 @@ def ch7() -> str:
                  f"<tr><td>Pin in bending</td><td class='n'>{k['raw']['pin_bending']}</td>"
                  f"<td>governs; pin diameter adopted as 45 mm</td></tr>", "sm")
     dims = "".join(f"<tr><td class='mono'>{a}</td><td>{b}</td><td class='n'>{c:g}</td>"
-                   f"<td>{(d or '-')[:80]}</td></tr>" for a, b, c, d in k["dims"][:10])
+                   f"<td>{(d or '-')[:150]}</td></tr>" for a, b, c, d in k["dims"][:10])
     t3, n3 = tab(7, "Dimensions computed for the knuckle joint, with the rule behind each",
                  "<tr><th>Symbol</th><th>Meaning</th><th class='n'>Value, mm</th>"
                  "<th>Rule and source</th></tr>", dims, "sm")
@@ -837,7 +959,7 @@ def ch7() -> str:
                  "<tr><td>Bar of 20 mm diameter, 10 kN in tension</td><td class='n'>31.83</td>"
                  "<td class='n'>32.22</td><td class='n'>+1.2</td></tr>"
                  "<tr><td>Knuckle joint eye rod, 50 kN</td><td class='n'>52.0</td>"
-                 "<td class='n'>57.9</td><td class='n'>+11.5</td></tr>", "sm")
+                 "<td class='n'>57.9</td><td class='n'>+11.3</td></tr>", "sm")
     return f"""
 <h2 class="sec">7.1 Design Results</h2>
 <p class="noind">All six joints size correctly, satisfy every applicable failure check, generate
@@ -895,9 +1017,9 @@ diameter of the eye and reports that it has done so.</p>
 but does not verify crushing between the cotter and the spigot. Evaluated at the final answer
 given in that source, the omitted check gives 167 MPa against an allowable of 110 MPa. Leutwiler,
 in Article 98, lists this mode as one of ten, and its expression is identical in form. The
-present system retains the check and sizes the cotter thicker in consequence. That two
-independent texts, published eighteen years apart, contain a check which the lesson omits is what
-establishes this as an omission rather than a matter of preference.</p>
+present system retains the check and sizes the cotter thicker in consequence. That an independent
+text, published eighteen years earlier, lists a check which the lesson omits is what establishes
+this as an omission rather than a matter of preference.</p>
 <h3 class="sub">7.4.3 A Constant Printed Incorrectly</h3>
 <p class="noind">The initial tightening load for a bolted joint is printed as 284<i>d</i> kN. The
 worked example on the same page obtains 56.8 kN for an M20 bolt, which is consistent only with a
@@ -1034,6 +1156,19 @@ def references_html() -> str:
   <li>Geuzaine C, Remacle JF. Gmsh: a three dimensional finite element mesh generator with built
   in pre and post processing facilities. International Journal for Numerical Methods in
   Engineering. 2009; 79(11):1309-1331.</li>
+  <li>BuildCAD AI. Text and photo to 3D model generator. &lt;https://buildcad.ai/&gt;
+  (Accessed on October 29, 2026).</li>
+  <li>Zoo. Text-to-CAD. &lt;https://zoo.dev/&gt; (Accessed on October 29, 2026).</li>
+  <li>CADAM (Adam). Open source text to parametric OpenSCAD. &lt;https://adam.new/&gt;
+  (Accessed on October 29, 2026).</li>
+  <li>Leo AI. Engineering copilot. &lt;https://getleo.ai/&gt; (Accessed on October 29, 2026).</li>
+  <li>MITCalc. Mechanical, industrial and technical calculations. &lt;https://mitcalc.com/&gt;
+  (Accessed on October 29, 2026).</li>
+  <li>KISSsoft. Software for the sizing and analysis of machine elements.
+  &lt;https://www.kisssoft.com/&gt; (Accessed on October 29, 2026).</li>
+  <li>Khan MS, Sinha S, Uddin T, Stricker D, Ali SA, Afzal MZ. Text2CAD: Generating Sequential
+  CAD Models from Beginner-to-Expert Level Text Prompts. Advances in Neural Information
+  Processing Systems 37 (NeurIPS 2024).</li>
 </ol>"""
 
 
@@ -1097,7 +1232,7 @@ def main() -> None:
                 t = line.strip()
                 if t.startswith("Figure ") or t.startswith("Table "):
                     parts_ = t.split()
-                    if len(parts_) > 1:
+                    if len(parts_) > 1 and parts_[1].endswith(":"):   # captions only, not in-text mentions
                         item_page.setdefault(("F" if t[0] == "F" else "T")
                                              + parts_[1].rstrip(":"), g)
 
