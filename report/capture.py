@@ -29,6 +29,8 @@ with sync_playwright() as pw:
     b = pw.chromium.launch(executable_path=BRAVE, headless=True,
                            args=["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"])
     page = b.new_page(viewport={"width": 1600, "height": 950}, device_scale_factor=2)
+    # light theme for print: a dark page prints badly and wastes toner
+    page.add_init_script("try{localStorage.setItem('aicad-theme','light')}catch(e){}")
     page.goto(URL, wait_until="networkidle", timeout=90_000)
     shot(page, "01-landing")
 

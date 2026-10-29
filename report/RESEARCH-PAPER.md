@@ -29,7 +29,7 @@ stated duty. Verification of the system's proportions and checks against the sou
 surfaced three genuine errors in that literature itself, each confirmed either by an independent
 second source or by the source's own worked example contradicting its own stated result. An
 independent finite element cross-check validates the governing hand calculations to within 1.2
-percent on a known case. The implementation is covered by 290 automated tests and is deployed as
+percent on a known case. The implementation is covered by 296 automated tests and is deployed as
 a public web application.
 
 ---
@@ -229,7 +229,7 @@ extracted parameters, and requests the build; the full working is printed as it 
 by the 3D model (assembled, exploded, and coloured by utilisation), the drawing sheet, the
 dimension and check tables, and the generated files.
 
-The implementation is covered by 290 automated tests covering sizing arithmetic, generated
+The implementation is covered by 296 automated tests covering sizing arithmetic, generated
 geometry, requirement interpretation, the drawing sheet and the finite element path — including
 tests that assert the three literature discrepancies reported in Section 7.2 are real, so the
 system cannot later be "corrected" back to the printed textbook answers without a test failing.
@@ -246,7 +246,7 @@ isolation was correct.
 All six joints size correctly and satisfy every applicable failure check; the busiest check across
 all six lies between 67 and 79 percent of allowable, the intended consequence of the 1.25 design
 factor. For the worked example *knuckle joint for 50 kN*: the rod from direct tension computes to
-32.57 mm, adopted at the standard 35 mm; the pin computes to 25.75 mm from double shear and 43.72
+32.57 mm, adopted at the standard 35 mm; the pin computes to 25.75 mm from double shear and 43.95
 mm from bending — bending governs, nearly 1.7× the shear requirement, and the pin is adopted at
 45 mm, the same step the source material itself takes (a pin sized on shear alone would pass its
 own check and bend in service). All nine applicable failure checks on this joint are satisfied at
@@ -293,7 +293,7 @@ reported on every run rather than papered over.
 
 The method is first validated on a case with a known answer (a 20 mm bar, 10 kN tension): formula
 31.83 MPa vs. computed 32.22 MPa, 1.2 percent apart. On the knuckle joint's eye rod, the computed
-stress is 11.5 percent higher than the hand formula (52.0 vs. 57.9 MPa), expected because the hand
+stress is 11.3 percent higher than the hand formula (52.0 vs. 57.9 MPa), expected because the hand
 formula treats the rod as a plain bar in tension and does not represent the stress concentration
 at the pin bore that the finite element model resolves directly; both values remain below the 75
 MPa allowable. On a separate component, refining the mesh sixteen-fold moved the computed peak
@@ -329,7 +329,7 @@ A system has been developed that accepts a machine-joint requirement in ordinary
 returns a complete design: every dimension computed from a published formula, every applicable
 failure mode verified against allowable stress, every component generated as an exact solid, and a
 first-angle drawing sheet with dimensions and a title block. Six joints are implemented across 44
-distinct failure checks, covered by 290 automated tests. The verification exercise against
+distinct failure checks, covered by 296 automated tests. The verification exercise against
 published literature produced an unanticipated result: three errors in the source material itself,
 surfaced not by inspection but because every check is evaluated and printed on every run. The
 division of responsibility between language interpretation and deterministic, traceable

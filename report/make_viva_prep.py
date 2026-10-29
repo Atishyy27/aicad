@@ -69,7 +69,7 @@ HARD = {
                 "something you added to make the demo look more thorough?\"",
                 "It is the step the source material itself takes, not an addition: the NPTEL "
                 "lesson sizes the same pin on both checks and adopts the larger. The reason it "
-                "matters is numeric, not stylistic: at 50 kN, bending demands 43.9 mm against "
+                "matters is numeric, not stylistic: at 50 kN, bending demands 44.85 mm against "
                 "shear's 25.75 mm, a pin sized on shear alone would pass its own check and still "
                 "bend in service."),
     "Dharmendra": ("\"You are a final year mechanical student saying a published lesson from "
@@ -81,7 +81,7 @@ HARD = {
                    "omits, with an algebraically identical formula. And for the eye shear error, "
                    "the lesson's own final numbers fail its own stated allowable by 23 percent, "
                    "arithmetic anyone can redo by hand from the lesson's printed values."),
-    "Ankur": ("\"Your FEA gives 11.5 percent higher stress than the hand formula on the eye rod. "
+    "Ankur": ("\"Your FEA gives 11.3 percent higher stress than the hand formula on the eye rod. "
               "Doesn't that mean one of your two methods is wrong?\"",
               "No, it means they are measuring slightly different things and that is expected, "
               "stated plainly rather than hidden: the hand formula treats the rod as a plain bar "

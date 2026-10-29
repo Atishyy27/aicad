@@ -13,5 +13,5 @@
 11. **Report.** Every run prints: raw value, rounded value, rule + source, every check's substituted arithmetic.
 12. **Cross-check.** Optional FEA (CalculiX) validates one component's stress independently; flags NOT CONVERGED if the mesh won't settle instead of reporting a bad number.
 13. **Output.** 3D viewer (assembled/exploded/weak-spot colouring), STEP (NX/SolidWorks/Fusion), DXF, FCStd.
-14. **Scope today.** 6 joints, 44 checks, all satisfied. 3 errors found in the published sources this was built from, each independently confirmed. 290 automated tests.
+14. **Scope today.** 6 joints, 44 checks, all satisfied. 3 errors found in the published sources this was built from, each independently confirmed. 296 automated tests.
 15. **What AI never does.** Pick a dimension, run a check, or touch the geometry. One job only: read the sentence.

@@ -518,7 +518,16 @@ def ch2() -> str:
     CMP_TAB = n_cmp
     return f"""
 <h2 class="sec">2.1 Design of Cotter and Knuckle Joints</h2>
-<p class="noind">The primary reference used in this work is the course material on the Design of
+<p class="noind">The standard text for the course, Bhandari's Design of Machine Elements, treats the
+cotter joint and the knuckle joint in sections 4.9 to 4.12. It gives the strength equations for
+every failure mode, the empirical proportions of each joint, and complete worked examples: Example
+4.2 and 4.4 for the cotter joint and Example 4.5 for the knuckle joint. The software follows
+Bhandari's proportions for the knuckle joint, in which the outside diameter of the eye and the
+pin head are taken from the pin diameter (d0 = 2d, 1.5d) and the rod is enlarged to 1.1D at the
+eye, and his procedure for the cotter joint, in which the spigot and the socket are sized from
+their own tension equations. Those worked examples are the cases against which the software is
+tested in Chapter 7.</p>
+<p>A second reference is the course material on the Design of
 Machine Elements published by the Indian Institute of Technology Kharagpur through the National
 Programme on Technology Enhanced Learning. Module 4 of that course treats pin joints, keys and
 threaded fasteners. Lesson 2 gives the complete design procedure for the socket and spigot cotter
@@ -947,11 +956,13 @@ def ch7() -> str:
                  "<tr><th>Failure mode</th><th>Expression</th><th class='n'>Stress, MPa</th>"
                  "<th class='n'>Allowable, MPa</th><th class='n'>Utilisation, percent</th>"
                  "<th>Result</th></tr>", checks, "sm")
-    ver = ("<tr><td>Knuckle joint</td><td>NPTEL Module 4 Lesson 2</td>"
-           "<td>proportions and all nine checks verified</td></tr>"
+    ver = ("<tr><td>Knuckle joint</td><td>Bhandari Ex 4.5 and Problem 4.1; NPTEL Module 4 Lesson 2</td>"
+           "<td>all seven adopted sizes and six check stresses of Ex 4.5 reproduced exactly; "
+           "nine checks verified</td></tr>"
            "<tr><td>Socket and spigot cotter joint</td>"
-           "<td>NPTEL Module 4 Lesson 2; Leutwiler Article 98</td>"
-           "<td>all ten checks verified against two independent sources</td></tr>"
+           "<td>Bhandari Ex 4.2; NPTEL Module 4 Lesson 2; Leutwiler Article 98</td>"
+           "<td>nine of ten sizes of Ex 4.2 reproduced; ten checks verified against two "
+           "independent sources</td></tr>"
            "<tr><td>Gib and cotter joint</td><td>Unwin, page 179</td>"
            "<td>breadth division, thickness and taper verified</td></tr>"
            "<tr><td>Protected type flange coupling</td>"
@@ -976,7 +987,7 @@ def ch7() -> str:
 every component as a solid model and produce a drawing sheet. Each design completes in
 approximately ten seconds. Table {n1} summarises the results.</p>
 {t1}
-<p>The busiest check across the six joints lies between 67 and 79 percent of the allowable
+<p>The busiest check across the six joints lies between 71 and 79 percent of the allowable
 stress. That range is the intended consequence of the design factor described in Section 5.4 and
 confirms that margin is retained in every case.</p>
 
@@ -992,7 +1003,7 @@ the complete set of dimensions with the rule and the source behind each.</p>
 {t3}
 <p>With all dimensions determined, the nine failure modes are evaluated at the actual load of
 50,000 N. The results are given in Table {n4}. Every check is satisfied, and the busiest, shear
-of the eye, reaches 76 percent of its allowable stress.</p>
+of the pin in bending, reaches 79 percent of its allowable stress.</p>
 {t4}
 {fig(7, "05-drawing", "First angle A3 drawing sheet generated for the knuckle joint of "
                       "Section 7.2, at a scale of 1:2.5")}
@@ -1011,6 +1022,19 @@ manufacturers. The proportions used are therefore a convention, and the system r
 such on every run. For the sleeve and cotter joint, four sources were searched and none treats
 that joint by name; its checks are verified by direct correspondence with the socket and spigot
 cotter joint, but its proportions remain unsupported and are reported as such.</p>
+<p>The strongest test is the reproduction of complete worked examples. Given the inputs of
+Bhandari's Example 4.5 (50 kN, 30C8, factor of safety 5), the software adopts exactly the sizes
+the book adopts: rod 30 mm, enlarged rod 35 mm, eye 40 mm and fork 25 mm thick, pin 40 mm, eye
+diameter 80 mm and pin head 60 mm, and it computes the same six eye and fork stresses, 31.25 and
+25 N/mm<sup>2</sup>. Problem 4.1 is reproduced to the printed 14.47 mm and 13.47 mm. For the
+cotter joint of Example 4.2 nine of the ten adopted sizes agree, including the spigot and socket
+diameters solved from their tension equations (37.91 and 52.04 mm before rounding). The one
+difference, the width of the cotter, follows from the book designing the cotter alone with a
+factor of safety of 4 while the software applies the rods' factor of 6 to every part. Each of
+these cases is an automated test and a one click case in the web application.</p>
+<p>The two texts disagree on one proportion of the knuckle joint. The NPTEL lesson takes the pin
+head as 1.5 times the rod diameter, which on its own 55 mm pin leaves a head only 5 mm larger
+than the pin; Bhandari takes it as 1.5 times the pin diameter. The software follows Bhandari.</p>
 
 <h2 class="sec">7.4 Discrepancies Found in the Sources</h2>
 <p class="noind">The verification exercise identified three errors in the published sources. They
@@ -1070,8 +1094,8 @@ the original sentence is discarded rather than used, which is the safeguard agai
 input rather than a verified calculation.</li>
 <li><b>Sizing and verifying against every failure mode, with iteration.</b> Met. All six joints
 satisfy all {n_checks} applicable checks at the stated load, as given in Table {n1}, and the
-iterative enlargement described in Section 5.5 is what makes the knuckle eye and the gib and
-cotter strap pass where the source proportions alone would not.</li>
+iterative enlargement described in Section 5.5 is what makes the gib and cotter strap, and the
+knuckle eye of the NPTEL problem, pass where the source proportions alone would not.</li>
 <li><b>Exact solid models in a neutral format that opens in commercial CAD software.</b>
 Substantially met. Every exported assembly was inspected directly and confirmed to carry the
 AUTOMOTIVE_DESIGN (AP214) schema with each component as a separate named solid rather than a
@@ -1145,6 +1169,8 @@ def references_html() -> str:
 <ol class="refs">
   <li>Indian Institute of Technology Kharagpur. Design of Machine Elements I, Module 4: Fasteners
   and Joints. National Programme on Technology Enhanced Learning; Lessons 1 to 4.</li>
+  <li>Bhandari VB. Design of Machine Elements. New Delhi: McGraw Hill Education; Chapter 4,
+  sections 4.9 to 4.12, Examples 4.2 to 4.5 and Problem 4.1.</li>
   <li>Unwin WC. The Elements of Machine Design, Part I. London: Longmans, Green and Co.; 1899.
   Article 103 and Figures 130 and 131, page 179.</li>
   <li>Leutwiler OA. Elements of Machine Design. New York: McGraw Hill Book Company; 1917.

@@ -507,10 +507,10 @@ def build() -> None:
       <h2>Checked against three published sources, two of them out of copyright</h2>
       <table class="sm">
         <tr><th>Joint</th><th>Source consulted</th><th>Outcome</th></tr>
-        <tr><td>Knuckle joint</td><td>NPTEL IIT Kharagpur, Module 4 Lesson 2</td>
-            <td>proportions and all nine checks verified</td></tr>
-        <tr><td>Socket and spigot cotter</td><td>NPTEL M4 L2; Leutwiler (1917) Art. 98</td>
-            <td>ten checks verified against two independent books</td></tr>
+        <tr><td>Knuckle joint</td><td>Bhandari Ex 4.5; NPTEL M4 L2</td>
+            <td>Ex 4.5 reproduced exactly: 7 of 7 sizes, 6 of 6 stresses</td></tr>
+        <tr><td>Socket and spigot cotter</td><td>Bhandari Ex 4.2; NPTEL M4 L2; Leutwiler Art. 98</td>
+            <td>Ex 4.2: 9 of 10 sizes; ten checks verified against two books</td></tr>
         <tr><td>Gib and cotter</td><td>Unwin (1899), page 179</td>
             <td>breadth split, thickness and taper verified</td></tr>
         <tr><td>Flange coupling</td><td>NPTEL M4 L1 keys; Leutwiler Art. 275 bolts</td>
@@ -585,7 +585,7 @@ def build() -> None:
             <tr><td>20 mm bar, 10 kN tension</td><td class="n">31.83</td><td class="n">32.22</td>
                 <td class="n">+1.2 %</td></tr>
             <tr><td>Knuckle eye rod, 50 kN</td><td class="n">52.0</td><td class="n">57.9</td>
-                <td class="n">+11.5 %</td></tr>
+                <td class="n">+11.3 %</td></tr>
           </table>
           <p>The bar validates the method. The eye rod reads higher because the formula treats it
           as a plain bar and ignores the stress raised at the pin bore. Both stay under the 75 MPa
@@ -697,7 +697,7 @@ def build() -> None:
          ["Solid modelling and STEP export",
           "First angle A3 sheet and DXF",
           "Verification against the three sources",
-          "Finite element cross check, 290 tests",
+          "Finite element cross check, 296 tests",
           "Web deployment, report and presentation"]),
         ("Phase 4", "Semester 8, proposed scope", "next",
          ["Riveted and welded joints",
@@ -735,7 +735,7 @@ def build() -> None:
       </div>
       <div class="row r2" style="flex:none;margin-top:9mm">
         <div class="card g"><b>Everything shown in green and amber exists today.</b> Six joints,
-        44 checks, the drawing sheet, the verification against three books and 290 tests are all
+        44 checks, the drawing sheet, the verification against three books and 296 tests are all
         working and demonstrated in this presentation.</div>
         <div class="card"><b>Semester 8 is a proposal, not a commitment.</b> These items come
         from the limits listed on the previous slide and are to be agreed with the guide.</div>

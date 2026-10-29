@@ -35,7 +35,7 @@ numbers, substitute them into the book's own printed formula, and the arithmetic
 the contradiction. We didn't need our software to find this, our software just happened to be the
 first thing that actually ran every check on every design and noticed the mismatch.
 
-**Q: Your finite element result is 11.5 percent higher than your hand-calculated formula on the
+**Q: Your finite element result is 11.3 percent higher than your hand-calculated formula on the
 knuckle eye rod. Doesn't a mismatch between your two methods undermine your own analysis?**
 A: It would if we hid it or rounded it away; stating it instead is the point. The formula treats
 the rod as a plain bar in tension and has no way to represent the stress concentration at the pin
@@ -57,16 +57,16 @@ that, the arithmetic as it stands says what it says.
 **Q: Walk us through your results. Are they accurate?**
 A: Six joints, 44 applicable failure checks between them, all satisfied at the stated load. For
 the worked example, a knuckle joint at 50 kN: rod from direct tension comes to 32.57 mm, rounded
-up to the standard 35 mm; the pin is sized twice, 25.75 mm for shear, 43.72 mm for bending, and
+up to the standard 35 mm; the pin is sized twice, 25.75 mm for shear, 43.95 mm for bending, and
 the larger wins, becoming 45 mm, because a pin sized on shear alone would pass its own check and
 still bend in service. All nine failure checks on that joint then pass at the real load, busiest
 at 76 percent of allowable.
 
 **Q: How do your results align with the objectives you actually set out to meet?**
-A: Five of our six stated objectives are met without qualification: interpreting plain English,
-sizing and verifying with iteration, the drawing sheet, verification against literature, and
-browser use without install. The sixth, the exported file opening correctly inside NX10 itself, is
-confirmed correct in file structure, AP214 schema, four separate named solids rather than one
+A: Three of our six stated objectives are met without qualification: interpreting plain English,
+sizing and verifying with iteration, and browser use without install. Three are met in part. The
+open point that matters most, the exported file opening correctly inside NX10 itself, is
+confirmed correct in file structure, AP214 schema, each part a separate named solid rather than one
 fused body, which is exactly what an NX10 assembly import needs, but it has not yet been watched
 opening on a lab machine, and we say that plainly rather than assume it.
 
@@ -186,6 +186,6 @@ checking every citation and cross-reference for formatting consistency has not b
 ### Quick numbers, for the one-line version of any answer above
 
 6 joints · 44 checks, all satisfied · 3 errors found in published sources, each independently
-confirmed · 290 automated tests, including tests that would fail if any of the 3 findings were
+confirmed · 296 automated tests, including tests that would fail if any of the 3 findings were
 reverted · FEA validated to 1.2 percent before trusting it on the real joint · 5 of 6 stated
 objectives met without qualification, 1 met in file structure and not yet observed in NX10.

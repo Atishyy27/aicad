@@ -281,7 +281,7 @@ def build_phase2() -> None:
       {joint_table()}
       <div class="row r2" style="flex:none;margin-top:6mm">
         <div class="card"><b>Finite element validation.</b> 1.2% off a known case before trusting
-        the method; 11.5% higher than the hand formula on the real eye rod, expected, because the
+        the method; 11.3% higher than the hand formula on the real eye rod, expected, because the
         formula ignores the stress concentration at the pin bore that the FEA sees directly.</div>
         <div class="card"><b>Objectives 1, 2 and 6 met; 3, 4 and 5 met in part.</b> The NX10 import,
         the main open point, is verified in file structure (AP214 schema,

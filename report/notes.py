@@ -73,7 +73,7 @@ against anything, and geometry you cannot justify is useless in a design review.
 
 10: """BHAVYA.
 Six joints, 44 failure checks in total, and every check is satisfied.
-The busiest check across all six sits between 67 and 79 percent of allowable. That is
+The busiest check across all six sits between 71 and 79 percent of allowable. That is
 deliberate, not luck: each joint is sized for 1.25 times the load you asked for, then the
 stresses are reported at the real load. Margin stays in hand rather than being spent on paper.
 The gib and cotter joint needed a decision. Unwin gives the breadth and thickness but no strap
@@ -85,7 +85,7 @@ does not give is sized against a failure check until it passes.""",
 12: """ATISHAY.
 Knuckle joint, 50 kN. Three calculations decide everything.
 Rod from direct tension gives 32.57, so the rod becomes 35, the next standard size.
-The pin is sized twice. Double shear asks for 25.75. Bending asks for 43.95. We take the larger,
+The pin is sized twice. Double shear asks for 25.75. Bending asks for 44.85. We take the larger,
 so the pin becomes 45.
 Bending asks for nearly 1.7 times what shear asks for. A pin sized on shear alone would pass its
 own check and bend in service. The textbook takes the same step.
@@ -94,7 +94,7 @@ printed beside it.""",
 
 13: """ATISHAY.
 All nine failure modes, evaluated at the real 50 kN, not the design load.
-Nine of nine are satisfied. The busiest is shear of the eye at 76 percent of its allowable.
+Nine of nine are satisfied. The busiest is the pin in bending at 79 percent of its allowable.
 The point to make: none of this is stored. Ask for 80 kN and every number in this table changes
 and the pin is re-sized. It is not a library of readymade models.""",
 
@@ -174,7 +174,7 @@ prints the arithmetic.""",
 An independent finite element cross check.
 First validated on a case with a known answer: a 20 mm bar in tension, formula 31.83, computed
 32.22, a difference of 1.2 percent.
-On the knuckle eye rod: formula 52.0, computed 57.9, about 11.5 percent higher. That is expected,
+On the knuckle eye rod: formula 52.0, computed 57.9, about 11.3 percent higher. That is expected,
 because the formula treats the rod as a plain bar and ignores the stress raised at the pin bore.
 Both stay under the 75 MPa allowable.
 The important part: a peak that never settles is not a stress. On one part the computed peak
@@ -183,7 +183,7 @@ a finer mesh and reports NOT CONVERGED when the number will not settle, and tell
 to the hand calculation.""",
 
 25: """ANKUR.
-290 automated tests run on every change: the arithmetic, the geometry, the parsing, the drawing
+296 automated tests run on every change: the arithmetic, the geometry, the parsing, the drawing
 and the analysis.
 The row that matters most is the last one. There are tests that assert the three errors in the
 books are real. Without them, someone could later correct our software back to the printed
@@ -238,6 +238,6 @@ Every dimension this software produces can be traced to a formula, and every for
 in a book. That is the difference between a tool that designs and one that only draws.
 The language model reads the requirement. The engineering stays deterministic, checked, and open
 to inspection.
-Six joints, 44 checks, 290 tests, and three errors found in published literature along the way.
+Six joints, 44 checks, 296 tests, and three errors found in published literature along the way.
 Thank you. We are happy to take questions.""",
 }

@@ -1,0 +1,170 @@
+{
+ "joints": [
+  {
+   "request": "knuckle joint for 50 kN",
+   "title": "Knuckle joint",
+   "parts": 5,
+   "checks": 9,
+   "passed": 9,
+   "worst_pct": 76
+  },
+  {
+   "request": "socket and spigot joint for 35 kN",
+   "title": "Socket and spigot cotter joint",
+   "parts": 3,
+   "checks": 10,
+   "passed": 10,
+   "worst_pct": 67
+  },
+  {
+   "request": "sleeve and cotter joint for 50 kN",
+   "title": "Sleeve and cotter joint",
+   "parts": 5,
+   "checks": 8,
+   "passed": 8,
+   "worst_pct": 77
+  },
+  {
+   "request": "gib and cotter joint for 50 kN",
+   "title": "Gib and cotter joint",
+   "parts": 4,
+   "checks": 8,
+   "passed": 8,
+   "worst_pct": 79
+  },
+  {
+   "request": "M24 nut bolt, plates 30 mm thick, load 20 kN",
+   "title": "Hex bolt, nut and washer",
+   "parts": 3,
+   "checks": 2,
+   "passed": 2,
+   "worst_pct": 71
+  },
+  {
+   "request": "flange coupling to transmit 20 kW at 1440 rpm",
+   "title": "Protected type rigid flange coupling",
+   "parts": 12,
+   "checks": 7,
+   "passed": 7,
+   "worst_pct": 80
+  }
+ ],
+ "knuckle": {
+  "raw": {
+   "rod_tension": 32.57,
+   "pin_shear": 25.75,
+   "pin_bending": 43.95
+  },
+  "dims": {
+   "D": 35.0,
+   "d": 45.0,
+   "d2": 70.0,
+   "d3": 55.0,
+   "t": 44.0,
+   "t1": 27.0,
+   "t2": 18.0,
+   "collar_t": 23.0,
+   "taper_d": 9.0,
+   "clearance": 5.0,
+   "fork_base": 45.0,
+   "rod_len": 105.0
+  },
+  "checks": [
+   [
+    "rod tension",
+    52.0,
+    75,
+    69
+   ],
+   [
+    "pin double shear",
+    15.7,
+    60,
+    26
+   ],
+   [
+    "pin bending",
+    55.9,
+    75,
+    75
+   ],
+   [
+    "eye tension",
+    45.5,
+    75,
+    61
+   ],
+   [
+    "eye shear",
+    45.5,
+    60,
+    76
+   ],
+   [
+    "eye crushing",
+    25.3,
+    150,
+    17
+   ],
+   [
+    "fork tension",
+    37.0,
+    75,
+    49
+   ],
+   [
+    "fork shear",
+    37.0,
+    60,
+    62
+   ],
+   [
+    "fork crushing",
+    20.6,
+    150,
+    14
+   ]
+  ]
+ },
+ "size_ms": 0.0282,
+ "materials": [
+  [
+   "30C8 plain carbon steel",
+   35.0,
+   6.55,
+   458
+  ],
+  [
+   "40C8 plain carbon steel",
+   30.0,
+   4.52,
+   361
+  ],
+  [
+   "45C8 plain carbon steel",
+   30.0,
+   4.22,
+   380
+  ],
+  [
+   "40Cr1 alloy steel",
+   25.0,
+   2.7,
+   405
+  ],
+  [
+   "Grey cast iron FG 260",
+   45.0,
+   13.18,
+   791
+  ],
+  [
+   "Aluminium alloy 64430 (6061)",
+   35.0,
+   2.3,
+   643
+  ]
+ ],
+ "total_checks": 44,
+ "tests_collected": "296 tests collected in 1.52s"
+}
