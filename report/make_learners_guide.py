@@ -25,6 +25,11 @@ OUT = HERE / "AI-in-CAD-Learners-Guide.pdf"
 SRC = HERE.parent / "aicad"
 
 EXTRA = """
+@page{size:A3 portrait;margin:11mm 12mm}
+.pb{column-count:2;column-gap:8mm}
+.pb .who,.pb .role{column-span:all}
+.ov{column-count:2;column-gap:8mm}.ov h1,.ov .sub{column-span:all}
+table{page-break-inside:avoid;break-inside:avoid}
 pre{font-family:Consolas,'Courier New',monospace;font-size:8.4pt;line-height:1.3;background:#f4f5f7;
  border-left:1mm solid #555;padding:2mm 3mm;margin:2mm 0;white-space:pre-wrap;page-break-inside:avoid}
 .file{font-size:8.5pt;color:#555;margin:2mm 0 0}
@@ -71,7 +76,7 @@ def body(F) -> str:
     d, b, raw = F["demo"].dims, F["busiest"], F["demo"].raw
     use = round(100 * b.stress_mpa / b.allowable_mpa)
 
-    overview = f"""
+    overview = f"""<div class='ov'>
 <h1>AI in CAD: Learner's Guide</h1>
 <p class='sub'>Strategic Application of Artificial Intelligence in CAD · SGSITS Mechanical, B.Tech 2026-27 ·
 Supervisor Dr. B. R. Rawal · theory, derivations and the real source code, one section per presenter</p>
@@ -127,7 +132,7 @@ identically. A <span class='k'>Check</span> passes only if the stress is within 
 <p>The <b>design factor</b> is applied to the load, not to the stresses, so the allowables stay the book values.
 At 1.25 the governing check can't exceed 1/1.25 = 80% utilisation, and rounding up to preferred sizes pushes it
 below that. That's why every joint lands at {F['lo']}-{F['hi']}%.</p>
-"""
+</div>"""
 
     atishay = section("Atishay Jain", "AI: language models, structured extraction and guarding against hallucination", f"""
 <h3>How an LLM works</h3>
