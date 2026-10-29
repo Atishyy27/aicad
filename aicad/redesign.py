@@ -19,6 +19,8 @@ _LIMIT = re.compile(r"\b(max(?:imum)?\s+load|how much (?:load|force)|load capaci
                     r"strongest load|carry at most|safe load)\b", re.I)
 _MARGIN = re.compile(r"margin|\bsafety\b|\bsafer\b|factor of safety|design factor|\bfos\b|\bstronger\b|"
                      r"more capacity|less stressed|headroom", re.I)
+_SCALE = re.compile(r"\b(double|twice|triple|thrice|half|halve|quadruple|(\d+(?:\.\d+)?)\s*(?:x|times))\b", re.I)
+_SCALE_WORDS = {"double": 2.0, "twice": 2.0, "triple": 3.0, "thrice": 3.0, "half": 0.5, "halve": 0.5, "quadruple": 4.0}
 _OPTIMISE = re.compile(r"\b(light(?:er|est)?|cheap(?:er|est)?|optimi[sz]e|lowest mass|less material|best material)\b", re.I)
 
 
@@ -69,6 +71,19 @@ def follow_up(current: Spec, text: str, mode: str = "auto", runner=None) -> Foll
             msg += f" The current load, {design.load_n:,.0f} N, uses {100 * design.load_n / P:.0f}% of that."
         return FollowUp("limit", msg, value=P, governing=name)
 
+    m = _SCALE.search(text) if design is not None else None
+    if m:
+        f = _SCALE_WORDS.get(m.group(1).lower()) or float(m.group(2))
+        new = replace(current, notes=[])
+        if re.search(r"\b(load|force|kn|newtons?)\b", text, re.I) and current.load_n:
+            new.load_n = round(current.load_n * f, 3)
+            return _apply(current, design, joint, new, [f"load_n: {current.load_n:g} -> {new.load_n:g}"])
+        if re.search(r"\brod\b", text, re.I) and not re.search(r"\blength\b", text, re.I) and "D" in design.dims:
+            new.rod_diameter_mm = float(round(design.dims["D"] * f))
+            return _apply(current, design, joint, new,
+                          [f"rod_diameter_mm: {design.dims['D']:g} -> {new.rod_diameter_mm:g}"])
+        return FollowUp("explain", _derived(text, design, joint, f))
+
     if _MARGIN.search(text):
         m = re.search(r"(\d+(?:\.\d+)?)\s*(?:x|times)?", text)
         want = float(m.group(1)) if m and 1.0 <= float(m.group(1)) <= 5.0 else (current.design_factor or 1.25) + 0.25
@@ -93,6 +108,31 @@ def follow_up(current: Spec, text: str, mode: str = "auto", runner=None) -> Foll
         return optimise(current, text)
 
     kwargs = {"mode": mode} if runner is None else {"mode": mode, "runner": runner}
+    return _from_parse(current, design, joint, text, kwargs)
+
+
+def _derived(text: str, design, joint, f: float) -> str:
+    """A size that is not an input: say what decides it and what changing it would really do."""
+    if joint.NAME == "knuckle" and re.search(r"\bpin\b", text, re.I) and re.search(r"\blength|long\b", text, re.I):
+        d = design.dims
+        span = d["t"] + 2 * d["t1"]
+        return (f"The pin length is not a free choice: it spans the eye and both fork plates, t + 2 t1 = "
+                f"{d['t']:g} + 2 x {d['t1']:g} = {span:g} mm, plus the collar ({d['collar_t']:g} mm) and the head "
+                f"({d['t2']:g} mm). A longer pin on its own carries no more load. Lengthening it means thicker "
+                f"plates, and the bending moment on the pin, M = P/2 (t1/3 + t/4), grows with them, so the pin "
+                f"would have to get thicker too (it is already governed by bending). To change the joint, change "
+                f"the load, the rod diameter or the material.")
+    key = find_symbol(text, design, joint)
+    if key:
+        rule = design.rules.get(key) or "it is sized from a failure check"
+        return (f"{joint.LABELS.get(key, key)} ({key} = {design.dims[key]:g} mm) is not set directly; "
+                f"it follows from: {rule}. Scaling it by {f:g} on its own would break that rule. "
+                f"Change the load, the rod diameter or the material and it follows.")
+    return ("Only the load and the rod diameter can be scaled directly, for example 'double the load' or "
+            "'half the rod diameter'. Every other size follows from them.")
+
+
+def _from_parse(current, design, joint, text, kwargs) -> FollowUp:
     delta = parse(text, **kwargs)
     new = replace(current, notes=[])
     changed_fields = []
@@ -107,7 +147,12 @@ def follow_up(current: Spec, text: str, mode: str = "auto", runner=None) -> Foll
             setattr(new, key, v)
     if not changed_fields:
         return FollowUp("unclear", "I could not find a change, a why-question or a load question in that. "
-                                   "Try: 'make it 80 kN', 'why is the pin 45 mm', 'how much load can this take'.")
+                                   "Try: 'make it 80 kN', 'double the load', 'rod 40 mm', 'why is the pin 45 mm', "
+                                   "'how much load can this take', 'make it lighter'.")
+    return _apply(current, design, joint, new, changed_fields)
+
+
+def _apply(current, design, joint, new, changed_fields) -> FollowUp:
 
     new_joint = REGISTRY.get(new.joint or "")
     if new_joint is None:
