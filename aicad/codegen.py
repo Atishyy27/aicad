@@ -104,7 +104,7 @@ def run_code(code: str, timeout: float = 60, python: str | None = None) -> tuple
     (tmp / "ai_part.py").write_text(code)
     (tmp / "harness.py").write_text(_HARNESS)
     step = tmp / "part.step"
-    env = {k: v for k, v in os.environ.items() if k in ("PATH", "HOME", "SYSTEMROOT", "TMPDIR", "TEMP", "TMP")}
+    env = {k: v for k, v in os.environ.items() if k in ("PATH", "HOME", "USERPROFILE", "HOMEDRIVE", "HOMEPATH", "SYSTEMROOT", "TMPDIR", "TEMP", "TMP")}
     try:
         done = subprocess.run([python or sys.executable, str(tmp / "harness.py"), str(tmp / "ai_part.py"), str(step)],
                               capture_output=True, text=True, timeout=timeout, cwd=tmp, env=env)
