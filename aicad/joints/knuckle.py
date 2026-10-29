@@ -25,6 +25,7 @@ COLORS = {
 }
 LABELS = {
     "D": "rod diameter",
+    "D1": "enlarged end, 1.1D",
     "d": "pin diameter",
     "d2": "eye outer diameter",
     "d3": "pin head and collar diameter",
@@ -68,10 +69,10 @@ def design(
         raw["rod_tension"] = math.sqrt(4 * Pd / (math.pi * s["tension"]))
         D = next_preferred(raw["rod_tension"], sizes)
 
-    # every thickness comes from the ROD diameter (NPTEL IIT KGP M4L2 fig 4.2.3.1), rounded up to a
-    # whole mm before anything is sized off it, so the pin is checked against the plate actually cut;
-    # the pin is sized separately and raised when shear or bending needs it
-    t_eye, t_fork = ceil_mm(k_t * D), ceil_mm(k_t1 * D)
+    # the eye and fork thicknesses come from the ROD diameter (b = 1.25D, a = 0.75D) and are rounded
+    # up to the next standard size before anything is sized off them, as Bhandari does in Ex 4.5
+    # (37.5 -> 40, 22.5 -> 25); the pin is sized separately and raised when shear or bending needs it
+    t_eye, t_fork = next_preferred(k_t * D, sizes), next_preferred(k_t1 * D, sizes)
     d = props["pin_diameter_d"]["times"] * D
     governing = "pin = rod diameter"
     if P is not None:
@@ -83,15 +84,15 @@ def design(
         if bending_mode == "size" and raw["pin_bending"] > d + 1e-9:
             d, governing = next_preferred(raw["pin_bending"], sizes), "pin bending"
             notes.append(
-                f"Pin raised to {d:g} mm for bending (needs {raw['pin_bending']:.1f} mm), the same step the "
-                "NPTEL worked problem takes. Set pin_bending.mode to 'check_only' to keep the pin equal to the rod."
+                f"Pin raised to {d:g} mm for bending (needs {raw['pin_bending']:.1f} mm), the same step "
+                "Bhandari Ex 4.5 and the NPTEL worked problem take. Set pin_bending.mode to 'check_only' to keep the pin equal to the rod."
             )
 
-    # the hole has to fit the final pin, so the eye and fork must grow with it. The NPTEL
-    # worked problem raises the pin for bending but then checks the eye against the original
-    # pin size; done that way its own eye-shear check fails, so we grow the eye instead.
-    d2 = props["eye_outer_diameter_d2"]["times"] * D
-    if P is not None and d > props["pin_diameter_d"]["times"] * D:
+    # the eye and fork outside diameter follows the PIN, d0 = 2d (Bhandari eq 4.26j), so a pin
+    # raised for bending carries its eye with it. If a check still fails, grow it further: the
+    # NPTEL worked problem raises the pin but checks the eye against the old one, and fails.
+    d2 = props["eye_outer_diameter_d2"]["times"] * d
+    if P is not None:
         grown = False
         for _ in range(400):
             trial = dict(D=D, d=d, d2=d2, t=t_eye, t1=t_fork)
@@ -107,7 +108,8 @@ def design(
         "D": D,
         "d": d,
         "d2": d2,
-        "d3": next_preferred(props["head_collar_diameter_d3"]["times"] * D, sizes),
+        "d3": next_preferred(props["head_collar_diameter_d3"]["times"] * d, sizes),
+        "D1": next_preferred(props["enlarged_rod_D1"]["times"] * D, sizes),
         "t": t_eye,
         "t1": t_fork,
         "t2": ceil_mm(props["head_thickness_t2"]["times"] * D),
@@ -115,24 +117,26 @@ def design(
     m = DATA["modelling_choices"]
     dims["collar_t"] = ceil_mm(times(m["collar_thickness"], d))
     dims["taper_d"] = ceil_mm(times(m["taper_pin_diameter"], D))
-    dims["clearance"] = ceil_mm(times(m["fork_clearance"], d))
+    dims["clearance"] = float(m["fork_clearance"]["mm"])
     dims["fork_base"] = times(m["fork_base_length"], d)
     dims["rod_len"] = m["rod_length"]["times"] * dims["d2"]
     dims = {k: round(v, 3) for k, v in dims.items()}
 
-    def rule(key, prop_key, rounding="rounded up to a whole mm"):
+    def rule(key, prop_key, rounding="rounded up to a standard size"):
         p = props[prop_key]
-        return f"{key} = {p['times']} x D, the rod diameter ({p['meaning']}), {rounding} [{p['source']}]"
+        base = "d, the pin diameter" if p["of"] == "d" else "D, the rod diameter"
+        return f"{key} = {p['times']} x {base} ({p['meaning']}), {rounding} [{p['source']}]"
 
     rules = {
         "D": "given by user" if rod_diameter_mm is not None
         else "rod in tension: D = sqrt(4P / (pi sigma_t)), rounded up to a preferred size",
         "d": f"governed by {governing}",
         "d2": rule("d2", "eye_outer_diameter_d2"),
-        "d3": rule("d3", "head_collar_diameter_d3", "rounded up to a preferred size"),
+        "d3": rule("d3", "head_collar_diameter_d3"),
+        "D1": rule("D1", "enlarged_rod_D1"),
         "t": rule("t", "eye_thickness_t"),
         "t1": rule("t1", "fork_thickness_t1"),
-        "t2": rule("t2", "head_thickness_t2"),
+        "t2": rule("t2", "head_thickness_t2", "rounded up to a whole mm"),
     }
 
     checks = _checks(P, dims, s) if P is not None else []
@@ -168,6 +172,7 @@ def build_parts(dims: dict):
     from ._shapes import box, disc, hole_x, hole_z, rod_along_x, soften
 
     D, d, d2, d3 = dims["D"], dims["d"], dims["d2"], dims["d3"]
+    D1 = dims.get("D1", D)
     t, t1, t2 = dims["t"], dims["t1"], dims["t2"]
     collar_t, taper_d = dims["collar_t"], dims["taper_d"]
     clearance, base_len, rod_len = dims["clearance"], dims["fork_base"], dims["rod_len"]
@@ -180,6 +185,8 @@ def build_parts(dims: dict):
     eye_rod = (
         disc(d2, t, -t / 2)
         .union(rod_along_x(D, -(d2 / 2 + rod_len), d2 / 2 + rod_len))
+        # the rod is enlarged to D1 where it meets the eye (Bhandari eq 4.26b)
+        .union(rod_along_x(D1, -(d2 / 2 + D), d2 / 2 + D))
         .cut(hole_z(d, span))
         .clean()
     )
@@ -201,6 +208,7 @@ def build_parts(dims: dict):
         .union(plate(-outer, "<Z"))
         .union(base)
         .union(rod_along_x(D, base_x + base_len / 2, base_len / 2 + rod_len))
+        .union(rod_along_x(D1, base_x + base_len / 2, base_len / 2 + D))
         .cut(hole_z(d, span))
         .clean()
     )

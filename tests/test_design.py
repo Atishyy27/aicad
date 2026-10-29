@@ -19,14 +19,14 @@ def test_knuckle_50kn_rod_from_tension():
 
 def test_knuckle_50kn_pin_is_raised_for_bending():
     r = knuckle.design(load_n=50_000, design_factor=1.0)
-    # thicknesses come off the rod, not the pin (NPTEL M4L2): D = 30, t = 1.25 D, t1 = 0.75 D,
-    # each rounded up to a whole mm before the pin is sized: t = 38, t1 = 23.
-    # sigma_b = 16 P (t1/3 + t/4) / (pi d^3) <= 75  ->  d >= 38.77 -> next preferred 40
-    assert r.raw["pin_bending"] == pytest.approx(38.77, abs=0.01)
+    # thicknesses come off the rod (Bhandari eq 4.26m, n): D = 30, b = 1.25 D, a = 0.75 D, each
+    # rounded up to a standard size before the pin is sized: t = 40, t1 = 25 (37.5 -> 40, 22.5 -> 25).
+    # sigma_b = 16 P (t1/3 + t/4) / (pi d^3) <= 75  ->  d >= 39.63 -> next preferred 40
+    assert r.raw["pin_bending"] == pytest.approx(39.63, abs=0.01)
     assert r.dims["d"] == 40
-    assert r.dims["t"] == 38 and r.dims["t1"] == 23
-    # 2 D would be 60; the eye grows past it because the raised pin eats into the metal
-    assert r.dims["d2"] == 62
+    assert r.dims["t"] == 40 and r.dims["t1"] == 25
+    # the eye follows the pin, d0 = 2d (eq 4.26j)
+    assert r.dims["d2"] == 80
     assert "governed by pin bending" == r.rules["d"]
     assert any("bending" in n for n in r.notes)
 
@@ -167,7 +167,10 @@ def test_bigger_factor_means_bigger_parts(factor):
 def test_knuckle_derived_sizes_are_standard_not_raw_multiples():
     """16 Oct review: 52.5 and 43.75 mm cannot be bought or cut. Every derived size is rounded up."""
     r = knuckle.design(load_n=50_000)
-    assert r.dims["d3"] == 55                      # 1.5 x 35 = 52.5 -> next preferred size
-    for k in ("t", "t1", "t2", "collar_t", "taper_d", "clearance"):
+    sizes = knuckle.DATA["preferred_diameters_mm"]
+    assert r.dims["d3"] == 70                      # 1.5 x pin 45 = 67.5 -> next preferred size
+    for k in ("d3", "D1", "t", "t1"):
+        assert r.dims[k] in sizes, (k, r.dims[k])
+    for k in ("t2", "collar_t", "taper_d", "clearance"):
         assert r.dims[k] == int(r.dims[k]), (k, r.dims[k])
     assert r.all_passed

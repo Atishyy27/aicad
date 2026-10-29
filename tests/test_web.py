@@ -42,7 +42,7 @@ def test_size_is_instant_and_matches_the_design(server):
     r = _post(server, "/api/size", {"fields": {"joint": "knuckle", "load_n": 50_000}})
     assert time.perf_counter() - t < 1.0
     dims = {d["key"]: d["value"] for d in r["dims"]}
-    assert r["ok"] and dims["D"] == 35 and dims["d3"] == 55 and len(r["checks"]) == 9 and r["all_passed"]
+    assert r["ok"] and dims["D"] == 35 and dims["d3"] == 70 and len(r["checks"]) == 9 and r["all_passed"]
 
 
 def test_materials_lists_every_grade_with_mass_and_cost(server):
@@ -94,7 +94,7 @@ def test_files_outside_the_output_folder_are_not_served(server):
 def test_followup_limit_and_change(server):
     fields = {"joint": "knuckle", "load_n": 50000}
     r = _post(server, "/api/followup", {"fields": fields, "text": "how much load can this take", "parser": "rules"})
-    assert r["kind"] == "limit" and r["governing"] == "eye shear"
+    assert r["kind"] == "limit" and r["governing"] == "pin bending"
     r = _post(server, "/api/followup", {"fields": fields, "text": "make it 80 kN", "parser": "rules"})
     assert r["kind"] == "change" and r["fields"]["load_n"] == 80000
 

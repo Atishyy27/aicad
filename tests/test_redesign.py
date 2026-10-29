@@ -24,9 +24,9 @@ def test_max_load_is_exactly_the_limit(name):
 
 def test_limit_question_on_a_design():
     r = follow_up(CASES["knuckle"], "how much load can this take", mode="rules")
-    # eye shear binds first now: the eye is grown to the smallest size that passes, so it sits
-    # closest to its allowable of any check
-    assert r.kind == "limit" and r.governing == "eye shear"
+    # pin bending binds first: with d0 = 2d the eye has metal to spare, and the pin is the
+    # member sized nearest its allowable
+    assert r.kind == "limit" and r.governing == "pin bending"
     # the design carries more than the load it was sized for: that headroom is the design margin
     assert r.value > 50_000 and r.value < 50_000 * 1.6
 

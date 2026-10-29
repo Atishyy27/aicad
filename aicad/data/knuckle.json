@@ -28,6 +28,7 @@
   22,
   25,
   30,
+  32,
   35,
   40,
   45,
@@ -41,42 +42,48 @@
   110,
   125,
   140,
-  160
+  160,
+  180,
+  200,
+  225,
+  250,
+  280,
+  320
  ],
  "proportions": {
   "pin_diameter_d": {
    "of": "D",
    "times": 1.0,
    "meaning": "pin diameter, before shear and bending raise it",
-   "source": "NPTEL IIT KGP M4L2 fig 4.2.3.1",
+   "source": "Bhandari, Design of Machine Elements, sec 4.12, eq 4.26d",
    "page": "lesson 2"
   },
   "eye_outer_diameter_d2": {
-   "of": "D",
+   "of": "d",
    "times": 2.0,
-   "meaning": "outer diameter of eye",
-   "source": "NPTEL IIT KGP M4L2 fig 4.2.3.1",
+   "meaning": "outer diameter of eye and fork, d0 = 2d",
+   "source": "Bhandari, Design of Machine Elements, sec 4.12, eq 4.26j",
    "page": "lesson 2"
   },
   "head_collar_diameter_d3": {
-   "of": "D",
+   "of": "d",
    "times": 1.5,
-   "meaning": "pin head and collar diameter",
-   "source": "NPTEL IIT KGP M4L2 fig 4.2.3.1",
+   "meaning": "pin head and collar diameter, 1.5d",
+   "source": "Bhandari, Design of Machine Elements, sec 4.12, eq 4.26o",
    "page": "lesson 2"
   },
   "eye_thickness_t": {
    "of": "D",
    "times": 1.25,
-   "meaning": "thickness of single eye",
-   "source": "NPTEL IIT KGP M4L2 fig 4.2.3.1",
+   "meaning": "thickness of eye of rod B, b = 1.25D",
+   "source": "Bhandari, Design of Machine Elements, sec 4.12, eq 4.26n",
    "page": "lesson 2"
   },
   "fork_thickness_t1": {
    "of": "D",
    "times": 0.75,
-   "meaning": "thickness of each fork plate",
-   "source": "NPTEL IIT KGP M4L2 fig 4.2.3.1",
+   "meaning": "thickness of each fork eye, a = 0.75D",
+   "source": "Bhandari, Design of Machine Elements, sec 4.12, eq 4.26m",
    "page": "lesson 2"
   },
   "head_thickness_t2": {
@@ -85,6 +92,13 @@
    "meaning": "thickness of pin head",
    "source": "NPTEL IIT KGP M4L2 fig 4.2.3.1",
    "page": "lesson 2"
+  },
+  "enlarged_rod_D1": {
+   "of": "D",
+   "times": 1.1,
+   "meaning": "enlarged rod diameter near the eye and fork, D1 = 1.1D",
+   "source": "Bhandari, Design of Machine Elements, sec 4.12, eq 4.26b",
+   "page": "p 99"
   }
  },
  "modelling_choices": {
@@ -102,10 +116,8 @@
   },
   "taper_ratio_on_diameter": 50,
   "fork_clearance": {
-   "of": "d",
-   "times": 0.1,
-   "min_mm": 2,
-   "note": "gap between eye edge and fork base so the eye can swing"
+   "mm": 10,
+   "note": "gap x between the fork base and the eye, x = 10 mm (Bhandari eq 4.26p)"
   },
   "fork_base_length": {
    "of": "d",
