@@ -5,12 +5,14 @@
 <title>aicad - design a machine joint from one sentence</title>
 <style>
 :root{--bg:#0f1218;--panel:#161b23;--panel2:#1c222c;--line:#2a3240;--ink:#e8ecf2;--mute:#8a95a8;
---acc:#4f8cff;--acc2:#7c5cff;--ok:#2fbf71;--warn:#f5a524;--bad:#f2555a;--r:12px}
+--acc:#4f8cff;--acc2:#7c5cff;--ok:#2fbf71;--warn:#f5a524;--bad:#f2555a;--r:12px;--head:#0c0f14;--row:#222a35;--hover:#1f2632;--sel:#1d2a44}
+:root.light{--bg:#eef1f5;--panel:#ffffff;--panel2:#f3f5f8;--line:#d9dee6;--ink:#151a22;--mute:#5f6b7c;
+--ok:#14904f;--warn:#b7791f;--bad:#d03b40;--head:#ffffff;--row:#e8ecf1;--hover:#f0f4fa;--sel:#e3edff}
 *{box-sizing:border-box}html,body{margin:0;height:100%}
 body{background:var(--bg);color:var(--ink);font:14px/1.45 Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
 display:flex;flex-direction:column;overflow:hidden}
 button,input,select,textarea{font:inherit;color:inherit}
-header{display:flex;align-items:center;gap:14px;padding:10px 18px;border-bottom:1px solid var(--line);background:#0c0f14}
+header{display:flex;align-items:center;gap:14px;padding:10px 18px;border-bottom:1px solid var(--line);background:var(--head)}
 .logo{font-weight:800;font-size:18px;letter-spacing:-.02em;display:flex;align-items:center;gap:8px}
 .logo i{width:22px;height:22px;border-radius:6px;background:linear-gradient(135deg,var(--acc),var(--acc2));display:inline-block}
 header .tag{color:var(--mute);font-size:13px}
@@ -47,21 +49,21 @@ input[type=range]{width:100%;accent-color:var(--acc)}
 .note{font-size:12px;color:var(--mute);margin:6px 0 0}
 .mats{width:100%;border-collapse:collapse;font-size:12px}
 .mats th{text-align:left;color:var(--mute);font-weight:600;padding:4px 4px;border-bottom:1px solid var(--line)}
-.mats td{padding:6px 4px;border-bottom:1px solid #222a35}
-.mats tr{cursor:pointer}.mats tr:hover td{background:#1f2632}
-.mats tr.sel td{background:#1d2a44}
+.mats td{padding:6px 4px;border-bottom:1px solid var(--row)}
+.mats tr{cursor:pointer}.mats tr:hover td{background:var(--hover)}
+.mats tr.sel td{background:var(--sel)}
 .mats .best{color:var(--ok);font-size:10.5px;font-weight:700}
-.center{position:relative;display:flex;flex-direction:column;min-width:0;background:radial-gradient(ellipse at 50% 30%,#1b2230,#0f1218 70%)}
+.center{position:relative;display:flex;flex-direction:column;min-width:0;background:var(--bg)}
 .vbar{display:flex;gap:6px;padding:10px 14px;align-items:center;border-bottom:1px solid var(--line)}
 .vbar .t{font-weight:700}.vbar .sp{flex:1}
-iframe#viewer{flex:1;border:0;width:100%;background:#f4f5f7}
+iframe#viewer{flex:1;border:0;width:100%;background:var(--bg)}
 .empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:30px;text-align:center}
 .empty h2{margin:0;font-size:26px;letter-spacing:-.02em}
 .lib{display:grid;grid-template-columns:repeat(3,minmax(150px,1fr));gap:10px;max-width:720px;width:100%}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:12px;text-align:left;cursor:pointer}
 .card:hover{border-color:var(--acc);transform:translateY(-1px)}
 .card .n{font-weight:700}.card .d{font-size:12px;color:var(--mute);margin-top:3px}
-.busy{position:absolute;inset:52px 0 0 0;display:flex;align-items:center;justify-content:center;background:#0f1218b0;
+.busy{position:absolute;inset:52px 0 0 0;display:flex;align-items:center;justify-content:center;background:color-mix(in srgb,var(--bg) 70%,transparent);
 font-weight:700;gap:10px;z-index:3}
 .spin{width:18px;height:18px;border-radius:50%;border:2px solid var(--line);border-top-color:var(--acc);animation:sp .8s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
@@ -69,13 +71,13 @@ font-weight:700;gap:10px;z-index:3}
 .tab{padding:8px 10px;border:0;background:none;color:var(--mute);cursor:pointer;border-bottom:2px solid transparent;font-weight:600}
 .tab.on{color:var(--ink);border-bottom-color:var(--acc)}
 .pane{padding:12px 14px}
-.chk{padding:9px 0;border-bottom:1px solid #222a35}
+.chk{padding:9px 0;border-bottom:1px solid var(--row)}
 .chk .top{display:flex;justify-content:space-between;font-size:13px}
 .chk .f{font-family:ui-monospace,Consolas,monospace;font-size:11.5px;color:var(--mute);margin-top:3px}
-.bar{height:6px;border-radius:99px;background:#232b37;margin-top:6px;overflow:hidden}
+.bar{height:6px;border-radius:99px;background:var(--row);margin-top:6px;overflow:hidden}
 .bar>i{display:block;height:100%;border-radius:99px}
 .dims{width:100%;border-collapse:collapse;font-size:12.5px}
-.dims td{padding:6px 4px;border-bottom:1px solid #222a35;vertical-align:top}
+.dims td{padding:6px 4px;border-bottom:1px solid var(--row);vertical-align:top}
 .dims td.v{font-weight:700;text-align:right;white-space:nowrap}
 .dims .r{font-size:11px;color:var(--mute)}
 .sheet{background:#fff;border-radius:8px;overflow:hidden}.sheet svg{width:100%;height:auto;display:block}
@@ -84,7 +86,7 @@ border-radius:9px;color:var(--ink);text-decoration:none;font-size:13px}.files a:
 .files a span{color:var(--mute);font-size:11.5px}
 .log{font-family:ui-monospace,Consolas,monospace;font-size:11px;color:var(--mute);white-space:pre-wrap;max-height:240px;overflow:auto}
 .msg{font-size:13px;padding:8px 10px;border-radius:10px;margin:6px 0;background:var(--panel2)}
-.msg.me{background:#1d2a44}
+.msg.me{background:var(--sel)}
 .summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:6px}
 .kpi{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:8px}
 .kpi .v{font-size:18px;font-weight:800}.kpi .l{font-size:11px;color:var(--mute)}
@@ -97,6 +99,7 @@ border-radius:9px;color:var(--ink);text-decoration:none;font-size:13px}.files a:
   <div class="tag">Say what you need. It sizes the joint, checks every way it can fail, and draws it.</div>
   <div class="sp"></div>
   <span class="pill" id="statusPill">ready</span>
+  <button class="ghost" id="themeBtn" title="light or dark">Light mode</button>
   <span class="pill">SGSITS Indore, Mechanical &middot; build __BUILD_ID__</span>
 </header>
 <main>
@@ -200,6 +203,15 @@ async function post(u,b){const r=await fetch(u,{method:"POST",headers:{"Content-
 function pill(t,cls=""){$("statusPill").textContent=t;$("statusPill").className="pill "+cls;}
 function busy(on,msg){$("busy").classList.toggle("hidden",!on);if(msg)$("busyMsg").textContent=msg;}
 
+// theme: remembered per browser, dark by default, passed into the 3D viewer frame
+function applyTheme(t){document.documentElement.classList.toggle("light",t==="light");
+  $("themeBtn").textContent=t==="light"?"Dark mode":"Light mode";
+  try{localStorage.setItem("aicad-theme",t);}catch(e){}
+  try{$("viewer").contentWindow.postMessage({theme:t},"*");}catch(e){}}
+let theme="dark"; try{theme=localStorage.getItem("aicad-theme")||"dark";}catch(e){}
+applyTheme(theme);
+$("themeBtn").onclick=()=>{theme=theme==="light"?"dark":"light";applyTheme(theme);};
+$("viewer").addEventListener("load",()=>applyTheme(theme));
 let text="", material=null, mats=[], matsKey="", seq=0, sheetSeq=0, lastBuild=null;
 const SL={load:v=>`${v} kN`,bolt:v=>`M${v}`,grip:v=>`${v} mm`,power:v=>`${v} kW`,speed:v=>`${v} rpm`};
 for(const k in SL){ $(k).addEventListener("input",()=>{$("o-"+k).textContent=SL[k]($(k).value); live();});
