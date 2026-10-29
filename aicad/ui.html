@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="icon" href="data:,">
+<title>aicad - design a machine joint from one sentence</title>
+<style>
+:root{--bg:#0f1218;--panel:#161b23;--panel2:#1c222c;--line:#2a3240;--ink:#e8ecf2;--mute:#8a95a8;
+--acc:#4f8cff;--acc2:#7c5cff;--ok:#2fbf71;--warn:#f5a524;--bad:#f2555a;--r:12px}
+*{box-sizing:border-box}html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);font:14px/1.45 Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+display:flex;flex-direction:column;overflow:hidden}
+button,input,select,textarea{font:inherit;color:inherit}
+header{display:flex;align-items:center;gap:14px;padding:10px 18px;border-bottom:1px solid var(--line);background:#0c0f14}
+.logo{font-weight:800;font-size:18px;letter-spacing:-.02em;display:flex;align-items:center;gap:8px}
+.logo i{width:22px;height:22px;border-radius:6px;background:linear-gradient(135deg,var(--acc),var(--acc2));display:inline-block}
+header .tag{color:var(--mute);font-size:13px}
+header .sp{flex:1}
+.pill{font-size:11.5px;padding:3px 9px;border-radius:99px;border:1px solid var(--line);color:var(--mute)}
+.pill.ok{color:var(--ok);border-color:#1f5e3d}.pill.bad{color:var(--bad);border-color:#6b2a2d}
+main{flex:1;display:grid;grid-template-columns:360px 1fr 380px;min-height:0}
+aside,section.right{overflow:auto;background:var(--panel);border-right:1px solid var(--line)}
+section.right{border-right:0;border-left:1px solid var(--line)}
+.blk{padding:14px 16px;border-bottom:1px solid var(--line)}
+.h{font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--mute);margin:0 0 8px;
+display:flex;align-items:center;gap:8px}
+.h b{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;background:var(--panel2);
+border:1px solid var(--line);color:var(--ink);font-size:10.5px}
+.h.done b{background:var(--acc);border-color:var(--acc)}
+textarea{width:100%;min-height:74px;resize:vertical;background:var(--panel2);border:1px solid var(--line);
+border-radius:10px;padding:10px 12px;outline:none}
+textarea:focus,input:focus,select:focus{border-color:var(--acc)}
+.btn{background:linear-gradient(135deg,var(--acc),var(--acc2));border:0;border-radius:10px;padding:9px 14px;
+font-weight:700;cursor:pointer;color:#fff}
+.btn:disabled{opacity:.5;cursor:default}
+.ghost{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:6px 10px;cursor:pointer;color:var(--ink)}
+.ghost:hover{border-color:var(--acc)}
+.row{display:flex;gap:8px;align-items:center}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.chip{font-size:12px;padding:5px 9px;border-radius:99px;background:var(--panel2);border:1px solid var(--line);cursor:pointer}
+.chip:hover{border-color:var(--acc)}
+select,input[type=number]{width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:7px 9px;outline:none}
+.field{margin:9px 0}.field label{display:flex;justify-content:space-between;font-size:12.5px;color:var(--mute);margin-bottom:4px}
+.field label output{color:var(--ink);font-weight:700}
+input[type=range]{width:100%;accent-color:var(--acc)}
+.hidden{display:none!important}
+.muted{color:var(--mute);font-size:12.5px}
+.note{font-size:12px;color:var(--mute);margin:6px 0 0}
+.mats{width:100%;border-collapse:collapse;font-size:12px}
+.mats th{text-align:left;color:var(--mute);font-weight:600;padding:4px 4px;border-bottom:1px solid var(--line)}
+.mats td{padding:6px 4px;border-bottom:1px solid #222a35}
+.mats tr{cursor:pointer}.mats tr:hover td{background:#1f2632}
+.mats tr.sel td{background:#1d2a44}
+.mats .best{color:var(--ok);font-size:10.5px;font-weight:700}
+.center{position:relative;display:flex;flex-direction:column;min-width:0;background:radial-gradient(ellipse at 50% 30%,#1b2230,#0f1218 70%)}
+.vbar{display:flex;gap:6px;padding:10px 14px;align-items:center;border-bottom:1px solid var(--line)}
+.vbar .t{font-weight:700}.vbar .sp{flex:1}
+iframe#viewer{flex:1;border:0;width:100%;background:#f4f5f7}
+.empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:30px;text-align:center}
+.empty h2{margin:0;font-size:26px;letter-spacing:-.02em}
+.lib{display:grid;grid-template-columns:repeat(3,minmax(150px,1fr));gap:10px;max-width:720px;width:100%}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:12px;text-align:left;cursor:pointer}
+.card:hover{border-color:var(--acc);transform:translateY(-1px)}
+.card .n{font-weight:700}.card .d{font-size:12px;color:var(--mute);margin-top:3px}
+.busy{position:absolute;inset:52px 0 0 0;display:flex;align-items:center;justify-content:center;background:#0f1218b0;
+font-weight:700;gap:10px;z-index:3}
+.spin{width:18px;height:18px;border-radius:50%;border:2px solid var(--line);border-top-color:var(--acc);animation:sp .8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.tabs{display:flex;gap:2px;padding:8px 10px 0;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--panel);z-index:2}
+.tab{padding:8px 10px;border:0;background:none;color:var(--mute);cursor:pointer;border-bottom:2px solid transparent;font-weight:600}
+.tab.on{color:var(--ink);border-bottom-color:var(--acc)}
+.pane{padding:12px 14px}
+.chk{padding:9px 0;border-bottom:1px solid #222a35}
+.chk .top{display:flex;justify-content:space-between;font-size:13px}
+.chk .f{font-family:ui-monospace,Consolas,monospace;font-size:11.5px;color:var(--mute);margin-top:3px}
+.bar{height:6px;border-radius:99px;background:#232b37;margin-top:6px;overflow:hidden}
+.bar>i{display:block;height:100%;border-radius:99px}
+.dims{width:100%;border-collapse:collapse;font-size:12.5px}
+.dims td{padding:6px 4px;border-bottom:1px solid #222a35;vertical-align:top}
+.dims td.v{font-weight:700;text-align:right;white-space:nowrap}
+.dims .r{font-size:11px;color:var(--mute)}
+.sheet{background:#fff;border-radius:8px;overflow:hidden}.sheet svg{width:100%;height:auto;display:block}
+.files a{display:flex;justify-content:space-between;padding:8px 10px;margin:6px 0;border:1px solid var(--line);
+border-radius:9px;color:var(--ink);text-decoration:none;font-size:13px}.files a:hover{border-color:var(--acc)}
+.files a span{color:var(--mute);font-size:11.5px}
+.log{font-family:ui-monospace,Consolas,monospace;font-size:11px;color:var(--mute);white-space:pre-wrap;max-height:240px;overflow:auto}
+.msg{font-size:13px;padding:8px 10px;border-radius:10px;margin:6px 0;background:var(--panel2)}
+.msg.me{background:#1d2a44}
+.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:6px}
+.kpi{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:8px}
+.kpi .v{font-size:18px;font-weight:800}.kpi .l{font-size:11px;color:var(--mute)}
+@media (max-width:1100px){main{grid-template-columns:320px 1fr}section.right{grid-column:1/-1;max-height:50vh}}
+@media (max-width:720px){body{overflow:auto}main{display:block}aside,section.right{border:0}.center{min-height:60vh}}
+</style></head>
+<body>
+<header>
+  <div class="logo"><i></i>aicad</div>
+  <div class="tag">Say what you need. It sizes the joint, checks every way it can fail, and draws it.</div>
+  <div class="sp"></div>
+  <span class="pill" id="statusPill">ready</span>
+  <span class="pill">SGSITS Indore, Mechanical &middot; build __BUILD_ID__</span>
+</header>
+<main>
+<aside>
+  <div class="blk">
+    <div class="h" id="h1"><b>1</b>Describe the joint</div>
+    <textarea id="text" placeholder="e.g. knuckle joint for 50 kN"></textarea>
+    <div class="row" style="margin-top:8px">
+      <button class="btn" id="go" style="flex:1">Design it</button>
+      <select id="parser" style="width:auto" title="who reads the sentence">
+        <option value="rules">rules (offline)</option><option value="auto">AI, rules fallback</option><option value="ai">AI only</option>
+      </select>
+    </div>
+    <div class="chips" id="chips"></div>
+    <p class="note" id="readBy"></p>
+  </div>
+
+  <div class="blk hidden" id="specBlk">
+    <div class="h" id="h2"><b>2</b>Duty <span class="muted" style="text-transform:none;letter-spacing:0;font-weight:400">drag to resize live</span></div>
+    <div class="field"><label>joint</label><select id="joint"></select></div>
+    <div class="field" id="f-load"><label>load <output id="o-load"></output></label>
+      <input type="range" id="load" min="1" max="300" step="1"></div>
+    <div class="field" id="f-dia"><label>rod diameter, optional <output id="o-dia"></output></label>
+      <input type="number" id="dia" min="0" step="1" placeholder="leave empty to size from load"></div>
+    <div class="field" id="f-bolt"><label>bolt size <output id="o-bolt"></output></label>
+      <input type="range" id="bolt" min="6" max="48" step="2"></div>
+    <div class="field" id="f-grip"><label>grip (plates) <output id="o-grip"></output></label>
+      <input type="range" id="grip" min="5" max="150" step="1"></div>
+    <div class="field" id="f-power"><label>power <output id="o-power"></output></label>
+      <input type="range" id="power" min="1" max="200" step="1"></div>
+    <div class="field" id="f-speed"><label>speed <output id="o-speed"></output></label>
+      <input type="range" id="speed" min="100" max="3000" step="10"></div>
+    <div class="field" id="f-torque"><label>torque, or give power and speed <output id="o-torque"></output></label>
+      <input type="number" id="torque" min="0" step="any" placeholder="N m"></div>
+    <div id="question" class="note"></div>
+  </div>
+
+  <div class="blk hidden" id="matBlk">
+    <div class="h" id="h3"><b>3</b>Material selection</div>
+    <p class="muted" style="margin:0 0 8px">The same joint designed in each material. Pick one: its allowable stresses drive every check.</p>
+    <table class="mats"><thead><tr><th>material</th><th>size</th><th>mass</th><th>cost</th></tr></thead><tbody id="matRows">
+      <tr><td colspan="4" class="muted">comparing...</td></tr></tbody></table>
+    <p class="note" id="matNote"></p>
+  </div>
+
+  <div class="blk hidden" id="chatBlk">
+    <div class="h"><b>4</b>Ask or change</div>
+    <div id="thread"></div>
+    <div class="row"><input id="ask" type="text" placeholder="make it lighter / why is the pin 45 mm? / load 80 kN"
+      style="flex:1;background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:8px 10px;outline:none">
+      <button class="ghost" id="askBtn">Send</button></div>
+  </div>
+</aside>
+
+<div class="center">
+  <div class="vbar"><span class="t" id="vTitle">No design yet</span><span class="muted" id="vDuty"></span><span class="sp"></span>
+    <span class="pill" id="vTime"></span></div>
+  <div class="empty" id="empty">
+    <h2>Pick a joint, or type one.</h2>
+    <p class="muted" style="max-width:520px;margin:0">Every dimension comes from a design formula with its source,
+    is rounded up to a standard size, and is checked against every way the joint can fail.</p>
+    <div class="lib" id="lib"></div>
+  </div>
+  <iframe id="viewer" class="hidden" title="3D model"></iframe>
+  <div class="busy hidden" id="busy"><div class="spin"></div><span id="busyMsg">Building the solids...</span></div>
+</div>
+
+<section class="right">
+  <div class="tabs">
+    <button class="tab on" data-p="pChecks">Checks</button><button class="tab" data-p="pDims">Dimensions</button>
+    <button class="tab" data-p="pSheet">Drawing</button><button class="tab" data-p="pFiles">Files</button>
+    <button class="tab" data-p="pLog">Working</button>
+  </div>
+  <div class="pane" id="pChecks"><p class="muted">The failure checks appear here, with the arithmetic.</p></div>
+  <div class="pane hidden" id="pDims"></div>
+  <div class="pane hidden" id="pSheet"><p class="muted">The A3 first angle drawing sheet appears here.</p></div>
+  <div class="pane hidden" id="pFiles"></div>
+  <div class="pane hidden" id="pLog"><div class="log" id="log"></div></div>
+</section>
+</main>
+
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const EX=[["knuckle joint for 50 kN","Knuckle joint","5 parts, 9 checks"],
+  ["socket and spigot joint for 35 kN","Socket and spigot cotter","3 parts, 10 checks"],
+  ["sleeve and cotter joint for 50 kN","Sleeve and cotter","5 parts, 8 checks"],
+  ["gib and cotter joint for 50 kN","Gib and cotter","4 parts, 8 checks"],
+  ["M24 nut bolt, plates 30 mm thick, load 20 kN","Hex bolt, nut, washer","3 parts, 2 checks"],
+  ["flange coupling to transmit 20 kW at 1440 rpm","Protected flange coupling","14 parts, 7 checks"]];
+$("chips").innerHTML=EX.map(e=>`<span class="chip">${esc(e[0])}</span>`).join("");
+$("lib").innerHTML=EX.map(e=>`<div class="card" data-t="${esc(e[0])}"><div class="n">${esc(e[1])}</div><div class="d">${esc(e[0])}</div><div class="d">${esc(e[2])}</div></div>`).join("");
+document.querySelectorAll(".chip").forEach(c=>c.onclick=()=>{$("text").value=c.textContent;$("go").click();});
+document.querySelectorAll(".card").forEach(c=>c.onclick=()=>{$("text").value=c.dataset.t;$("go").click();});
+document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{
+  document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("on",x===t));
+  document.querySelectorAll(".pane").forEach(p=>p.classList.toggle("hidden",p.id!==t.dataset.p));});
+
+async function post(u,b){const r=await fetch(u,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(b)});
+  const t=await r.text(); try{return JSON.parse(t);}catch(e){return {ok:false,error:"server said: "+t.slice(0,200)};}}
+function pill(t,cls=""){$("statusPill").textContent=t;$("statusPill").className="pill "+cls;}
+function busy(on,msg){$("busy").classList.toggle("hidden",!on);if(msg)$("busyMsg").textContent=msg;}
+
+let text="", material=null, mats=[], matsKey="", seq=0, sheetSeq=0, lastBuild=null;
+const SL={load:v=>`${v} kN`,bolt:v=>`M${v}`,grip:v=>`${v} mm`,power:v=>`${v} kW`,speed:v=>`${v} rpm`};
+for(const k in SL){ $(k).addEventListener("input",()=>{$("o-"+k).textContent=SL[k]($(k).value); live();});
+  $(k).addEventListener("change",()=>rebuild()); }
+["dia","torque"].forEach(k=>$(k).addEventListener("change",()=>{live();rebuild();}));
+$("joint").onchange=()=>{showFields();live();rebuild();};
+
+function showFields(){
+  const j=$("joint").value;
+  const vis={"f-load":j!=="flange_coupling","f-dia":!["nut_bolt","flange_coupling"].includes(j),"f-bolt":j==="nut_bolt",
+    "f-grip":j==="nut_bolt","f-torque":j==="flange_coupling","f-power":j==="flange_coupling","f-speed":j==="flange_coupling"};
+  for(const k in vis) $(k).classList.toggle("hidden",!vis[k]);
+}
+function setRange(id,v,def){ if(v==null||v==="") v=def; if(v==null) return;
+  const el=$(id); if(+v>+el.max) el.max=Math.ceil(+v*1.5); el.value=v; if(SL[id]) $("o-"+id).textContent=SL[id](el.value); }
+function fields(){
+  const j=$("joint").value, vis=id=>!$("f-"+id).classList.contains("hidden"), num=id=>$(id).value!==""?+$(id).value:null;
+  const f={joint:j};
+  if(vis("load")) f.load_n=+$("load").value*1000;
+  if(vis("dia")&&num("dia")) f.rod_diameter_mm=num("dia");
+  if(vis("bolt")) f.bolt_size=+$("bolt").value;
+  if(vis("grip")) f.grip_mm=+$("grip").value;
+  if(vis("power")) {f.power_kw=+$("power").value; f.speed_rpm=+$("speed").value;}
+  if(vis("torque")&&num("torque")) f.torque_nm=num("torque");
+  if(material){f.tension_mpa=material.tension;f.shear_mpa=material.shear;f.crushing_mpa=material.crushing;}
+  return f;
+}
+function dutyKey(){const f=fields(); delete f.tension_mpa; delete f.shear_mpa; delete f.crushing_mpa; return JSON.stringify(f);}
+
+$("text").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();$("go").click();}});
+$("go").onclick=async()=>{
+  text=$("text").value.trim(); if(!text) return;
+  $("go").disabled=true; pill("reading the sentence...");
+  try{
+    const r=await post("/api/understand",{text,parser:$("parser").value});
+    if(!r.spec){pill("could not read it","bad");$("readBy").textContent=r.error||"";return;}
+    const s=r.spec;
+    $("joint").innerHTML=Object.entries(r.joints).map(([k,v])=>`<option value="${k}">${esc(v.title)} (${v.parts} parts)</option>`).join("");
+    $("joint").value=s.joint&&r.joints[s.joint]?s.joint:"knuckle";
+    setRange("load",s.load_n!=null?Math.round(s.load_n/1000):null,50);
+    $("dia").value=s.rod_diameter_mm??""; setRange("bolt",s.bolt_size,24); setRange("grip",s.grip_mm,30);
+    setRange("power",s.power_kw,20); setRange("speed",s.speed_rpm,1440); $("torque").value=s.torque_nm??"";
+    material=null; mats=[]; matsKey="";
+    showFields();
+    $("readBy").textContent=`Read by ${r.source}. `+(r.notes||[]).join(" ");
+    $("question").textContent=(r.missing||[]).length?`Missing: ${r.missing.join(", ")}. Set it above.`:"";
+    ["specBlk","matBlk","chatBlk"].forEach(i=>$(i).classList.remove("hidden"));
+    $("h1").classList.add("done");$("h2").classList.add("done");
+    await live(); loadMaterials(); rebuild();
+  } finally {$("go").disabled=false;}
+};
+
+// live: sizing and every check, no geometry; fast enough to run on every slider movement
+let liveT=null;
+function live(){ clearTimeout(liveT); return new Promise(res=>{ liveT=setTimeout(async()=>{
+  const r=await post("/api/size",{fields:fields()}); if(r.ok){renderChecks(r);renderDims(r);
+    $("vTitle").textContent=r.title; $("vDuty").textContent="  "+r.duty;} res(r);},40);});}
+
+function colour(u){return u>0.95?"var(--bad)":u>0.8?"var(--warn)":"var(--ok)";}
+function renderChecks(r){
+  const pass=r.checks.filter(c=>c.passed).length, worst=Math.max(0,...r.checks.map(c=>c.allowed?c.stress/c.allowed:0));
+  pill(`${pass} of ${r.checks.length} checks pass`, pass===r.checks.length?"ok":"bad");
+  const m=material?material.material:"default allowables (30C8)";
+  $("pChecks").innerHTML=`<div class="summary"><div class="kpi"><div class="v">${pass}/${r.checks.length}</div><div class="l">checks pass</div></div>
+   <div class="kpi"><div class="v">${Math.round(worst*100)}%</div><div class="l">busiest check</div></div>
+   <div class="kpi"><div class="v">${(lastMass()??"-")}</div><div class="l">mass, kg</div></div></div>
+   <p class="note">Material: ${esc(m)}. Sized for ${esc(r.notes&&r.notes[0]&&r.notes[0].startsWith("Sized for")?"1.25 x the load, checked at the load":"the given load")}.</p>`+
+   r.checks.map(c=>{const u=c.allowed?c.stress/c.allowed:0;return `<div class="chk"><div class="top"><span>${esc(c.name)}</span>
+   <span style="color:${colour(u)}">${c.stress} / ${c.allowed} MPa &middot; ${c.passed?"pass":"FAIL"}</span></div>
+   <div class="f">${esc(c.formula)}</div><div class="bar"><i style="width:${Math.min(100,u*100)}%;background:${colour(u)}"></i></div></div>`;}).join("");
+}
+function renderDims(r){
+  $("pDims").innerHTML=`<table class="dims">`+r.dims.map(d=>`<tr><td><b>${esc(d.key)}</b> <span class="muted">${esc(d.label)}</span>
+   ${d.rule?`<div class="r">${esc(d.rule)}</div>`:""}</td><td class="v">${(+d.value).toLocaleString()} mm</td></tr>`).join("")+`</table>`;
+}
+function lastMass(){ if(matsKey!==dutyKey()) return null;
+  const m=mats.find(x=>x.material===(material?material.material:"30C8 plain carbon steel")); return m&&m.mass_kg!=null?m.mass_kg.toFixed(2):null;}
+
+async function loadMaterials(){
+  const key=dutyKey(); const f=JSON.parse(key);
+  $("matRows").innerHTML=`<tr><td colspan="4" class="muted">designing it in 6 materials...</td></tr>`;
+  const r=await post("/api/materials",{fields:f}); if(key!==dutyKey()) return;
+  if(!r.ok){$("matRows").innerHTML=`<tr><td colspan="4" class="muted">${esc(r.error||"not available")}</td></tr>`;return;}
+  mats=r.rows; matsKey=key; const ok=mats.filter(m=>m.ok);
+  const light=ok.length?ok.reduce((a,b)=>a.mass_kg<b.mass_kg?a:b):null, cheap=ok.length?ok.reduce((a,b)=>a.cost_inr<b.cost_inr?a:b):null;
+  $("matRows").innerHTML=mats.map((m,i)=>`<tr data-i="${i}" class="${material&&material.material===m.material?"sel":""}">
+   <td>${esc(m.material)}<div class="muted" style="font-size:10.5px">${esc(m.is_grade||"")} &middot; &sigma;t ${m.tension} MPa
+   ${m===light?' <span class="best">LIGHTEST</span>':""}${m===cheap?' <span class="best">CHEAPEST</span>':""}</div></td>
+   <td>${m.ok?(m.size??"-")+" mm":"fails"}</td><td>${m.mass_kg!=null?m.mass_kg.toFixed(2)+" kg":"-"}</td>
+   <td>${m.cost_inr!=null?"Rs "+Math.round(m.cost_inr).toLocaleString("en-IN"):"-"}</td></tr>`).join("");
+  $("matNote").textContent="Size is the governing diameter. Mass is the joint without the rod stubs. Allowable stresses and rates are working values, to be confirmed against the design data book and a supplier.";
+  document.querySelectorAll("#matRows tr").forEach(tr=>tr.onclick=()=>{material=mats[+tr.dataset.i];
+    document.querySelectorAll("#matRows tr").forEach(x=>x.classList.toggle("sel",x===tr)); $("h3").classList.add("done");
+    live(); rebuild();});
+  live();
+}
+
+let rebT=null;
+function rebuild(){ clearTimeout(rebT); rebT=setTimeout(doBuild,150);
+  if(mats.length&&matsKey!==dutyKey()) loadMaterials(); }
+async function doBuild(){
+  const my=++seq, t0=performance.now(); const f=fields();
+  $("empty").classList.add("hidden"); $("viewer").classList.remove("hidden"); busy(true,"Building the solids...");
+  const r=await post("/api/build",{fields:f,text,fast:true});
+  if(my!==seq) return;
+  busy(false);
+  if(!r.ok){pill(r.error||("missing: "+(r.missing||[]).join(", ")),"bad");return;}
+  lastBuild=r;
+  $("vTime").textContent=r.cached?"ready instantly (cached)":`built in ${((performance.now()-t0)/1000).toFixed(1)} s`;
+  if(r.inline&&r.inline.viewer) $("viewer").srcdoc=r.inline.viewer; else $("viewer").src=r.files.viewer;
+  $("log").textContent=(r.steps||[]).join("\n");
+  renderFiles(r,null);
+  loadSheet(f);
+}
+
+async function loadSheet(f){
+  const my=++sheetSeq, t0=performance.now();
+  $("pSheet").innerHTML=`<div class="row"><div class="spin"></div><b>Drawing the A3 sheet in FreeCAD...</b></div>
+   <p class="muted">Projecting every view with hidden lines takes about half a minute. The model and the checks are already final; carry on.</p>`;
+  const r=await post("/api/sheet",{fields:f,text});
+  if(my!==sheetSeq) return;
+  if(!r.ok||!r.drawing){$("pSheet").innerHTML=`<p class="muted">No sheet: ${esc(r.reason||r.error||"FreeCAD did not run")}</p>`;return;}
+  const blob=new Blob([r.drawing],{type:"image/svg+xml"}), url=URL.createObjectURL(blob);
+  $("pSheet").innerHTML=`<p class="muted">${r.cached?"ready":"drawn in "+((performance.now()-t0)/1000).toFixed(0)+" s"}${r.sheet_scale?", scale "+esc(r.sheet_scale):""}.
+   <a href="${url}" target="_blank" style="color:var(--acc)">open full size</a></p><div class="sheet">${r.drawing}</div>`;
+  renderFiles(lastBuild,r);
+}
+function renderFiles(b,s){
+  if(!b) return;
+  const name={viewer:"3D viewer (offline html)",assembly_step:"assembly.step",report:"report.md"};
+  let h=`<div class="files">`+Object.entries(b.files).filter(([k])=>k!=="drawing"&&k!=="fcstd"&&k!=="dxf").map(([k,v])=>
+    `<a href="${v}" download>${esc(name[k]||k.replace("part_","")+".step")}<span>${k.startsWith("part_")?"part":k==="viewer"?"html":"file"}</span></a>`).join("");
+  if(s&&s.drawing) h+=`<a href="${URL.createObjectURL(new Blob([s.drawing],{type:"image/svg+xml"}))}" download="drawing.svg">drawing.svg<span>A3 sheet</span></a>`;
+  if(s&&s.dxf) h+=`<a href="${URL.createObjectURL(new Blob([s.dxf],{type:"application/dxf"}))}" download="drawing.dxf">drawing.dxf<span>for AutoCAD</span></a>`;
+  $("pFiles").innerHTML=h+`</div><p class="note">STEP opens in Siemens NX (File &gt; Import &gt; STEP214), SolidWorks, FreeCAD, Onshape and Fusion.</p>`;
+}
+
+async function ask(){
+  const q=$("ask").value.trim(); if(!q) return; $("ask").value="";
+  $("thread").insertAdjacentHTML("beforeend",`<div class="msg me">${esc(q)}</div>`);
+  const r=await post("/api/followup",{fields:fields(),text:q,parser:$("parser").value});
+  $("thread").insertAdjacentHTML("beforeend",`<div class="msg">${esc(r.message||r.error||"")}</div>`);
+  if(r.kind==="change"&&r.fields){const s=r.fields;
+    if(s.joint) $("joint").value=s.joint; showFields();
+    if(s.load_n!=null) setRange("load",Math.round(s.load_n/1000)); if(s.rod_diameter_mm!=null) $("dia").value=s.rod_diameter_mm;
+    if(s.bolt_size!=null) setRange("bolt",s.bolt_size); if(s.power_kw!=null) setRange("power",s.power_kw); if(s.speed_rpm!=null) setRange("speed",s.speed_rpm);
+    if(s.tension_mpa!=null){const m=mats.find(x=>x.tension===s.tension_mpa&&x.shear===s.shear_mpa); material=m||{material:"custom",tension:s.tension_mpa,shear:s.shear_mpa,crushing:s.crushing_mpa};}
+    await live(); loadMaterials(); rebuild();}
+}
+$("askBtn").onclick=ask; $("ask").addEventListener("keydown",e=>{if(e.key==="Enter")ask();});
+</script></body></html>

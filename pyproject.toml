@@ -19,7 +19,7 @@ build-backend = "setuptools.build_meta"
 include = ["aicad*"]
 
 [tool.setuptools.package-data]
-aicad = ["data/*.json", "vendor/*.js"]
+aicad = ["data/*.json", "vendor/*.js", "ui.html"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

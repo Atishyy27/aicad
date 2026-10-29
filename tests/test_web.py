@@ -31,8 +31,34 @@ def test_page_loads(server):
     with urllib.request.urlopen(server + "/") as r:
         html = r.read().decode()
     assert "aicad" in html and "/api/understand" in html
-    for marker in ("what do you need", "check the numbers", "Drawing", "Checks", "ask or change"):
+    for marker in ("Describe the joint", "Material selection", "Drawing", "Checks", "Ask or change",
+                   "/api/size", "/api/sheet", "/api/materials"):
         assert marker in html, marker
+
+
+def test_size_is_instant_and_matches_the_design(server):
+    import time
+    t = time.perf_counter()
+    r = _post(server, "/api/size", {"fields": {"joint": "knuckle", "load_n": 50_000}})
+    assert time.perf_counter() - t < 1.0
+    dims = {d["key"]: d["value"] for d in r["dims"]}
+    assert r["ok"] and dims["D"] == 35 and dims["d3"] == 55 and len(r["checks"]) == 9 and r["all_passed"]
+
+
+def test_materials_lists_every_grade_with_mass_and_cost(server):
+    r = _post(server, "/api/materials", {"fields": {"joint": "knuckle", "load_n": 50_000}})
+    assert r["ok"] and len(r["rows"]) == 6
+    steel = next(x for x in r["rows"] if x["material"].startswith("30C8"))
+    assert steel["ok"] and steel["mass_kg"] > 0 and steel["cost_inr"] > 0 and steel["tension"] == 75
+    again = _post(server, "/api/materials", {"fields": {"joint": "knuckle", "load_n": 50_000}})
+    assert again.get("cached")
+
+
+def test_fast_build_skips_the_sheet_and_is_cached(server):
+    body = {"fields": {"joint": "cotter", "load_n": 35_000}, "text": "socket and spigot joint for 35 kN", "fast": True}
+    r = _post(server, "/api/build", body)
+    assert r["ok"] and r["inline"].get("viewer") and r["freecad_reason"] == "skipped"
+    assert _post(server, "/api/build", body).get("cached")
 
 
 def test_understand_reports_what_is_missing(server):

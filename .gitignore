@@ -9,3 +9,4 @@ reference/
 
 report/*.html
 report/.build/
+.claude/
