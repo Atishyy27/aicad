@@ -24,7 +24,7 @@ _JOINTS = [
     ("flange_coupling", r"\bcoupling\b|\bflange\b"),
     ("cotter", r"\bcott?er\b|\bsocket\b|\bspigot\b"),
     ("knuckle", r"\bk?nuc?kle\b|\bknukle\b"),
-    ("nut_bolt", r"\bnut\b|\bbolts?\b|\bm\d{1,2}\b"),
+    ("nut_bolt", r"\bnut\b|\bbolts?\b|\bm\d{1,2}\b|\bfaste?ners?\b|\bscrews?\b"),
 ]
 JOINT_NAMES = [j for j, _ in _JOINTS]
 _NUM = r"(\d+(?:\.\d+)?)"
@@ -153,7 +153,7 @@ _JOINT_MEANINGS = (
     "Joint labels: 'knuckle' = knuckle joint / pin joint with an eye and a fork; "
     "'cotter' = socket and spigot cotter joint (any 'socket', 'spigot' or plain 'cotter joint'); "
     "'sleeve_and_cotter' = sleeve and cotter joint; 'gib_and_cotter' = gib and cotter joint; "
-    "'nut_bolt' = any bolt, nut, nut-bolt, hex bolt or metric size like M12. "
+    "'nut_bolt' = any bolt, nut, nut-bolt, hex bolt, screw, threaded fastener (even misspelt, e.g. 'fastner') or metric size like M12. "
 )
 _SYSTEM = (
     "You extract a mechanical joint request into JSON. The request is in English. "
@@ -325,6 +325,11 @@ def merge(ai: Spec, rules: Spec) -> Spec:
     """AI answer first. A field the AI left empty is filled from the rules, with a note.
     Fields where both have a value but disagree keep the AI value, with a note."""
     out = Spec(**{f: getattr(ai, f) for f in _MERGE_FIELDS}, source=f"{ai.source}+rules", notes=list(ai.notes))
+    if ai.joint is None and rules.joint is None:
+        # Not a joint at all ("L bracket 80 by 60, 5 mm thick"): the rules would read the bracket's
+        # numbers as a rod diameter and a grip, so nothing is filled in.
+        out.source = ai.source
+        return out
     for key in _MERGE_FIELDS:
         a, r = getattr(ai, key), getattr(rules, key)
         if a is None and r is not None:

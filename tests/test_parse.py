@@ -181,3 +181,15 @@ def test_gib_count_is_read_from_words_not_digits():
     bad = spec_from_ai_json({"joint": "gib_and_cotter", "gibs": 7, "load_n": 50000},
                             "gib and cotter joint for 50 kN", source="test")
     assert bad.gibs is None and any("one or two" in n for n in bad.notes)
+
+
+def test_merge_fills_nothing_when_no_joint_is_named():
+    from aicad.parse import Spec, merge, parse_rules
+    text = "L bracket 80 by 60, 5 mm thick"
+    out = merge(Spec(source="ai"), parse_rules(text))
+    assert out.joint is None and out.rod_diameter_mm is None and out.grip_mm is None
+
+
+def test_fastener_and_screw_mean_the_bolt_joint():
+    for text in ("thread fastner M20 for 20 kN", "threaded fastener for 20 kN", "a screw for 10 kN"):
+        assert P.parse_rules(text).joint == "nut_bolt", text
