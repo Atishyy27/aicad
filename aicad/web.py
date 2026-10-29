@@ -179,6 +179,7 @@ def _spec_from_fields(fields: dict) -> Spec:
         torque_nm=_num(fields.get("torque_nm")),
         power_kw=_num(fields.get("power_kw")),
         speed_rpm=_num(fields.get("speed_rpm")),
+        design_factor=_num(fields.get("design_factor")),
         tension_mpa=_num(fields.get("tension_mpa")),
         shear_mpa=_num(fields.get("shear_mpa")),
         crushing_mpa=_num(fields.get("crushing_mpa")),

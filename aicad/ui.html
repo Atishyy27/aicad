@@ -191,9 +191,31 @@ const EX=[["knuckle joint for 50 kN","Knuckle joint","5 parts, 9 checks"],
   ["M24 nut bolt, plates 30 mm thick, load 20 kN","Hex bolt, nut, washer","3 parts, 2 checks"],
   ["flange coupling to transmit 20 kW at 1440 rpm","Protected flange coupling","14 parts, 7 checks"]];
 $("chips").innerHTML=EX.map(e=>`<span class="chip">${esc(e[0])}</span>`).join("");
-$("lib").innerHTML=EX.map(e=>`<div class="card" data-t="${esc(e[0])}"><div class="n">${esc(e[1])}</div><div class="d">${esc(e[0])}</div><div class="d">${esc(e[2])}</div></div>`).join("");
+// Worked examples from the textbooks. Inputs are the book's own; "book" holds the sizes the book
+// adopts, so the page can show book and software side by side. Checked by tests/test_book_problems.py.
+const PRESETS=[
+ {t:"Knuckle joint, Bhandari Ex 4.5",d:"50 kN, 30C8 (Syt 400), FoS 5",src:"Bhandari, Design of Machine Elements, Ex 4.5, p 100",
+  text:"knuckle joint for 50 kN",f:{joint:"knuckle",load_n:50000,tension_mpa:80,shear_mpa:40,crushing_mpa:80,design_factor:1},
+  mat:"30C8, Syt 400 MPa, FoS 5: st = sc = sb = 80, tau = 40 MPa",
+  book:{D:30,D1:35,t:40,t1:25,d:40,d2:80,d3:60}},
+ {t:"Knuckle joint, Bhandari Exercise 4.1",d:"25 kN, 45C8 (Syt 380), FoS 2.5",src:"Bhandari, Design of Machine Elements, Problem 4.1, p 138",
+  text:"knuckle joint for 25 kN",f:{joint:"knuckle",load_n:25000,tension_mpa:152,shear_mpa:87.70,crushing_mpa:152,design_factor:1},
+  mat:"45C8, Syt 380 MPa, FoS 2.5: st = 152, tau = 0.577 x 152 = 87.7 MPa",
+  raw:{rod_tension:14.47,pin_shear:13.47}},
+ {t:"Knuckle joint, NPTEL Q.2",d:"100 kN, st 100, tau 65, sc 150",src:"NPTEL IIT Kharagpur, Module 4 Lesson 2, Q.2",
+  text:"knuckle joint for 100 kN",f:{joint:"knuckle",load_n:100000,tension_mpa:100,shear_mpa:65,crushing_mpa:150,design_factor:1},
+  mat:"st = 100, tau = 65, sc = 150 MPa as given in the lesson",
+  book:{D:40,t:50,t1:30,t2:20}},
+ {t:"Cotter joint, Bhandari Ex 4.2",d:"50 kN, 30C8, FoS 6 rods / 4 cotter",src:"Bhandari, Design of Machine Elements, Ex 4.2, p 91",
+  text:"socket and spigot joint for 50 kN",f:{joint:"cotter",load_n:50000,tension_mpa:66.67,shear_mpa:33.33,crushing_mpa:133.33,design_factor:1},
+  mat:"30C8, Syt 400 MPa, FoS 6: st = 66.67, tau = 33.33, sc = 133.33 MPa (the book uses FoS 4 for the cotter alone)",
+  book:{d:32,t:10,d1:40,d2:55,d3:48,d4:80,a:24,c:24,b:50,t1:15},
+  why:"Only the cotter width b differs. The book designs the cotter alone with a factor of safety of 4 (shear 50 MPa); this software applies the rods' factor of 6 (shear 33.33 MPa) to every part, so it widens the cotter to keep the same margin. With shear 50 MPa the formula b = P / (2 t tau) gives the book's 50 mm."},
+ {t:"Knuckle joint, design margin",d:"50 kN, default allowables, sized for 1.25 x load",src:"default demonstration case",
+  text:"knuckle joint for 50 kN",f:{joint:"knuckle",load_n:50000},mat:null}];
+$("lib").innerHTML=PRESETS.map((e,i)=>`<div class="card" data-p="${i}"><div class="n">${esc(e.t)}</div><div class="d">${esc(e.d)}</div><div class="d" style="opacity:.75">${esc(e.src)}</div></div>`).join("");
 document.querySelectorAll(".chip").forEach(c=>c.onclick=()=>{$("text").value=c.textContent;$("go").click();});
-document.querySelectorAll(".card").forEach(c=>c.onclick=()=>{$("text").value=c.dataset.t;$("go").click();});
+document.querySelectorAll(".card").forEach(c=>c.onclick=()=>loadPreset(PRESETS[+c.dataset.p]));
 document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{
   document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("on",x===t));
   document.querySelectorAll(".pane").forEach(p=>p.classList.toggle("hidden",p.id!==t.dataset.p));});
@@ -212,6 +234,7 @@ let theme="dark"; try{theme=localStorage.getItem("aicad-theme")||"dark";}catch(e
 applyTheme(theme);
 $("themeBtn").onclick=()=>{theme=theme==="light"?"dark":"light";applyTheme(theme);};
 $("viewer").addEventListener("load",()=>applyTheme(theme));
+let preset=null, presetKey="", designFactor=null;
 let text="", material=null, mats=[], matsKey="", seq=0, sheetSeq=0, lastBuild=null;
 const SL={load:v=>`${v} kN`,bolt:v=>`M${v}`,grip:v=>`${v} mm`,power:v=>`${v} kW`,speed:v=>`${v} rpm`};
 for(const k in SL){ $(k).addEventListener("input",()=>{$("o-"+k).textContent=SL[k]($(k).value); live();});
@@ -236,6 +259,7 @@ function fields(){
   if(vis("grip")) f.grip_mm=+$("grip").value;
   if(vis("power")) {f.power_kw=+$("power").value; f.speed_rpm=+$("speed").value;}
   if(vis("torque")&&num("torque")) f.torque_nm=num("torque");
+  if(designFactor!=null) f.design_factor=designFactor;
   if(material){f.tension_mpa=material.tension;f.shear_mpa=material.shear;f.crushing_mpa=material.crushing;
     f.material=material.material;}
   return f;
@@ -255,7 +279,7 @@ $("go").onclick=async()=>{
     setRange("load",s.load_n!=null?Math.round(s.load_n/1000):null,50);
     $("dia").value=s.rod_diameter_mm??""; setRange("bolt",s.bolt_size,24); setRange("grip",s.grip_mm,30);
     setRange("power",s.power_kw,20); setRange("speed",s.speed_rpm,1440); $("torque").value=s.torque_nm??"";
-    material=null; mats=[]; matsKey="";
+    material=null; mats=[]; matsKey=""; preset=null; designFactor=null;
     showFields();
     $("readBy").textContent=`Read by ${r.source}. `+(r.notes||[]).join(" ");
     $("question").textContent=(r.missing||[]).length?`Missing: ${r.missing.join(", ")}. Set it above.`:"";
@@ -264,6 +288,35 @@ $("go").onclick=async()=>{
     await live(); loadMaterials(); rebuild();
   } finally {$("go").disabled=false;}
 };
+
+async function loadPreset(P){
+  const j=await post("/api/understand",{text:P.text,parser:"rules"});
+  $("joint").innerHTML=Object.entries(j.joints).map(([k,v])=>`<option value="${k}">${esc(v.title)} (${v.parts} parts)</option>`).join("");
+  $("joint").value=P.f.joint; showFields();
+  setRange("load",Math.round(P.f.load_n/1000)); $("dia").value="";
+  text=P.text; $("text").value=P.text+(P.mat?` (${P.src})`:"");
+  designFactor=P.f.design_factor??null; mats=[]; matsKey="";
+  material=P.mat?{material:P.mat,tension:P.f.tension_mpa,shear:P.f.shear_mpa,crushing:P.f.crushing_mpa}:null;
+  preset=P.book||P.raw?P:null; presetKey=dutyKey();
+  $("readBy").textContent=P.mat?`Book case: ${P.src}. Allowables: ${P.mat}.`:"Default case.";
+  $("question").textContent="";
+  ["specBlk","matBlk","chatBlk"].forEach(i=>$(i).classList.remove("hidden"));
+  $("h1").classList.add("done");$("h2").classList.add("done");
+  await live(); loadMaterials(); rebuild();
+}
+function bookTable(r){
+  if(!preset||presetKey!==dutyKey()) return "";
+  const got={}; r.dims.forEach(d=>got[d.key]=d.value);
+  let rows="", ok=0, n=0;
+  for(const [k,v] of Object.entries(preset.book||{})){ n++; const g=got[k], same=Math.abs((g??-1)-v)<1e-6; if(same) ok++;
+    rows+=`<tr><td><b>${esc(k)}</b></td><td class="v">${v}</td><td class="v">${g??"-"}</td><td style="color:${same?"var(--ok)":"var(--warn)"}">${same?"same":"differs"}</td></tr>`;}
+  for(const [k,v] of Object.entries(preset.raw||{})){ n++; const g=r.raw?r.raw[k]:null, same=g!=null&&Math.abs(g-v)<0.01; if(same) ok++;
+    rows+=`<tr><td><b>${esc(k.replace("_"," "))}</b> <span class="muted">computed</span></td><td class="v">${v}</td><td class="v">${g??"-"}</td><td style="color:${same?"var(--ok)":"var(--warn)"}">${same?"same":"differs"}</td></tr>`;}
+  return `<div class="kpi" style="margin-bottom:10px"><div class="l">BOOK CHECK &middot; ${esc(preset.src)}</div>
+   <div class="v" style="font-size:16px">${ok} of ${n} values match the book</div>
+   <table class="dims" style="margin-top:6px"><tr><td class="muted">symbol</td><td class="v muted">book</td><td class="v muted">aicad</td><td></td></tr>${rows}</table>
+   ${preset.why?`<p class="note">${esc(preset.why)}</p>`:""}</div>`;
+}
 
 // live: sizing and every check, no geometry; fast enough to run on every slider movement
 let liveT=null;
@@ -275,8 +328,8 @@ function colour(u){return u>0.95?"var(--bad)":u>0.8?"var(--warn)":"var(--ok)";}
 function renderChecks(r){
   const pass=r.checks.filter(c=>c.passed).length, worst=Math.max(0,...r.checks.map(c=>c.allowed?c.stress/c.allowed:0));
   pill(`${pass} of ${r.checks.length} checks pass`, pass===r.checks.length?"ok":"bad");
-  const m=material?material.material:"default allowables (30C8)";
-  $("pChecks").innerHTML=`<div class="summary"><div class="kpi"><div class="v">${pass}/${r.checks.length}</div><div class="l">checks pass</div></div>
+  const m=material?material.material:"default working allowables (30C8 row of the material table)";
+  $("pChecks").innerHTML=bookTable(r)+`<div class="summary"><div class="kpi"><div class="v">${pass}/${r.checks.length}</div><div class="l">checks pass</div></div>
    <div class="kpi"><div class="v">${Math.round(worst*100)}%</div><div class="l">busiest check</div></div>
    <div class="kpi"><div class="v">${(lastMass()??"-")}</div><div class="l">mass, kg</div></div></div>
    <p class="note">Material: ${esc(m)}. Sized for ${esc(r.notes&&r.notes[0]&&r.notes[0].startsWith("Sized for")?"1.25 x the load, checked at the load":"the given load")}.</p>`+
