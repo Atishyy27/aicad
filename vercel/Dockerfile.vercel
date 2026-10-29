@@ -45,6 +45,8 @@ ENV HOME=/tmp
 # Shell form on purpose: exec form would pass the literal string $PORT.
 # The application directory is read-only at runtime, so built files go to /tmp.
 ENV AICAD_OUT=/tmp/aicad-out
+# build the example joints at start-up so the first demo click is already done
+ENV AICAD_PREBUILD=1
 ENV PORT=80
 EXPOSE 80
 # /tmp is a fresh filesystem at runtime, so the runtime dir is made here, not at build time

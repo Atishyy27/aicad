@@ -16,10 +16,15 @@ MATERIALS = json.loads((Path(__file__).parent / "data" / "materials.json").read_
 
 def _volume_mm3(joint, dims) -> float:
     """Volume of the joint itself: the display rod stubs are cut to 1 mm so they do not skew the comparison."""
+    from .joints._shapes import PLAIN_EDGES
     dims = dict(dims)
     if "rod_len" in dims:
         dims["rod_len"] = 1.0
-    return sum(p.val().Volume() for p in joint.build_parts(dims).values())
+    PLAIN_EDGES.on = True
+    try:
+        return sum(p.val().Volume() for p in joint.build_parts(dims).values())
+    finally:
+        PLAIN_EDGES.on = False
 
 
 def compare(spec) -> list[dict]:

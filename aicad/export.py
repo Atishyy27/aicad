@@ -10,6 +10,12 @@ from .design import Design
 VIEWER_JS = Path(__file__).parent / "vendor" / "model-viewer.min.js"
 
 
+# Mesh for the on-screen views only; STEP keeps the exact geometry. CadQuery's default
+# (0.1 mm, 0.1 rad) put the filleted knuckle's viewer at 9.7 MB, past the size the page can
+# carry inline, so the model vanished whenever a request reached a different container.
+GLB_MESH = {"tolerance": 0.25, "angularTolerance": 0.3}
+
+
 def export_all(parts: dict, design: Design, joint, out: Path, request: str) -> Path:
     import cadquery as cq
 
@@ -23,7 +29,7 @@ def export_all(parts: dict, design: Design, joint, out: Path, request: str) -> P
     for name, wp in parts.items():
         assy.add(wp, name=name, color=cq.Color(*joint.COLORS[name], 1.0))
     assy.export(str(out / "assembly.step"))  # default mode keeps parts separate
-    assy.export(str(out / "assembly.glb"))
+    assy.export(str(out / "assembly.glb"), **GLB_MESH)
 
     exploded64 = None
     if hasattr(joint, "explode"):
@@ -32,7 +38,7 @@ def export_all(parts: dict, design: Design, joint, out: Path, request: str) -> P
         for name, wp in parts.items():
             ex.add(wp, name=name, color=cq.Color(*joint.COLORS[name], 1.0),
                    loc=cq.Location(cq.Vector(*moves.get(name, (0, 0, 0)))))
-        ex.export(str(out / "exploded.glb"))
+        ex.export(str(out / "exploded.glb"), **GLB_MESH)
         exploded64 = base64.b64encode((out / "exploded.glb").read_bytes()).decode()
 
     stress64 = None
@@ -42,7 +48,7 @@ def export_all(parts: dict, design: Design, joint, out: Path, request: str) -> P
         heat = cq.Assembly(name=f"{joint.NAME}_weak_spots")
         for name, wp in parts.items():
             heat.add(wp, name=name, color=cq.Color(*utilisation_colour(util[name][0]), 1.0))
-        heat.export(str(out / "weak_spots.glb"))
+        heat.export(str(out / "weak_spots.glb"), **GLB_MESH)
         stress64 = base64.b64encode((out / "weak_spots.glb").read_bytes()).decode()
 
     glb64 = base64.b64encode((out / "assembly.glb").read_bytes()).decode()
