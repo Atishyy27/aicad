@@ -70,6 +70,10 @@ def _checks(P, dm, s):
     ]
 
 
+def _up5(x: float) -> float:
+    return float(5 * math.ceil(x / 5 - 1e-9))
+
+
 def _keep_walls(dm):
     """Geometry sanity: every outer diameter must leave a real wall."""
     dm["d2"] = max(dm["d2"], dm["d1"] + 4)
@@ -97,6 +101,22 @@ def design(load_n=None, rod_diameter_mm=None, tension_mpa=None, shear_mpa=None, 
     dm = {"d": d}
     for key, p in props.items():
         dm[key] = ceil_mm(p["times"] * d)
+    if P is not None:
+        # Bhandari sec 4.10 sizes the spigot and the socket from their own tension equations,
+        # not from proportions, and rounds every diameter up to the next 5 mm (Ex 4.2: 37.91 -> 40,
+        # 52.04 -> 55, 2.4d = 76.8 -> 80). A proportion stays as the floor so a light load still
+        # leaves a sensible wall.
+        t = dm["t"]
+        q = math.pi / 4
+        area = Pd / s["tension"]
+        spigot = (t + math.sqrt(t * t + 4 * q * area)) / (2 * q)           # q d1^2 - t d1 = P/st
+        raw["spigot_tension"] = spigot
+        dm["d1"] = _up5(spigot)
+        c0 = q * dm["d1"] ** 2 - t * dm["d1"]                                # q d2^2 - t d2 = P/st + c0
+        socket = (t + math.sqrt(t * t + 4 * q * (area + c0))) / (2 * q)
+        raw["socket_tension"] = socket
+        dm["d2"] = _up5(socket)
+        dm["d4"] = _up5(props["d4"]["times"] * d)
     _keep_walls(dm)
     start = dict(dm)
 

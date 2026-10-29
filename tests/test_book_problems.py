@@ -12,7 +12,10 @@ def test_knuckle_100kn_matches_the_lesson():
     """Q.2: 100 kN, 100 MPa tension, 65 shear, 150 crushing."""
     d = REGISTRY["knuckle"].design(load_n=100_000, tension_mpa=100, shear_mpa=65,
                                    crushing_mpa=150, design_factor=1.0)
-    lesson = {"D": 40, "d3": 60, "t": 50, "t1": 30, "t2": 20, "taper_d": 10}
+    # d3 is left out on purpose: the lesson takes the pin head as 1.5 x the ROD (60 mm on a 55 mm
+    # pin, a 2.5 mm lip), Bhandari eq 4.26o takes it as 1.5 x the PIN; the tool follows Bhandari.
+    lesson = {"D": 40, "t": 50, "t1": 30, "t2": 20, "taper_d": 10}
+    assert d.dims["d3"] >= 1.5 * d.dims["d"] - 1e-9
     for key, want in lesson.items():
         assert d.dims[key] == pytest.approx(want), f"{key}: ours {d.dims[key]}, lesson {want}"
     # the lesson gives d2 = 2D = 80, but it checks the eye against the original 40 mm pin.
@@ -195,3 +198,40 @@ def test_sleeve_joint_uses_eight_of_leutwilers_ten_and_correctly_drops_the_colla
     # the crushing check NPTEL omits is present here too, as (h) P = t d1 Sb
     assert next(c for c in d.checks if c.name == "rod end crushing").formula == "P / (d2 t)"
     assert d.verified_against_book is False      # proportions still unverified, and they say so
+
+
+def test_knuckle_matches_bhandari_example_4_5_exactly():
+    """Bhandari, Design of Machine Elements, Ex 4.5 (pp 100-101): 50 kN, 30C8, Syt 400, FoS 5,
+    so 80 MPa tension, crushing and bending and 40 MPa shear. Every adopted size is checked."""
+    d = REGISTRY["knuckle"].design(load_n=50_000, tension_mpa=80, shear_mpa=40, crushing_mpa=80, design_factor=1.0)
+    assert d.raw["rod_tension"] == pytest.approx(28.21, abs=0.01)
+    assert d.raw["pin_shear"] == pytest.approx(28.21, abs=0.01)
+    assert d.raw["pin_bending"] == pytest.approx(38.79, abs=0.01)
+    book = {"D": 30, "D1": 35, "t": 40, "t1": 25, "d": 40, "d2": 80, "d3": 60}
+    assert {k: d.dims[k] for k in book} == book
+    stress = {c.name: round(c.stress_mpa, 2) for c in d.checks}
+    for name in ("eye tension", "eye shear", "eye crushing"):
+        assert stress[name] == 31.25
+    for name in ("fork tension", "fork shear", "fork crushing"):
+        assert stress[name] == 25.0
+
+
+def test_knuckle_matches_bhandari_exercise_4_1():
+    """Bhandari exercise 4.1 (p 138): 25 kN, 45C8, Syt 380, FoS 2.5, Ssy = 57.7% Syt.
+    Printed answers: rod 14.47 mm, pin 13.47 mm."""
+    d = REGISTRY["knuckle"].design(load_n=25_000, tension_mpa=380 / 2.5, shear_mpa=0.577 * 380 / 2.5,
+                                   crushing_mpa=380 / 2.5, design_factor=1.0)
+    assert d.raw["rod_tension"] == pytest.approx(14.47, abs=0.01)
+    assert d.raw["pin_shear"] == pytest.approx(13.47, abs=0.01)
+
+
+def test_cotter_matches_bhandari_example_4_2_except_the_cotter_width():
+    """Bhandari Ex 4.2 (p 91): 50 kN, 30C8, FoS 6 for rods, so 66.67 tension, 33.33 shear,
+    133.33 crushing. The book uses FoS 4 for the cotter alone, which is the only size that differs."""
+    d = REGISTRY["cotter"].design(load_n=50_000, tension_mpa=66.67, shear_mpa=33.33, crushing_mpa=133.33,
+                                  design_factor=1.0)
+    assert d.raw["spigot_tension"] == pytest.approx(37.91, abs=0.02)
+    assert d.raw["socket_tension"] == pytest.approx(52.04, abs=0.02)
+    book = {"d": 32, "t": 10, "d1": 40, "d2": 55, "d3": 48, "d4": 80, "a": 24, "c": 24, "t1": 15}
+    assert {k: d.dims[k] for k in book} == book
+    assert d.all_passed
