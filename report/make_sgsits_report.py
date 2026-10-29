@@ -142,6 +142,11 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
 table.sm{font-size:10pt}
 table.sm th,table.sm td{padding:1.1mm 1.4mm}
 .mono{font-family:"Courier New",monospace;font-size:10pt}
+.listing{margin:4mm 0 6mm;page-break-inside:auto}
+.lcap{font-weight:bold;font-size:10.5pt;margin-bottom:2mm}
+.lsrc{font-weight:normal;font-family:"Courier New",monospace;font-size:9pt}
+pre.code{font-family:"Courier New",monospace;font-size:8pt;line-height:1.25;white-space:pre-wrap;
+word-break:break-word;border:0.3mm solid #999;padding:3mm 4mm;margin:0;background:#f7f7f7}
 figure{margin:5mm 0;text-align:center;page-break-inside:avoid}
 figure img{max-width:100%;border:0.6pt solid #555}
 figcaption{font-size:12pt;font-weight:700;margin-top:2.5mm;text-align:center;line-height:1.35}
@@ -1210,6 +1215,7 @@ def main() -> None:
 
     appendix_pdf = render(appendix_html(), "appendix")
     appendix_start, appendix_n = page_no, len(PdfReader(str(appendix_pdf)).pages)
+    appendix_b_off = next((i for i, t in enumerate(page_texts(appendix_pdf)) if "APPENDIX B" in t), appendix_n - 1)
     page_no += appendix_n
     refs_pdf = render(references_html(), "refs")
     refs_start, refs_n = page_no, len(PdfReader(str(refs_pdf)).pages)
@@ -1273,6 +1279,7 @@ def main() -> None:
                           key=lambda s: [int(x) for x in s.split(".")]):
             rows.append(toc_row(key + " " + SEC_TITLES.get(key, ""), str(sec_page[key]), 2))
     rows.append(toc_row("Appendix A &nbsp; Screenshots of the Working System", str(appendix_start)))
+    rows.append(toc_row("Appendix B &nbsp; Selected Source Code", str(appendix_start + appendix_b_off)))
     rows.append(toc_row("References", str(refs_start)))
     contents = '<div class="fm-h">TABLE OF CONTENTS</div>' + "".join(rows)
 
@@ -1305,7 +1312,8 @@ def main() -> None:
             else:
                 marks.append({"num": chapter_start[i - 1] + off, "header": head})
     for off in range(appendix_n):
-        marks.append({} if off == 0 else {"num": appendix_start + off, "header": "Appendix A"})
+        marks.append({} if off in (0, appendix_b_off) else
+                     {"num": appendix_start + off, "header": "Appendix A" if off < appendix_b_off else "Appendix B"})
     for off in range(refs_n):
         marks.append({"num": refs_start + off, "header": "References"})
 
@@ -1347,6 +1355,45 @@ def symbols_html() -> str:
             f'<tbody>{abody}</tbody></table>')
 
 
+# Listings are read from the source files when the report is built, function by function, so
+# the code printed here is always the code that runs.
+LISTINGS = [
+    ("aicad/design.py", ["next_preferred", "ceil_mm", "sizing_load"],
+     "Rounding to a preferred size and the design factor"),
+    ("aicad/joints/knuckle.py", ["design"], "Sizing the knuckle joint from the load"),
+    ("aicad/joints/knuckle.py", ["_checks"], "The nine failure checks of the knuckle joint"),
+    ("aicad/parse.py", ["_numbers_in", "_traceable"],
+     "Safeguard: a number from the language model is used only if it appears in the requirement"),
+    ("aicad/optimise.py", ["compare"], "Material selection: the joint designed in every material"),
+    ("aicad/freecad_pack.py", ["section_loops"], "Faces cut by the plane of section A-A, for hatching"),
+]
+
+
+def _function_source(path: Path, name: str) -> str:
+    import ast
+    src = path.read_text(encoding="utf-8")
+    for node in ast.walk(ast.parse(src)):
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == name:
+            return "\n".join(src.splitlines()[node.lineno - 1:node.end_lineno])
+    return f"# {name} not found in {path.name}"
+
+
+def code_appendix() -> str:
+    root = HERE.parent
+    out = ['<div style="page-break-before:always"></div>'
+           '<div class="chapter-open"><div class="no">APPENDIX B</div>'
+           '<div class="ti">Selected Source Code</div></div>'
+           '<p class="noind">The listings below are taken unchanged from the source of the software '
+           'at the time this report was generated. The complete source is available at '
+           'github.com/Atishyy27/aicad.</p>']
+    for i, (rel, names, caption) in enumerate(LISTINGS, 1):
+        code = "\n\n".join(_function_source(root / rel, n) for n in names)
+        safe = code.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+        out.append(f'<div class="listing"><div class="lcap">Listing B.{i}: {caption} '
+                   f'<span class="lsrc">({rel})</span></div><pre class="code">{safe}</pre></div>')
+    return "".join(out)
+
+
 def appendix_html() -> str:
     return f"""
 <div class="chapter-open"><div class="no">APPENDIX A</div>
@@ -1359,7 +1406,8 @@ def appendix_html() -> str:
 {fig("A", "07-checks", "Every failure check with its substituted arithmetic, its allowable stress "
                      "and its utilisation")}
 {fig("A", "09-files", "Files produced by a single run, available for download")}
-{fig("A", "10-materials", "Material selection: the joint designed in each material, with the governing size, mass and material cost")}"""
+{fig("A", "10-materials", "Material selection: the joint designed in each material, with the governing size, mass and material cost")}
+{code_appendix()}"""
 
 
 if __name__ == "__main__":
