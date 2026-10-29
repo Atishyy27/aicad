@@ -123,3 +123,12 @@ def test_coupling_through_the_web_app(server):
     assert r["spec"]["power_kw"] == 20 and r["spec"]["speed_rpm"] == 1440 and r["missing"] == []
     b = _post(server, "/api/build", {"fields": {"joint": "flange_coupling", "torque_nm": 500}, "text": "coupling"})
     assert b["ok"] and b["duty"].startswith("Torque") and len(b["checks"]) == 7
+
+
+def test_sheet_poll_answers_at_once(server):
+    import time
+    t = time.perf_counter()
+    r = _post(server, "/api/sheet", {"fields": {"joint": "nut_bolt", "load_n": 20_000, "bolt_size": 24, "grip_mm": 30},
+                                     "text": "M24 bolt", "poll": True})
+    assert time.perf_counter() - t < 2.0
+    assert r.get("pending") or "ok" in r

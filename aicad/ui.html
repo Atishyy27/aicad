@@ -320,8 +320,12 @@ async function loadSheet(f){
   const my=++sheetSeq, t0=performance.now();
   $("pSheet").innerHTML=`<div class="row"><div class="spin"></div><b>Drawing the A3 sheet in FreeCAD...</b></div>
    <p class="muted">Projecting every view with hidden lines takes about half a minute. The model and the checks are already final; carry on.</p>`;
-  const r=await post("/api/sheet",{fields:f,text});
-  if(my!==sheetSeq) return;
+  let r={pending:true};
+  for(let i=0;i<80&&r.pending;i++){
+    r=await post("/api/sheet",{fields:f,text,poll:true});
+    if(my!==sheetSeq) return;
+    if(r.pending) await new Promise(z=>setTimeout(z,3000));
+  }
   if(!r.ok||!r.drawing){$("pSheet").innerHTML=`<p class="muted">No sheet: ${esc(r.reason||r.error||"FreeCAD did not run")}</p>`;return;}
   const blob=new Blob([r.drawing],{type:"image/svg+xml"}), url=URL.createObjectURL(blob);
   $("pSheet").innerHTML=`<p class="muted">${r.cached?"ready":"drawn in "+((performance.now()-t0)/1000).toFixed(0)+" s"}${r.sheet_scale?", scale "+esc(r.sheet_scale):""}.

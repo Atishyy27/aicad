@@ -292,6 +292,28 @@ def cached(kind: str, fields: dict, fn):
         ev.set()
 
 
+SHEET_FAILED: dict = {}
+
+
+def sheet_poll(fields: dict, text: str, out_root: Path = OUT_ROOT) -> dict:
+    key = "sheet" + json.dumps(fields, sort_keys=True, default=str)
+    hit = CACHE.get(key)
+    if hit is not None:
+        return hit | {"cached": True}
+    with _INFLIGHT_LOCK:
+        running = key in _INFLIGHT
+    failed = SHEET_FAILED.pop(key, None)
+    if failed is not None:
+        return failed            # say why once, so the page stops asking; the next poll retries
+    if not running:
+        def run():
+            r = cached("sheet", fields, lambda: sheet(fields, text, out_root))
+            if not r.get("ok"):
+                SHEET_FAILED[key] = r
+        threading.Thread(target=run, daemon=True).start()
+    return {"ok": False, "pending": True}
+
+
 EXAMPLES = ["knuckle joint for 50 kN", "socket and spigot joint for 35 kN", "sleeve and cotter joint for 50 kN",
             "gib and cotter joint for 50 kN", "M24 nut bolt, plates 30 mm thick, load 20 kN",
             "flange coupling to transmit 20 kW at 1440 rpm"]
@@ -392,6 +414,10 @@ class Handler(BaseHTTPRequestHandler):
                 return self._json(200, cached("materials", f, lambda: materials(f)))
             if self.path == "/api/sheet":
                 f, t = body.get("fields", {}), body.get("text", "")
+                if body.get("poll"):
+                    # Answer at once: done, or still drawing. A browser request held open for the
+                    # 30 to 50 s a sheet takes was reset by the host before the body arrived.
+                    return self._json(200, sheet_poll(f, t, self.out_root))
                 return self._json(200, cached("sheet", f, lambda: sheet(f, t, self.out_root)))
             if self.path == "/api/build":
                 f, t = body.get("fields", {}), body.get("text", "")

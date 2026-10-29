@@ -40,7 +40,7 @@ F = json.loads((HERE / "facts.json").read_text())
 
 # Sections describing work that has not shipped are written but stay switched off. Flip a flag
 # to True only once the corresponding change is live, so the report never claims more than exists.
-FEATURES = {"materials": False, "drawing_v2": False, "fast_build": False}
+FEATURES = {"materials": True, "drawing_v2": False, "fast_build": True}
 CMP_TAB = ""   # number of the comparison table in Chapter 2, cited from Chapter 3
 
 # ---------------------------------------------------------------- the team and the front page
@@ -761,47 +761,52 @@ to which a component may be designed.</p>{materials_section()}"""
 
 
 def materials_section() -> str:
-    """Section 5.8, rendered only when FEATURES['materials'] is on."""
+    """Section 5.8, rendered only when FEATURES['materials'] is on. The table is computed by the
+    software itself for the worked example, so the report cannot drift from what the app shows."""
     if not FEATURES["materials"]:
         return ""
-    M = F.get("materials", {})
-    fos = M.get("factor_of_safety")
+    import sys
+    sys.path.insert(0, str(HERE.parent))
+    from aicad.optimise import MATERIALS, compare
+    from aicad.parse import Spec
+    rows_out = compare(Spec(joint="knuckle", load_n=50_000.0))
+    by = {m["name"]: m for m in MATERIALS["materials"]}
+    ok = [r for r in rows_out if r.get("ok")]
+    light = min(ok, key=lambda r: r["mass_kg"])["material"] if ok else None
+    cheap = min(ok, key=lambda r: r["cost_inr"])["material"] if ok else None
     rows = ""
-    for g in M.get("grades", []):
-        cast = g["class"].endswith("iron")
-        base = g.get("ultimate_mpa") if cast else g.get("yield_mpa")
-        if base is None:
-            continue                       # no verified property value yet: no row
-        cells = (f"<td>{g['grade']}</td><td>{g['standard']}</td><td class='n'>"
-                 f"{g.get('yield_mpa') if g.get('yield_mpa') is not None else '-'}</td>"
-                 f"<td class='n'>{g.get('ultimate_mpa') if g.get('ultimate_mpa') is not None else '-'}</td>")
-        if fos:
-            t = base / fos
-            cells += (f"<td class='n'>{t:.0f}</td><td class='n'>{0.5*t:.0f}</td>"
-                      f"<td class='n'>{2*t:.0f}</td>")
-        else:
-            cells += "<td class='n'>-</td><td class='n'>-</td><td class='n'>-</td>"
-        rows += f"<tr>{cells}</tr>"
-    table = ref = ""
-    if rows:
-        table, nm = tab(5, "Material grades offered, with the allowable stresses derived from them",
-                        "<tr><th>Grade</th><th>Standard</th><th class='n'>Yield, MPa</th>"
-                        "<th class='n'>Ultimate, MPa</th><th class='n'>Tension, MPa</th>"
-                        "<th class='n'>Shear, MPa</th><th class='n'>Crushing, MPa</th></tr>",
-                        rows, "sm")
-        ref = f" The property values and the resulting allowable stresses are given in Table {nm}."
+    for r in rows_out:
+        m = by[r["material"]]
+        tag = " (lightest)" if r["material"] == light else (" (cheapest)" if r["material"] == cheap else "")
+        rows += (f"<tr><td>{r['material']}{tag}</td><td>{m['is_grade']}</td>"
+                 f"<td class='n'>{m['tension']}</td><td class='n'>{m['shear']}</td><td class='n'>{m['crushing']}</td>"
+                 f"<td class='n'>{r['size']:g}</td><td class='n'>{r['mass_kg']:.2f}</td>"
+                 f"<td class='n'>{r['cost_inr']:,.0f}</td></tr>")
+    table, nm = tab(5, "Knuckle joint for 50 kN designed in each material offered, as computed by the software",
+                    "<tr><th>Material</th><th>Grade</th><th class='n'>&sigma;<sub>t</sub>, MPa</th>"
+                    "<th class='n'>&tau;, MPa</th><th class='n'>&sigma;<sub>c</sub>, MPa</th>"
+                    "<th class='n'>D, mm</th><th class='n'>Mass, kg</th><th class='n'>Cost, Rs</th></tr>",
+                    rows, "sm")
     return f"""
 
 <h2 class="sec">5.8 Material Selection</h2>
-<p class="noind">The user selects the material of the joint from a list of Indian standard
-grades. Three are plain carbon steels to IS 1570, namely 30C8, 40C8 and 45C8, and one is grey cast
-iron to IS 210, namely FG 200.{ref}</p>
-<p>For the steels the allowable tensile stress is the yield strength divided by the factor of
-safety. For the cast iron it is the ultimate strength divided by the factor of safety, since grey
-cast iron shows no distinct yield point. In both cases the allowable shear stress is taken as 0.5
-times the allowable tensile stress and the allowable crushing stress as 2 times it. The material
-chosen is passed to every failure check, so that the allowable stress in each check follows the
-selected grade and not a fixed working value.</p>{table}"""
+<p class="noind">Material selection is a separate step between interpreting the requirement and
+building the joint. The software holds six materials with their Indian standard designations:
+the plain carbon steels 30C8, 40C8 and 45C8 to IS 1570, the alloy steel 40Cr1, grey cast iron
+FG 260 to IS 210 and the aluminium alloy 64430 to IS 733. For each it records working allowable
+stresses in tension, shear and crushing, the density, and an indicative rate per kilogram.</p>
+<p>When a requirement has been read, the joint is designed completely in every material: the
+governing dimension is sized from that material's allowable stresses, every failure check is
+evaluated, and the mass is obtained from the volume of the generated solids. The user is shown
+which materials pass, the size each requires, the mass and the material cost, with the lightest
+and the cheapest passing material marked. The material the user selects then supplies the
+allowable stresses for every check in the design. Table {nm} gives the result for the worked
+example of Section 7.2.</p>{table}
+<p>The comparison makes the trade off explicit. A stronger steel reduces the rod diameter and the
+mass, while cast iron, weak in tension, requires the largest section. The allowable stresses and
+the rates in the table are working values; before they are used for a real component they are to
+be confirmed against a design data book and a supplier's quotation, and the software states this
+on every run.</p>"""
 
 
 def drawing_v2_para() -> str:
@@ -1353,7 +1358,8 @@ def appendix_html() -> str:
                          "source")}
 {fig("A", "07-checks", "Every failure check with its substituted arithmetic, its allowable stress "
                      "and its utilisation")}
-{fig("A", "09-files", "Files produced by a single run, available for download")}"""
+{fig("A", "09-files", "Files produced by a single run, available for download")}
+{fig("A", "10-materials", "Material selection: the joint designed in each material, with the governing size, mass and material cost")}"""
 
 
 if __name__ == "__main__":
