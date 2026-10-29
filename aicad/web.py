@@ -259,17 +259,37 @@ def sheet(fields: dict, text: str, out_root: Path = OUT_ROOT) -> dict:
 CACHE: dict = {}
 
 
+_INFLIGHT: dict = {}
+_INFLIGHT_LOCK = threading.Lock()
+
+
 def cached(kind: str, fields: dict, fn):
+    """A second request for something already being made waits for that one instead of starting
+    its own: two 30 s sheets for the same joint would queue on the FreeCAD lock back to back."""
     key = kind + json.dumps(fields, sort_keys=True, default=str)
     hit = CACHE.get(key)
     if hit is not None:
         return hit | {"cached": True}
-    r = fn()
-    if r.get("ok"):
-        if len(CACHE) > 200:
-            CACHE.clear()
-        CACHE[key] = r
-    return r
+    with _INFLIGHT_LOCK:
+        ev = _INFLIGHT.get(key)
+        owner = ev is None
+        if owner:
+            ev = _INFLIGHT[key] = threading.Event()
+    if not owner:
+        ev.wait(600)
+        hit = CACHE.get(key)
+        return hit | {"cached": True} if hit is not None else fn()
+    try:
+        r = fn()
+        if r.get("ok"):
+            if len(CACHE) > 200:
+                CACHE.clear()
+            CACHE[key] = r
+        return r
+    finally:
+        with _INFLIGHT_LOCK:
+            _INFLIGHT.pop(key, None)
+        ev.set()
 
 
 EXAMPLES = ["knuckle joint for 50 kN", "socket and spigot joint for 35 kN", "sleeve and cotter joint for 50 kN",
@@ -285,9 +305,9 @@ def prebuild(out_root: Path = OUT_ROOT) -> None:
         f = fields_of(text)
         cached("build", f, lambda: build(f, text, freecad=False, out_root=out_root))
         cached("materials", f, lambda: materials(f))
-    for text in EXAMPLES:
-        f = fields_of(text)
-        cached("sheet", f, lambda: sheet(f, text, out_root))
+    # only the demo joint's sheet: six sheets back to back held the FreeCAD lock for minutes
+    f = fields_of(EXAMPLES[0])
+    cached("sheet", f, lambda: sheet(f, EXAMPLES[0], out_root))
 
 
 JOBS: dict = {}
