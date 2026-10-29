@@ -112,7 +112,7 @@ def build(fields: dict, text: str, freecad: bool = True, out_root: Path = OUT_RO
         from .freecad_pack import run_pack
         say("Drawing the A3 first-angle sheet in FreeCAD")
         with _SHEET_LOCK:
-            fc = run_pack(out, joint, design, text)
+            fc = run_pack(out, joint, design, text, material=fields.get("material"))
     say("Done")
 
     # Say so when the drawing did not happen. A missing sheet used to look identical to a

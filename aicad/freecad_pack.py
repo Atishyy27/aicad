@@ -40,7 +40,17 @@ def find_freecadcmd() -> str | None:
             or shutil.which("freecadcmd-python3"))
 
 
-def run_pack(out: Path, joint, design, request: str, timeout: float = 600) -> dict:
+def _parts_list(names, material: str) -> list:
+    """Bill of materials rows: identical numbered parts (bolt_1, bolt_2 ...) become one row."""
+    import re
+    rows: dict = {}
+    for n in names:
+        base = re.sub(r"_\d+$", "", n)
+        rows[base] = rows.get(base, 0) + 1
+    return [[i, k.replace("_", " ").upper(), material, q] for i, (k, q) in enumerate(rows.items(), 1)]
+
+
+def run_pack(out: Path, joint, design, request: str, timeout: float = 600, material: str | None = None) -> dict:
     exe = find_freecadcmd()
     if exe is None:
         return {"ok": False, "reason": "FreeCAD not found (install it or set FREECAD_CMD)"}
@@ -60,6 +70,8 @@ def run_pack(out: Path, joint, design, request: str, timeout: float = 600) -> di
         "verified": design.verified_against_book,
         "date": __import__("datetime").date.today().isoformat(),
         "dim_specs": joint.drawing_dims(design.dims) if hasattr(joint, "drawing_dims") else [],
+        "centre": getattr(joint, "CENTRE_LINES", {"FRONT VIEW": "h", "TOP VIEW (PLAN)": "h", "LEFT SIDE VIEW": "hv"}),
+        "parts_list": _parts_list(list(parts_named), material or "30C8 STEEL, IS 1570"),
     }
     (out / "freecad_job.json").write_text(json.dumps(job, indent=1))
     env = dict(os.environ, AICAD_JOB=str(out / "freecad_job.json"))
@@ -397,10 +409,36 @@ def build_sheet(comp, job) -> str:
         s, cx, cy, (x0, x1, y0, y1) = placed[view]
         return (cx + s * (u - (x0 + x1) / 2), cy + s * (y0 + y1) / 2 - s * v)
 
+    # centre lines (SP 46 long chain, thin) through the joint axis and any cross axis
+    chain = f'stroke="#000" stroke-width="0.18" fill="none" stroke-dasharray="8,1.5,1.5,1.5"'
+    for k, which in job.get("centre", {}).items():
+        if k not in placed:
+            continue
+        s, cx, cy, (x0, x1, y0, y1) = placed[k]
+        X = lambda u: cx + s * (u - (x0 + x1) / 2)
+        Y = lambda v: cy + s * (y0 + y1) / 2 - s * v
+        if "h" in which and y0 <= 0 <= y1:
+            body.append(f'<line x1="{X(x0) - 4:.2f}" y1="{Y(0):.2f}" x2="{X(x1) + 4:.2f}" y2="{Y(0):.2f}" {chain}/>')
+        if "v" in which and x0 <= 0 <= x1:
+            body.append(f'<line x1="{X(0):.2f}" y1="{Y(y1) - 4:.2f}" x2="{X(0):.2f}" y2="{Y(y0) + 4:.2f}" {chain}/>')
+
     for spec in job.get("dim_specs", []):
-        if spec["view"] in views:
-            a, b = to_sheet(spec["view"], spec["p1"]), to_sheet(spec["view"], spec["p2"])
-            body.append(_dimension(a, b, spec["orient"], spec["offset"], spec["text"]))
+        if spec["view"] not in views:
+            continue
+        a = to_sheet(spec["view"], spec["p1"])
+        if spec["orient"] == "note":
+            # leader: a dot on the feature, a sloping line, then the callout text on a short shelf
+            dx, dy = spec.get("to", (18, -12))
+            tx_, ty_ = a[0] + dx, a[1] + dy
+            right = dx >= 0
+            body.append(f'<circle cx="{a[0]:.2f}" cy="{a[1]:.2f}" r="0.6" fill="#000"/>')
+            body.append(f'<line x1="{a[0]:.2f}" y1="{a[1]:.2f}" x2="{tx_:.2f}" y2="{ty_:.2f}" stroke="#000" stroke-width="0.18"/>')
+            shelf = tx_ + (16 if right else -16)
+            body.append(f'<line x1="{tx_:.2f}" y1="{ty_:.2f}" x2="{shelf:.2f}" y2="{ty_:.2f}" stroke="#000" stroke-width="0.18"/>')
+            body.append(_text(tx_ + (1 if right else -1), ty_ - 1, spec["text"], 2.8, "start" if right else "end"))
+            continue
+        b = to_sheet(spec["view"], spec["p2"])
+        body.append(_dimension(a, b, spec["orient"], spec["offset"], spec["text"]))
 
     # frame: 20 mm filing margin on the left, 10 mm elsewhere
     frame = [
@@ -417,6 +455,18 @@ def build_sheet(comp, job) -> str:
         w = "bold" if i == 0 else "normal"
         table += [_text(tx, y, a, 3, weight=w), _text(tx + 27, y, b, 3, weight=w), _text(tx + 40, y, c[:30], 2.6, weight=w)]
     table.append(_text(tx, ty + 5.2 * len(rows) + 1, "All dimensions in mm", 2.6))
+
+    # parts list below the dimension table: number, name, material, quantity
+    py = ty + 5.2 * len(rows) + 12
+    plist = [["NO.", "PART", "MATERIAL", "QTY"]] + job.get("parts_list", [])
+    table.append(f'<rect x="{tx - 2}" y="{py - 5}" width="{A3_W - 10 - tx + 2}" height="{4 + 5.2 * len(plist)}" '
+                 f'fill="none" stroke="#000" stroke-width="0.35"/>')
+    table.append(_text(tx, py - 6.5, "PARTS LIST", 3, weight="bold"))
+    for i, (n_, nm_, mat_, q_) in enumerate(plist):
+        y = py + 5.2 * i
+        w = "bold" if i == 0 else "normal"
+        table += [_text(tx, y, str(n_), 2.7, weight=w), _text(tx + 9, y, str(nm_)[:20], 2.7, weight=w),
+                  _text(tx + 47, y, str(mat_)[:30], 2.5, weight=w), _text(A3_W - 14, y, str(q_), 2.7, "end", w)]
 
     # title block, bottom right
     bx0, by0, bx1, by1 = 236, 237, A3_W - 10, A3_H - 10

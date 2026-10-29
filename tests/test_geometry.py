@@ -119,7 +119,8 @@ def test_every_joint_has_drawing_dimensions_on_real_views(name):
     assert len(specs) >= 4
     assert {s["view"] for s in specs} <= {"FRONT VIEW", "LEFT SIDE VIEW", "TOP VIEW (PLAN)"}
     for s in specs:
-        assert s["orient"] in ("h", "v") and s["text"]
+        assert s["orient"] in ("h", "v", "note") and s["text"]
+        assert ("p2" in s) == (s["orient"] != "note")
 
 
 @pytest.mark.parametrize("name", list(CASES))

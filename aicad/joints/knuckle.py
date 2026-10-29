@@ -249,12 +249,32 @@ def build_parts(dims: dict):
     }
 
 
+# rod axis and pin axis in every view
+CENTRE_LINES = {"FRONT VIEW": "hv", "TOP VIEW (PLAN)": "hv", "LEFT SIDE VIEW": "hv"}
+
+
 def drawing_dims(dims: dict) -> list[dict]:
-    """Dimensions drawn on the sheet: view name, two 3D points, direction, paper offset (mm)."""
+    """Dimensions drawn on the sheet: view name, two 3D points, direction, paper offset (mm).
+    orient "note" is a leader callout from the point p1."""
     D, d2, d3, t, t1, t2 = (dims[k] for k in ("D", "d2", "d3", "t", "t1", "t2"))
+    d, collar_t, taper_d = dims["d"], dims["collar_t"], dims["taper_d"]
     outer = t / 2 + t1
     x_rod = -(d2 / 2 + dims["rod_len"]) + 4
+    taper_z = -outer - collar_t / 2
+    taper_len = d3 + 2 * max(taper_d, 3.0)
     return [
+        {"view": "FRONT VIEW", "p1": [taper_len / 2, 0, taper_z], "orient": "note", "to": (14, 10),
+         "text": f"TAPER PIN Ø{taper_d:g}, TAPER 1:50"},
+        {"view": "FRONT VIEW", "p1": [d3 / 2, 0, outer + t2 / 2], "orient": "note", "to": (16, -10),
+         "text": f"KNUCKLE PIN Ø{d:g}, HEAD Ø{d3:g}x{t2:g}"},
+        {"view": "FRONT VIEW", "p1": [-d3 / 2, 0, taper_z], "orient": "note", "to": (-14, 10),
+         "text": f"COLLAR Ø{d3:g}x{collar_t:g}"},
+        {"view": "LEFT SIDE VIEW", "p1": [0, d2 / 2, -t / 2], "p2": [0, d2 / 2, t / 2], "orient": "v", "offset": -7,
+         "text": f"{t:g}"},
+        {"view": "LEFT SIDE VIEW", "p1": [0, d2 / 2, t / 2], "p2": [0, d2 / 2, outer], "orient": "v", "offset": -13,
+         "text": f"{t1:g}"},
+        {"view": "TOP VIEW (PLAN)", "p1": [-d / 2, d2 / 2, 0], "p2": [d / 2, d2 / 2, 0], "orient": "h", "offset": 14,
+         "text": f"Ø{d:g}"},
         {"view": "FRONT VIEW", "p1": [x_rod, 0, -D / 2], "p2": [x_rod, 0, D / 2], "orient": "v", "offset": -7, "text": f"Ø{D:g}"},
         {"view": "LEFT SIDE VIEW", "p1": [0, -d2 / 2, -outer], "p2": [0, -d2 / 2, outer], "orient": "v", "offset": 7, "text": f"{2 * outer:g}"},
         {"view": "FRONT VIEW", "p1": [-d3 / 2, 0, outer + t2], "p2": [d3 / 2, 0, outer + t2], "orient": "h", "offset": -6, "text": f"Ø{d3:g}"},

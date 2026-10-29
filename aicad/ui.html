@@ -224,10 +224,11 @@ function fields(){
   if(vis("grip")) f.grip_mm=+$("grip").value;
   if(vis("power")) {f.power_kw=+$("power").value; f.speed_rpm=+$("speed").value;}
   if(vis("torque")&&num("torque")) f.torque_nm=num("torque");
-  if(material){f.tension_mpa=material.tension;f.shear_mpa=material.shear;f.crushing_mpa=material.crushing;}
+  if(material){f.tension_mpa=material.tension;f.shear_mpa=material.shear;f.crushing_mpa=material.crushing;
+    f.material=material.material;}
   return f;
 }
-function dutyKey(){const f=fields(); delete f.tension_mpa; delete f.shear_mpa; delete f.crushing_mpa; return JSON.stringify(f);}
+function dutyKey(){const f=fields(); delete f.tension_mpa; delete f.shear_mpa; delete f.crushing_mpa; delete f.material; return JSON.stringify(f);}
 
 $("text").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();$("go").click();}});
 $("go").onclick=async()=>{
