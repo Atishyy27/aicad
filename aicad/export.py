@@ -85,14 +85,14 @@ def export_all(parts: dict, design: Design, joint, out: Path, request: str) -> P
 
     glb64 = base64.b64encode((out / "assembly.glb").read_bytes()).decode()
     (out / "viewer.html").write_text(_viewer_html(glb64, request, joint, exploded64, stress64, section64,
-                                                  [(n, shade[n]) for n in parts]))
-    (out / "report.md").write_text(report(design, request, joint))
+                                                  [(n, shade[n]) for n in parts]), encoding="utf-8")
+    (out / "report.md").write_text(report(design, request, joint), encoding="utf-8")
     return out
 
 
 def _viewer_html(glb64: str, request: str, joint, exploded64: str | None = None, stress64: str | None = None,
                  section64: str | None = None, shades=None) -> str:
-    js = VIEWER_JS.read_text() if VIEWER_JS.exists() else ""
+    js = VIEWER_JS.read_text(encoding="utf-8") if VIEWER_JS.exists() else ""
     script = (f'<script type="module">{js}</script>' if js else
               '<script type="module" src="https://cdn.jsdelivr.net/npm/@google/model-viewer/dist/model-viewer.min.js"></script>')
     legend = "".join(

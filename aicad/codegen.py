@@ -51,7 +51,7 @@ _HARNESS = r'''
 import json, math, sys
 import cadquery as cq
 ns = {"cq": cq, "math": math}
-src = open(sys.argv[1]).read()
+src = open(sys.argv[1], encoding="utf-8").read()
 exec(compile(src, "ai_part.py", "exec"), ns)
 res = ns.get("result")
 out = {"has_result": res is not None}
@@ -101,8 +101,8 @@ def static_screen(code: str) -> list[str]:
 def run_code(code: str, timeout: float = 60, python: str | None = None) -> tuple[dict, str | None, str]:
     """Run the code in a separate process. Returns (measurements, step_path or None, error text)."""
     tmp = Path(tempfile.mkdtemp(prefix="aicad_codegen_"))
-    (tmp / "ai_part.py").write_text(code)
-    (tmp / "harness.py").write_text(_HARNESS)
+    (tmp / "ai_part.py").write_text(code, encoding="utf-8")
+    (tmp / "harness.py").write_text(_HARNESS, encoding="utf-8")
     step = tmp / "part.step"
     env = {k: v for k, v in os.environ.items() if k in ("PATH", "HOME", "USERPROFILE", "HOMEDRIVE", "HOMEPATH", "SYSTEMROOT", "TMPDIR", "TEMP", "TMP")}
     try:
@@ -218,8 +218,8 @@ def generate(text: str, out_root: Path = Path("out"), runner=subprocess.run, att
             out = Path(out_root) / f"codegen_{datetime.now():%Y%m%d-%H%M%S}"
             out.mkdir(parents=True, exist_ok=True)
             shutil.copy(str(step), out / "part.step")
-            (out / "code.py").write_text(ai["code"])
-            (out / "verification.json").write_text(json.dumps(history, indent=1))
+            (out / "code.py").write_text(ai["code"], encoding="utf-8")
+            (out / "verification.json").write_text(json.dumps(history, indent=1), encoding="utf-8")
             _viewer(out, text)
             return {"ok": True, "out": str(out), "attempts": history, "code": ai["code"]}
         prompt = (f"{text}\n\nYour previous code failed these checks: {'; '.join(verdict.reasons)}. "
@@ -238,7 +238,7 @@ def _viewer(out: Path, text: str) -> None:
     a.add(shape, name="part", color=cq.Color(0.55, 0.6, 0.85, 1.0))
     a.export(str(out / "part.glb"))
     glb = base64.b64encode((out / "part.glb").read_bytes()).decode()
-    js = VIEWER_JS.read_text() if VIEWER_JS.exists() else ""
+    js = VIEWER_JS.read_text(encoding="utf-8") if VIEWER_JS.exists() else ""
     safe = text.replace("<", "&lt;")
     (out / "viewer.html").write_text(
         f'<!doctype html><html><head><meta charset="utf-8"><title>AI-written part</title>'
@@ -246,7 +246,7 @@ def _viewer(out: Path, text: str) -> None:
         f'model-viewer{{width:100%;height:80vh}}</style></head><body><p style="padding:12px">'
         f'AI-written part (experimental, verified by size and validity only): {safe}</p>'
         f'<model-viewer src="data:model/gltf-binary;base64,{glb}" camera-controls auto-rotate></model-viewer>'
-        f'</body></html>')
+        f'</body></html>', encoding="utf-8")
 
 
 def main(argv=None) -> int:
